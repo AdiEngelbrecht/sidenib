@@ -1,0 +1,283 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="530" viewBox="0 0 960 530">
+<rect width="960" height="530" fill="#FFFFFF"/>
+<rect y="106" width="480" height="424" fill="#F7F4ED"/>
+<rect x="480" y="106" width="480" height="424" fill="#242620"/>
+<g font-family="Arial, sans-serif"><text x="32" y="46" font-size="28" font-weight="700" fill="#282722">Sidenib · Peek</text>
+<text x="32" y="77" font-size="14" fill="#6B685F">Approved identity · app icons and menu-bar marks at actual pixel sizes</text></g>
+<text x="32" y="141" font-family="Arial" font-size="14" fill="#282722">Light background</text>
+<svg x="32" y="174" width="128" height="128" viewBox="0 0 1024 1024">
+
+
+  <!-- SPDX-License-Identifier: Apache-2.0 -->
+  <defs>
+    <linearGradient id="a0_0_tile" x1="176" y1="80" x2="818" y2="986" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF9ED"/>
+      <stop offset="1" stop-color="#EFDBAF"/>
+    </linearGradient>
+    <linearGradient id="a0_0_paper" x1="242" y1="206" x2="684" y2="854" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFCF4"/>
+      <stop offset="1" stop-color="#FFF4DD"/>
+    </linearGradient>
+    <linearGradient id="a0_0_tab" x1="724" y1="420" x2="842" y2="628" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFD45D"/>
+      <stop offset="1" stop-color="#F6BE36"/>
+    </linearGradient>
+    <filter id="a0_0_shadow" x="110" y="152" width="690" height="780" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="20" stdDeviation="19" flood-color="#73501D" flood-opacity="0.19"/>
+    </filter>
+    <filter id="a0_0_tab-shadow" x="670" y="392" width="202" height="288" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="9" stdDeviation="10" flood-color="#916215" flood-opacity="0.13"/>
+    </filter>
+  </defs>
+  <rect x="32" y="32" width="960" height="960" rx="240" fill="url(#a0_0_tile)"/>
+  <rect x="32.75" y="32.75" width="958.5" height="958.5" rx="239.25" fill="none" stroke="#E0C99B" stroke-opacity="0.36" stroke-width="1.5"/>
+  <rect x="702" y="412" width="144" height="224" rx="66" fill="url(#a0_0_tab)" filter="url(#a0_0_tab-shadow)"/>
+  <rect x="182" y="194" width="554" height="652" rx="118" fill="#282722"/>
+  <rect x="174" y="194" width="554" height="652" rx="118" fill="url(#a0_0_paper)" filter="url(#a0_0_shadow)"/>
+  <rect x="175" y="195" width="552" height="650" rx="117" fill="none" stroke="#FFFFFF" stroke-opacity="0.74" stroke-width="2"/></svg>
+<text x="32" y="329" font-family="Arial" font-size="12" fill="#282722">128 px</text>
+<svg x="210" y="174" width="64" height="64" viewBox="0 0 1024 1024">
+
+
+  <!-- SPDX-License-Identifier: Apache-2.0 -->
+  <defs>
+    <linearGradient id="a0_1_tile" x1="176" y1="80" x2="818" y2="986" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF9ED"/>
+      <stop offset="1" stop-color="#EFDBAF"/>
+    </linearGradient>
+    <linearGradient id="a0_1_paper" x1="242" y1="206" x2="684" y2="854" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFCF4"/>
+      <stop offset="1" stop-color="#FFF4DD"/>
+    </linearGradient>
+    <linearGradient id="a0_1_tab" x1="724" y1="420" x2="842" y2="628" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFD45D"/>
+      <stop offset="1" stop-color="#F6BE36"/>
+    </linearGradient>
+    <filter id="a0_1_shadow" x="110" y="152" width="690" height="780" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="20" stdDeviation="19" flood-color="#73501D" flood-opacity="0.19"/>
+    </filter>
+    <filter id="a0_1_tab-shadow" x="670" y="392" width="202" height="288" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="9" stdDeviation="10" flood-color="#916215" flood-opacity="0.13"/>
+    </filter>
+  </defs>
+  <rect x="32" y="32" width="960" height="960" rx="240" fill="url(#a0_1_tile)"/>
+  <rect x="32.75" y="32.75" width="958.5" height="958.5" rx="239.25" fill="none" stroke="#E0C99B" stroke-opacity="0.36" stroke-width="1.5"/>
+  <rect x="702" y="412" width="144" height="224" rx="66" fill="url(#a0_1_tab)" filter="url(#a0_1_tab-shadow)"/>
+  <rect x="182" y="194" width="554" height="652" rx="118" fill="#282722"/>
+  <rect x="174" y="194" width="554" height="652" rx="118" fill="url(#a0_1_paper)" filter="url(#a0_1_shadow)"/>
+  <rect x="175" y="195" width="552" height="650" rx="117" fill="none" stroke="#FFFFFF" stroke-opacity="0.74" stroke-width="2"/></svg>
+<text x="210" y="329" font-family="Arial" font-size="12" fill="#282722">64 px</text>
+<svg x="324" y="174" width="32" height="32" viewBox="0 0 1024 1024">
+
+
+  <!-- SPDX-License-Identifier: Apache-2.0 -->
+  <defs>
+    <linearGradient id="a0_2_tile" x1="176" y1="80" x2="818" y2="986" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF9ED"/>
+      <stop offset="1" stop-color="#EFDBAF"/>
+    </linearGradient>
+    <linearGradient id="a0_2_paper" x1="242" y1="206" x2="684" y2="854" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFCF4"/>
+      <stop offset="1" stop-color="#FFF4DD"/>
+    </linearGradient>
+    <linearGradient id="a0_2_tab" x1="724" y1="420" x2="842" y2="628" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFD45D"/>
+      <stop offset="1" stop-color="#F6BE36"/>
+    </linearGradient>
+    <filter id="a0_2_shadow" x="110" y="152" width="690" height="780" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="20" stdDeviation="19" flood-color="#73501D" flood-opacity="0.19"/>
+    </filter>
+    <filter id="a0_2_tab-shadow" x="670" y="392" width="202" height="288" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="9" stdDeviation="10" flood-color="#916215" flood-opacity="0.13"/>
+    </filter>
+  </defs>
+  <rect x="32" y="32" width="960" height="960" rx="240" fill="url(#a0_2_tile)"/>
+  <rect x="32.75" y="32.75" width="958.5" height="958.5" rx="239.25" fill="none" stroke="#E0C99B" stroke-opacity="0.36" stroke-width="1.5"/>
+  <rect x="702" y="412" width="144" height="224" rx="66" fill="url(#a0_2_tab)" filter="url(#a0_2_tab-shadow)"/>
+  <rect x="182" y="194" width="554" height="652" rx="118" fill="#282722"/>
+  <rect x="174" y="194" width="554" height="652" rx="118" fill="url(#a0_2_paper)" filter="url(#a0_2_shadow)"/>
+  <rect x="175" y="195" width="552" height="650" rx="117" fill="none" stroke="#FFFFFF" stroke-opacity="0.74" stroke-width="2"/></svg>
+<text x="324" y="329" font-family="Arial" font-size="12" fill="#282722">32 px</text>
+<svg x="408" y="174" width="16" height="16" viewBox="0 0 1024 1024">
+
+
+  <!-- SPDX-License-Identifier: Apache-2.0 -->
+  <defs>
+    <linearGradient id="a0_3_tile" x1="176" y1="80" x2="818" y2="986" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF9ED"/>
+      <stop offset="1" stop-color="#EFDBAF"/>
+    </linearGradient>
+    <linearGradient id="a0_3_paper" x1="242" y1="206" x2="684" y2="854" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFCF4"/>
+      <stop offset="1" stop-color="#FFF4DD"/>
+    </linearGradient>
+    <linearGradient id="a0_3_tab" x1="724" y1="420" x2="842" y2="628" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFD45D"/>
+      <stop offset="1" stop-color="#F6BE36"/>
+    </linearGradient>
+    <filter id="a0_3_shadow" x="110" y="152" width="690" height="780" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="20" stdDeviation="19" flood-color="#73501D" flood-opacity="0.19"/>
+    </filter>
+    <filter id="a0_3_tab-shadow" x="670" y="392" width="202" height="288" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="9" stdDeviation="10" flood-color="#916215" flood-opacity="0.13"/>
+    </filter>
+  </defs>
+  <rect x="32" y="32" width="960" height="960" rx="240" fill="url(#a0_3_tile)"/>
+  <rect x="32.75" y="32.75" width="958.5" height="958.5" rx="239.25" fill="none" stroke="#E0C99B" stroke-opacity="0.36" stroke-width="1.5"/>
+  <rect x="702" y="412" width="144" height="224" rx="66" fill="url(#a0_3_tab)" filter="url(#a0_3_tab-shadow)"/>
+  <rect x="182" y="194" width="554" height="652" rx="118" fill="#282722"/>
+  <rect x="174" y="194" width="554" height="652" rx="118" fill="url(#a0_3_paper)" filter="url(#a0_3_shadow)"/>
+  <rect x="175" y="195" width="552" height="650" rx="117" fill="none" stroke="#FFFFFF" stroke-opacity="0.74" stroke-width="2"/></svg>
+<text x="408" y="329" font-family="Arial" font-size="12" fill="#282722">16 px</text>
+<text x="32" y="386" font-family="Arial" font-size="13" fill="#282722">Menu-bar mark</text>
+<svg x="36" y="415" width="16" height="16" viewBox="0 0 18 18">
+  <!-- SPDX-License-Identifier: Apache-2.0. Alpha-only template mark for native menu bars. -->
+  <path fill="#000000" d="M5 2.5h5.75A2.25 2.25 0 0 1 13 4.75V6.5h1.5A1.5 1.5 0 0 1 16 8v2a1.5 1.5 0 0 1-1.5 1.5H13v1.75a2.25 2.25 0 0 1-2.25 2.25H5a2.25 2.25 0 0 1-2.25-2.25v-8.5A2.25 2.25 0 0 1 5 2.5Z"/></svg>
+<text x="36" y="481" font-family="Arial" font-size="12" fill="#282722">16 px</text>
+<svg x="128" y="415" width="18" height="18" viewBox="0 0 18 18">
+  <!-- SPDX-License-Identifier: Apache-2.0. Alpha-only template mark for native menu bars. -->
+  <path fill="#000000" d="M5 2.5h5.75A2.25 2.25 0 0 1 13 4.75V6.5h1.5A1.5 1.5 0 0 1 16 8v2a1.5 1.5 0 0 1-1.5 1.5H13v1.75a2.25 2.25 0 0 1-2.25 2.25H5a2.25 2.25 0 0 1-2.25-2.25v-8.5A2.25 2.25 0 0 1 5 2.5Z"/></svg>
+<text x="128" y="481" font-family="Arial" font-size="12" fill="#282722">18 px</text>
+<svg x="224" y="415" width="32" height="32" viewBox="0 0 18 18">
+  <!-- SPDX-License-Identifier: Apache-2.0. Alpha-only template mark for native menu bars. -->
+  <path fill="#000000" d="M5 2.5h5.75A2.25 2.25 0 0 1 13 4.75V6.5h1.5A1.5 1.5 0 0 1 16 8v2a1.5 1.5 0 0 1-1.5 1.5H13v1.75a2.25 2.25 0 0 1-2.25 2.25H5a2.25 2.25 0 0 1-2.25-2.25v-8.5A2.25 2.25 0 0 1 5 2.5Z"/></svg>
+<text x="224" y="481" font-family="Arial" font-size="12" fill="#282722">32 px</text>
+<text x="512" y="141" font-family="Arial" font-size="14" fill="#FFF8E8">Dark background</text>
+<svg x="512" y="174" width="128" height="128" viewBox="0 0 1024 1024">
+
+
+  <!-- SPDX-License-Identifier: Apache-2.0 -->
+  <defs>
+    <linearGradient id="a480_0_tile" x1="176" y1="80" x2="818" y2="986" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF9ED"/>
+      <stop offset="1" stop-color="#EFDBAF"/>
+    </linearGradient>
+    <linearGradient id="a480_0_paper" x1="242" y1="206" x2="684" y2="854" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFCF4"/>
+      <stop offset="1" stop-color="#FFF4DD"/>
+    </linearGradient>
+    <linearGradient id="a480_0_tab" x1="724" y1="420" x2="842" y2="628" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFD45D"/>
+      <stop offset="1" stop-color="#F6BE36"/>
+    </linearGradient>
+    <filter id="a480_0_shadow" x="110" y="152" width="690" height="780" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="20" stdDeviation="19" flood-color="#73501D" flood-opacity="0.19"/>
+    </filter>
+    <filter id="a480_0_tab-shadow" x="670" y="392" width="202" height="288" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="9" stdDeviation="10" flood-color="#916215" flood-opacity="0.13"/>
+    </filter>
+  </defs>
+  <rect x="32" y="32" width="960" height="960" rx="240" fill="url(#a480_0_tile)"/>
+  <rect x="32.75" y="32.75" width="958.5" height="958.5" rx="239.25" fill="none" stroke="#E0C99B" stroke-opacity="0.36" stroke-width="1.5"/>
+  <rect x="702" y="412" width="144" height="224" rx="66" fill="url(#a480_0_tab)" filter="url(#a480_0_tab-shadow)"/>
+  <rect x="182" y="194" width="554" height="652" rx="118" fill="#282722"/>
+  <rect x="174" y="194" width="554" height="652" rx="118" fill="url(#a480_0_paper)" filter="url(#a480_0_shadow)"/>
+  <rect x="175" y="195" width="552" height="650" rx="117" fill="none" stroke="#FFFFFF" stroke-opacity="0.74" stroke-width="2"/></svg>
+<text x="512" y="329" font-family="Arial" font-size="12" fill="#FFF8E8">128 px</text>
+<svg x="690" y="174" width="64" height="64" viewBox="0 0 1024 1024">
+
+
+  <!-- SPDX-License-Identifier: Apache-2.0 -->
+  <defs>
+    <linearGradient id="a480_1_tile" x1="176" y1="80" x2="818" y2="986" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF9ED"/>
+      <stop offset="1" stop-color="#EFDBAF"/>
+    </linearGradient>
+    <linearGradient id="a480_1_paper" x1="242" y1="206" x2="684" y2="854" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFCF4"/>
+      <stop offset="1" stop-color="#FFF4DD"/>
+    </linearGradient>
+    <linearGradient id="a480_1_tab" x1="724" y1="420" x2="842" y2="628" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFD45D"/>
+      <stop offset="1" stop-color="#F6BE36"/>
+    </linearGradient>
+    <filter id="a480_1_shadow" x="110" y="152" width="690" height="780" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="20" stdDeviation="19" flood-color="#73501D" flood-opacity="0.19"/>
+    </filter>
+    <filter id="a480_1_tab-shadow" x="670" y="392" width="202" height="288" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="9" stdDeviation="10" flood-color="#916215" flood-opacity="0.13"/>
+    </filter>
+  </defs>
+  <rect x="32" y="32" width="960" height="960" rx="240" fill="url(#a480_1_tile)"/>
+  <rect x="32.75" y="32.75" width="958.5" height="958.5" rx="239.25" fill="none" stroke="#E0C99B" stroke-opacity="0.36" stroke-width="1.5"/>
+  <rect x="702" y="412" width="144" height="224" rx="66" fill="url(#a480_1_tab)" filter="url(#a480_1_tab-shadow)"/>
+  <rect x="182" y="194" width="554" height="652" rx="118" fill="#282722"/>
+  <rect x="174" y="194" width="554" height="652" rx="118" fill="url(#a480_1_paper)" filter="url(#a480_1_shadow)"/>
+  <rect x="175" y="195" width="552" height="650" rx="117" fill="none" stroke="#FFFFFF" stroke-opacity="0.74" stroke-width="2"/></svg>
+<text x="690" y="329" font-family="Arial" font-size="12" fill="#FFF8E8">64 px</text>
+<svg x="804" y="174" width="32" height="32" viewBox="0 0 1024 1024">
+
+
+  <!-- SPDX-License-Identifier: Apache-2.0 -->
+  <defs>
+    <linearGradient id="a480_2_tile" x1="176" y1="80" x2="818" y2="986" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF9ED"/>
+      <stop offset="1" stop-color="#EFDBAF"/>
+    </linearGradient>
+    <linearGradient id="a480_2_paper" x1="242" y1="206" x2="684" y2="854" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFCF4"/>
+      <stop offset="1" stop-color="#FFF4DD"/>
+    </linearGradient>
+    <linearGradient id="a480_2_tab" x1="724" y1="420" x2="842" y2="628" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFD45D"/>
+      <stop offset="1" stop-color="#F6BE36"/>
+    </linearGradient>
+    <filter id="a480_2_shadow" x="110" y="152" width="690" height="780" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="20" stdDeviation="19" flood-color="#73501D" flood-opacity="0.19"/>
+    </filter>
+    <filter id="a480_2_tab-shadow" x="670" y="392" width="202" height="288" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="9" stdDeviation="10" flood-color="#916215" flood-opacity="0.13"/>
+    </filter>
+  </defs>
+  <rect x="32" y="32" width="960" height="960" rx="240" fill="url(#a480_2_tile)"/>
+  <rect x="32.75" y="32.75" width="958.5" height="958.5" rx="239.25" fill="none" stroke="#E0C99B" stroke-opacity="0.36" stroke-width="1.5"/>
+  <rect x="702" y="412" width="144" height="224" rx="66" fill="url(#a480_2_tab)" filter="url(#a480_2_tab-shadow)"/>
+  <rect x="182" y="194" width="554" height="652" rx="118" fill="#282722"/>
+  <rect x="174" y="194" width="554" height="652" rx="118" fill="url(#a480_2_paper)" filter="url(#a480_2_shadow)"/>
+  <rect x="175" y="195" width="552" height="650" rx="117" fill="none" stroke="#FFFFFF" stroke-opacity="0.74" stroke-width="2"/></svg>
+<text x="804" y="329" font-family="Arial" font-size="12" fill="#FFF8E8">32 px</text>
+<svg x="888" y="174" width="16" height="16" viewBox="0 0 1024 1024">
+
+
+  <!-- SPDX-License-Identifier: Apache-2.0 -->
+  <defs>
+    <linearGradient id="a480_3_tile" x1="176" y1="80" x2="818" y2="986" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF9ED"/>
+      <stop offset="1" stop-color="#EFDBAF"/>
+    </linearGradient>
+    <linearGradient id="a480_3_paper" x1="242" y1="206" x2="684" y2="854" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFCF4"/>
+      <stop offset="1" stop-color="#FFF4DD"/>
+    </linearGradient>
+    <linearGradient id="a480_3_tab" x1="724" y1="420" x2="842" y2="628" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFD45D"/>
+      <stop offset="1" stop-color="#F6BE36"/>
+    </linearGradient>
+    <filter id="a480_3_shadow" x="110" y="152" width="690" height="780" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="20" stdDeviation="19" flood-color="#73501D" flood-opacity="0.19"/>
+    </filter>
+    <filter id="a480_3_tab-shadow" x="670" y="392" width="202" height="288" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="9" stdDeviation="10" flood-color="#916215" flood-opacity="0.13"/>
+    </filter>
+  </defs>
+  <rect x="32" y="32" width="960" height="960" rx="240" fill="url(#a480_3_tile)"/>
+  <rect x="32.75" y="32.75" width="958.5" height="958.5" rx="239.25" fill="none" stroke="#E0C99B" stroke-opacity="0.36" stroke-width="1.5"/>
+  <rect x="702" y="412" width="144" height="224" rx="66" fill="url(#a480_3_tab)" filter="url(#a480_3_tab-shadow)"/>
+  <rect x="182" y="194" width="554" height="652" rx="118" fill="#282722"/>
+  <rect x="174" y="194" width="554" height="652" rx="118" fill="url(#a480_3_paper)" filter="url(#a480_3_shadow)"/>
+  <rect x="175" y="195" width="552" height="650" rx="117" fill="none" stroke="#FFFFFF" stroke-opacity="0.74" stroke-width="2"/></svg>
+<text x="888" y="329" font-family="Arial" font-size="12" fill="#FFF8E8">16 px</text>
+<text x="512" y="386" font-family="Arial" font-size="13" fill="#FFF8E8">Menu-bar mark</text>
+<svg x="516" y="415" width="16" height="16" viewBox="0 0 18 18">
+  <!-- SPDX-License-Identifier: Apache-2.0. White mark for dark backgrounds outside native template rendering. -->
+  <path fill="#FFFFFF" d="M5 2.5h5.75A2.25 2.25 0 0 1 13 4.75V6.5h1.5A1.5 1.5 0 0 1 16 8v2a1.5 1.5 0 0 1-1.5 1.5H13v1.75a2.25 2.25 0 0 1-2.25 2.25H5a2.25 2.25 0 0 1-2.25-2.25v-8.5A2.25 2.25 0 0 1 5 2.5Z"/></svg>
+<text x="516" y="481" font-family="Arial" font-size="12" fill="#FFF8E8">16 px</text>
+<svg x="608" y="415" width="18" height="18" viewBox="0 0 18 18">
+  <!-- SPDX-License-Identifier: Apache-2.0. White mark for dark backgrounds outside native template rendering. -->
+  <path fill="#FFFFFF" d="M5 2.5h5.75A2.25 2.25 0 0 1 13 4.75V6.5h1.5A1.5 1.5 0 0 1 16 8v2a1.5 1.5 0 0 1-1.5 1.5H13v1.75a2.25 2.25 0 0 1-2.25 2.25H5a2.25 2.25 0 0 1-2.25-2.25v-8.5A2.25 2.25 0 0 1 5 2.5Z"/></svg>
+<text x="608" y="481" font-family="Arial" font-size="12" fill="#FFF8E8">18 px</text>
+<svg x="704" y="415" width="32" height="32" viewBox="0 0 18 18">
+  <!-- SPDX-License-Identifier: Apache-2.0. White mark for dark backgrounds outside native template rendering. -->
+  <path fill="#FFFFFF" d="M5 2.5h5.75A2.25 2.25 0 0 1 13 4.75V6.5h1.5A1.5 1.5 0 0 1 16 8v2a1.5 1.5 0 0 1-1.5 1.5H13v1.75a2.25 2.25 0 0 1-2.25 2.25H5a2.25 2.25 0 0 1-2.25-2.25v-8.5A2.25 2.25 0 0 1 5 2.5Z"/></svg>
+<text x="704" y="481" font-family="Arial" font-size="12" fill="#FFF8E8">32 px</text>
+</svg>

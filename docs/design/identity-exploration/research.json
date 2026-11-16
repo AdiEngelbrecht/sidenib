@@ -1,0 +1,150 @@
+{
+  "status": "identity_confirmed",
+  "reviewed_on": "2026-11-16",
+  "task": "ADIEN-158",
+  "recommendation": {
+    "name": "Sidenib",
+    "pronunciation": "side-nib",
+    "icon": "B \u2014 Peek",
+    "reason": "Confirmed by the user. The small paper tab reflects the side-notch interaction."
+  },
+  "selected_name": "Sidenib",
+  "selected_icon": "B \u2014 Peek",
+  "candidates": [
+    {
+      "name": "Furlin",
+      "decision": "not_selected",
+      "findings": "Initial quoted web search did not surface an obvious exact-match note/task app. An exact-name GitHub repository is a React assignment; substring matches include unrelated furling and FurLink projects. This is an initial collision screen, not an availability or trademark determination.",
+      "sources": [
+        "https://github.com/Lucky000001/Furlin"
+      ],
+      "queries": [
+        "\"Furlin\" app software",
+        "GitHub repository search: furlin in:name"
+      ]
+    },
+    {
+      "name": "Sidenib",
+      "decision": "selected",
+      "findings": "No GitHub repository-name matches returned. Web results include an unrelated Bolivian public-sector acronym SIDENIB, rather than a consumer note/task app.",
+      "sources": [
+        "https://www.defensoria.gob.bo/noticias/defensoria-del-pueblo-presenta-sistema-informatico-que-monitoreara-cumplimiento-de-los-derechos-de-ninyas%2C-ninyos-y-adolescentes"
+      ],
+      "queries": [
+        "\"Sidenib\"",
+        "GitHub repository search: sidenib in:name"
+      ]
+    },
+    {
+      "name": "Tuck",
+      "decision": "reject",
+      "findings": "Already used by Mac apps, including a saved-links/notes product and a menu-bar task/note utility.",
+      "sources": [
+        "https://tuck.fyi/",
+        "https://github.com/m3hu1/tuck"
+      ]
+    },
+    {
+      "name": "Foldlet",
+      "decision": "reject",
+      "findings": "Already used by an open-source Mac Dock utility and an Android cover-screen app.",
+      "sources": [
+        "https://github.com/wmtaff/foldlet",
+        "https://github.com/luongwnv/Foldlet"
+      ]
+    },
+    {
+      "name": "Sideleaf",
+      "decision": "reject",
+      "findings": "Already used by a Mac screen-edge sticky-note app and a separate meeting-notebook product.",
+      "sources": [
+        "https://sideleaf.pages.dev/",
+        "https://thinkhale.com/sideleaf/"
+      ]
+    }
+  ],
+  "icon_directions": [
+    {
+      "key": "A",
+      "name": "Fold",
+      "description": "Rounded ivory paper slip, single gold folded corner, one ink line."
+    },
+    {
+      "key": "B",
+      "name": "Peek",
+      "description": "Ivory note with a small golden tab at its right edge; the clearest reference to the side-notch interaction."
+    },
+    {
+      "key": "C",
+      "name": "Curl",
+      "description": "A broad golden paper curl with an ivory underside; the most distinctive symbol for an unfurling panel."
+    }
+  ],
+  "palette": {
+    "paper": "#FFF8E8",
+    "gold": "#F6C445",
+    "ink": "#282722",
+    "status": "proposed; generated image colors are illustrative"
+  },
+  "assets": {
+    "board": "concepts-v2.png",
+    "prompt": "concepts-v2.prompt.txt",
+    "generation": "built-in image_gen",
+    "limitations": "The comparison board preserves the exploration. The chosen B Peek direction now has editable SVG source and real-size PNG/ICNS/ICO exports in ../sidenib/. Native menu-bar template integration remains part of the repository/app identity task.",
+    "previous_board": "concepts-v1.png",
+    "selected_deliverables": {
+      "brand_direction": "../../brand-direction.md",
+      "vector_app_icon": "../sidenib/app-icon.svg",
+      "menu_mark": "../sidenib/mark.svg",
+      "menu_mark_light": "../sidenib/mark-light.svg",
+      "preview": "../sidenib/preview.png",
+      "exports": "../sidenib/exports/",
+      "export_script": "../sidenib/export-icons.py",
+      "generation": "Editable SVG geometry redrawn from selected concept; exports rendered with pinned resvg CLI."
+    }
+  },
+  "next_step": "ADIEN-160 can consume the confirmed Sidenib + Peek identity and exported assets. ADIEN-159 uses the same identity for the compact app design contract.",
+  "identity": {
+    "display_name": "Sidenib",
+    "pronunciation": "side-nib",
+    "repo_slug": "sidenib",
+    "name_confirmed": true,
+    "user_selection": "sidenib is funny i like that",
+    "icon_status": "confirmed",
+    "icon_selection": "yes the peek.",
+    "icon_direction": "B \u2014 Peek"
+  },
+  "exploration_recommendation": {
+    "name": "Furlin",
+    "pronunciation": "fur-lin",
+    "icon": "C \u2014 Curl",
+    "reason": "Suggests the panel unfurling from the edge; a soft paper curl gives it an original stationery identity."
+  },
+  "validation": {
+    "app_png_sizes": [
+      16,
+      18,
+      20,
+      24,
+      32,
+      48,
+      64,
+      128,
+      256,
+      512,
+      1024
+    ],
+    "monochrome_png_sizes": [
+      16,
+      18,
+      32,
+      36
+    ],
+    "native_containers": [
+      "ICNS generated with macOS iconutil",
+      "ICO with 7 embedded PNG sizes"
+    ],
+    "visual_review": "Inspected light/dark actual-size previews and 512px app icon. Confirmed rounded paper, right-side gold tab, thin curved ink edge, and readable monochrome silhouettes.",
+    "native_integration": "Not changed; task ADIEN-160 consumes the assets and verifies native template rendering."
+  }
+}
