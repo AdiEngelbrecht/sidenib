@@ -1,6 +1,13 @@
 /*
- * Calendar view styles. Scoped to .sn-cal and .sn-day; tokens only.
- * Extracted in ADIEN-162 at a usable level. ADIEN-163 owns this file.
+ * Calendar view styles (ADIEN-163). Scoped to .sn-cal and .sn-day; tokens
+ * only. Shared primitives (header, groups, rows, quick add) are not restyled.
+ *
+ * Every state has a cue that is not colour:
+ *   today      filled disc, bold number
+ *   selected   1.5 px ring, semibold number
+ *   outside    smaller number
+ *   scheduled  dot under the number; a bar when something is overdue, a
+ *              hollow dot when everything on the day is done
  */
 
 .sn-cal {
@@ -9,20 +16,20 @@
 }
 
 .sn-cal-weekdays,
-.sn-cal-grid {
+.sn-cal-week {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   justify-items: center;
 }
 
 .sn-cal-weekdays {
+  align-items: start;
   height: 20px;
   color: var(--sn-ink-secondary);
   font: var(--sn-text-micro);
 }
 
 .sn-day {
-  position: relative;
   display: grid;
   place-items: center;
   width: 100%;
@@ -38,46 +45,85 @@
   cursor: pointer;
 }
 
-.sn-day > span {
+.sn-day-number {
+  position: relative;
   display: grid;
   place-items: center;
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  transition: background-color var(--sn-motion-quick) linear;
+  transition:
+    background-color var(--sn-motion-quick) linear,
+    box-shadow var(--sn-motion-quick) linear;
 }
 
-.sn-day:hover > span {
+.sn-day:hover > .sn-day-number {
   background: var(--sn-surface-hover);
+}
+
+.sn-day:active > .sn-day-number {
+  transform: scale(0.94);
+}
+
+/* The focus ring follows the disc, not the wide cell. */
+.sn-panel .sn-day:focus-visible {
+  outline: none;
+}
+
+.sn-day:focus-visible > .sn-day-number {
+  outline: 2px solid var(--sn-focus);
+  outline-offset: 2px;
 }
 
 .sn-day.is-outside {
   color: var(--sn-ink-tertiary);
+  font-size: 12px;
 }
 
-.sn-day.is-selected > span {
+.sn-day.is-selected > .sn-day-number {
+  font-weight: 600;
   box-shadow: inset 0 0 0 1.5px var(--sn-ink);
 }
 
-.sn-day.is-today > span {
+.sn-day.is-today > .sn-day-number {
   color: var(--sn-accent-ink);
   font-weight: 700;
   background: var(--sn-accent);
 }
 
-/* A day with entries: a 3 px dot under the number, red when one is overdue. */
-.sn-day.has-items::after {
-  content: '';
+.sn-day-mark {
   position: absolute;
-  bottom: -1px;
-  width: 3px;
-  height: 3px;
-  border-radius: 50%;
+  bottom: 2px;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  border-radius: var(--sn-radius-pill);
   background: var(--sn-accent-text);
+  transform: translateX(-50%);
 }
 
-.sn-day.has-overdue::after {
+.sn-day-mark.is-done {
+  width: 5px;
+  height: 5px;
+  bottom: 1.5px;
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--sn-ink-secondary);
+}
+
+.sn-day-mark.is-overdue {
+  width: 10px;
+  height: 3px;
   background: var(--sn-danger);
+}
+
+/* On the gold disc the mark is ink, whatever the theme. */
+.sn-day.is-today .sn-day-mark.is-open,
+.sn-day.is-today .sn-day-mark.is-overdue {
+  background: var(--sn-accent-ink);
+}
+
+.sn-day.is-today .sn-day-mark.is-done {
+  box-shadow: inset 0 0 0 1px var(--sn-accent-ink);
 }
 
 .sn-cal-divider {
