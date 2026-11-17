@@ -92,8 +92,29 @@ do this; the test tool did.
 
 The test profile was removed afterwards and the Sidenib web view data and
 `~/Library/LaunchAgents/Sidenib.plist` that were there before were put back
-unchanged. That login item predates this pass and points at a build in
-another working folder.
+unchanged. That login item predated this pass and pointed at a build in
+another working folder; the installation below replaced it.
+
+### Installed copy, 2026-11-17 (coordinator)
+
+After the pass above, the project coordinator copied the same build (source
+commit `cd35077`) to `/Applications/Sidenib.app` with `ditto`. This was a
+direct copy of the `.app`, not a drag-install from the `.dmg`.
+
+- `codesign --verify --deep --strict /Applications/Sidenib.app` passes, and
+  the installed executable has the same SHA-256 as the built one
+  (`e05d72d9…c823ec7279`).
+- The app runs from `/Applications`. Through the accessibility API the
+  coordinator found the collapsed "Open Sidenib" control, pressed it, and saw
+  the Today card with its tasks and the Today, Calendar and Lists tabs.
+- `~/Library/LaunchAgents/Sidenib.plist` now points at
+  `/Applications/Sidenib.app/Contents/MacOS/sidenib`, replacing the entry that
+  pointed at a build folder.
+- `/Applications/Todobar.app` was not touched; its executable is
+  byte-identical to before.
+
+The checksum, signature, running process and login item were read back
+independently afterwards. The interaction itself was the coordinator's.
 
 ## Identity pass, 2026-11-16
 
