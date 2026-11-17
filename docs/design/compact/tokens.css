@@ -1,0 +1,162 @@
+/*
+ * Sidenib compact design tokens (ADIEN-159).
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Source of truth for the compact shell. Production code copies this file to
+ * src/design/tokens.css unchanged; change values here first, then re-copy.
+ * Every token is prefixed --sn- so it cannot collide with the v0.1.14
+ * baseline variables in src/App.css while both exist.
+ *
+ * Theme selection: [data-theme='light' | 'dark'] on the root element wins;
+ * without it the system appearance decides.
+ */
+
+:root {
+  color-scheme: light dark;
+
+  /* Type: platform system font only. No bundled web font. */
+  --sn-font: -apple-system, BlinkMacSystemFont, 'Segoe UI Variable Text',
+    'Segoe UI', system-ui, sans-serif;
+  --sn-text-title: 700 22px/26px var(--sn-font); /* view title */
+  --sn-text-headline: 600 15px/20px var(--sn-font); /* section, list name */
+  --sn-text-body: 400 14px/19px var(--sn-font); /* task title, row label */
+  --sn-text-caption: 400 12px/16px var(--sn-font); /* meta, due time */
+  --sn-text-micro: 600 11px/14px var(--sn-font); /* weekday, badge, tab label */
+  --sn-tracking-title: -0.01em;
+
+  /* Space: 4 px grid. */
+  --sn-space-1: 4px;
+  --sn-space-2: 8px;
+  --sn-space-3: 12px;
+  --sn-space-4: 16px;
+  --sn-space-5: 20px;
+
+  /* Radius. */
+  --sn-radius-card: 24px; /* open card */
+  --sn-radius-toast: 16px; /* reminder toast */
+  --sn-radius-group: 12px; /* grouped rows */
+  --sn-radius-control: 10px; /* fields, segmented track, buttons */
+  --sn-radius-notch: 6px; /* inner corners of the notch */
+  --sn-radius-pill: 999px;
+
+  /* Geometry, logical pixels. Mirrors geometry.js. */
+  --sn-notch-width: 12px;
+  --sn-notch-width-hover: 14px;
+  --sn-notch-width-open: 6px;
+  --sn-notch-height: 48px;
+  --sn-notch-hit-width: 28px;
+  --sn-notch-hit-height: 72px;
+  --sn-card-width: 340px;
+  --sn-card-height: 480px;
+  --sn-card-min-height: 320px;
+  --sn-edge-clearance: 10px;
+  --sn-row-min-height: 44px;
+  --sn-control-height: 36px;
+  --sn-icon-button: 28px;
+
+  /* Icons: lucide-react, already a dependency. */
+  --sn-icon-size: 16px;
+  --sn-icon-stroke: 1.75;
+
+  /* Motion. */
+  --sn-motion-reveal: 220ms;
+  --sn-motion-dismiss: 180ms;
+  --sn-motion-quick: 120ms;
+  --sn-ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --sn-ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --sn-reveal-offset: 16px;
+  --sn-reveal-scale: 0.96;
+
+  /* Light colour. Brand anchors: paper #FFF8E8, gold #F6C445, ink #282722. */
+  --sn-surface: #f6f2e9; /* card */
+  --sn-surface-raised: #fffdf7; /* grouped rows, toast */
+  --sn-surface-sunken: #ebe6da; /* fields, segmented track */
+  --sn-surface-hover: rgba(40, 39, 34, 0.05);
+  --sn-ink: #282722;
+  --sn-ink-secondary: #666154;
+  --sn-ink-tertiary: #8b8576; /* placeholders, disabled, decorative icons */
+  --sn-separator: rgba(40, 39, 34, 0.1);
+  --sn-border: rgba(40, 39, 34, 0.14);
+  --sn-accent: #f6c445; /* fills only: today, checked, badge, active notch */
+  --sn-accent-ink: #282722; /* text and icons on gold */
+  --sn-accent-text: #805a00; /* gold used as text or icon on paper */
+  --sn-danger: #a8391f; /* overdue, destructive */
+  --sn-focus: #805a00;
+  --sn-notch: rgba(40, 39, 34, 0.42);
+  --sn-notch-active: #f6c445;
+  --sn-shadow-card: 0 1px 0 rgba(255, 255, 255, 0.6) inset,
+    0 0 0 0.5px rgba(40, 39, 34, 0.16), 0 14px 36px rgba(60, 48, 20, 0.2),
+    0 2px 6px rgba(60, 48, 20, 0.1);
+  --sn-shadow-toast: 0 0 0 0.5px rgba(40, 39, 34, 0.16),
+    0 8px 22px rgba(60, 48, 20, 0.18);
+}
+
+:root[data-theme='dark'] {
+  --sn-surface: #1f1e1b;
+  --sn-surface-raised: #2b2a26;
+  --sn-surface-sunken: #161513;
+  --sn-surface-hover: rgba(244, 239, 226, 0.07);
+  --sn-ink: #f4efe2;
+  --sn-ink-secondary: #aca698;
+  --sn-ink-tertiary: #7f7a6d;
+  --sn-separator: rgba(244, 239, 226, 0.1);
+  --sn-border: rgba(244, 239, 226, 0.16);
+  --sn-accent: #f6c445;
+  --sn-accent-ink: #282722;
+  --sn-accent-text: #f6c445;
+  --sn-danger: #f0907a;
+  --sn-focus: #f6c445;
+  --sn-notch: rgba(244, 239, 226, 0.5);
+  --sn-notch-active: #f6c445;
+  --sn-shadow-card: 0 1px 0 rgba(255, 255, 255, 0.06) inset,
+    0 0 0 0.5px rgba(0, 0, 0, 0.7), 0 14px 36px rgba(0, 0, 0, 0.5),
+    0 2px 6px rgba(0, 0, 0, 0.3);
+  --sn-shadow-toast: 0 0 0 0.5px rgba(0, 0, 0, 0.7),
+    0 8px 22px rgba(0, 0, 0, 0.45);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --sn-surface: #1f1e1b;
+    --sn-surface-raised: #2b2a26;
+    --sn-surface-sunken: #161513;
+    --sn-surface-hover: rgba(244, 239, 226, 0.07);
+    --sn-ink: #f4efe2;
+    --sn-ink-secondary: #aca698;
+    --sn-ink-tertiary: #7f7a6d;
+    --sn-separator: rgba(244, 239, 226, 0.1);
+    --sn-border: rgba(244, 239, 226, 0.16);
+    --sn-accent: #f6c445;
+    --sn-accent-ink: #282722;
+    --sn-accent-text: #f6c445;
+    --sn-danger: #f0907a;
+    --sn-focus: #f6c445;
+    --sn-notch: rgba(244, 239, 226, 0.5);
+    --sn-notch-active: #f6c445;
+    --sn-shadow-card: 0 1px 0 rgba(255, 255, 255, 0.06) inset,
+      0 0 0 0.5px rgba(0, 0, 0, 0.7), 0 14px 36px rgba(0, 0, 0, 0.5),
+      0 2px 6px rgba(0, 0, 0, 0.3);
+    --sn-shadow-toast: 0 0 0 0.5px rgba(0, 0, 0, 0.7),
+      0 8px 22px rgba(0, 0, 0, 0.45);
+  }
+}
+
+/*
+ * Reduced motion: no travel and no scale. State changes become a short
+ * opacity fade. Components read these same tokens, so nothing else changes.
+ */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --sn-motion-reveal: 120ms;
+    --sn-motion-dismiss: 120ms;
+    --sn-reveal-offset: 0px;
+    --sn-reveal-scale: 1;
+  }
+}
+
+:root[data-motion='reduced'] {
+  --sn-motion-reveal: 120ms;
+  --sn-motion-dismiss: 120ms;
+  --sn-reveal-offset: 0px;
+  --sn-reveal-scale: 1;
+}

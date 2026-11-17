@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sidenib compact prototype</title>
+    <!-- SPDX-License-Identifier: Apache-2.0 -->
+    <!-- Static review prototype for ADIEN-159. Not production code. -->
+    <link rel="stylesheet" href="tokens.css" />
+    <link rel="stylesheet" href="prototype.css" />
+  </head>
+  <body>
+    <header class="proto-bar" aria-label="Prototype controls">
+      <strong>Sidenib compact prototype</strong>
+      <div class="proto-group" data-control="stage">
+        <span>Display</span>
+        <button type="button" data-value="laptop">Laptop 1440×900</button>
+        <button type="button" data-value="short">Short 1280×600</button>
+        <button type="button" data-value="tiny">Tiny 1024×445</button>
+      </div>
+      <div class="proto-group" data-control="theme">
+        <span>Theme</span>
+        <button type="button" data-value="light">Light</button>
+        <button type="button" data-value="dark">Dark</button>
+      </div>
+      <div class="proto-group" data-control="data">
+        <span>Tasks</span>
+        <button type="button" data-value="populated">Populated</button>
+        <button type="button" data-value="empty">Empty</button>
+        <button type="button" data-value="long">Long</button>
+        <button type="button" data-value="overdue">Overdue</button>
+        <button type="button" data-value="completed">Completed</button>
+      </div>
+      <div class="proto-group">
+        <span>More</span>
+        <button type="button" data-toggle="toast">Reminder</button>
+        <button type="button" data-toggle="edgeLeft">Left edge</button>
+        <button type="button" data-toggle="reduced">Reduced motion</button>
+        <button type="button" data-toggle="annotate">Annotate</button>
+      </div>
+      <span class="proto-hint">
+        Click or pull the notch inward. Alt+T toggles, Esc closes.
+      </span>
+    </header>
+    <div class="proto-stage-wrap" id="wrap">
+      <div class="proto-stage" id="stage"></div>
+    </div>
+    <script src="geometry.js"></script>
+    <script src="prototype.js"></script>
+  </body>
+</html>
