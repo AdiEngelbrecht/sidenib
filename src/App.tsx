@@ -18,6 +18,7 @@ import { ViewTabs } from './components/ViewTabs'
 import { useTaskStore } from './data/taskStore'
 import { useGmailConnector } from './gmail'
 import type { GmailThreadSuggestion } from './gmail'
+import { ReminderBanner } from './reminders/ReminderBanner'
 import { ReminderToast } from './reminders/ReminderToast'
 import { snoozedReminderValue } from './reminders/reminderTime'
 import { useReminders } from './reminders/useReminders'
@@ -181,7 +182,18 @@ function App() {
     navigate({ view: 'today' })
   }
 
-  const chrome = useMemo(
+  const dismissReminder = (alert: ReminderAlert) => reminders.dismiss(alert.id)
+  const reminderBanner =
+    controller.card.isOpen && reminders.alerts.length > 0 ? (
+      <ReminderBanner
+        items={reminders.alerts}
+        onOpen={openReminder}
+        onSnooze={snoozeReminder}
+        onDismiss={dismissReminder}
+      />
+    ) : null
+
+  const baseChrome = useMemo(
     (): PanelChrome => ({
       tabs: settings.sectionOrder,
       activeTab: isSettingsOpen ? null : view,
@@ -198,6 +210,7 @@ function App() {
       view,
     ],
   )
+  const chrome: PanelChrome = { ...baseChrome, banner: reminderBanner }
 
   // Advanced preferences reach the views only as token overrides on the
   // shell root; components keep reading tokens and never read settings.
@@ -266,15 +279,12 @@ function App() {
       <ReminderToast
         items={reminders.alerts}
         placement={
-          controller.toast.isBeside
-            ? 'beside'
-            : controller.card.isOpen
-              ? 'inside'
-              : 'hidden'
+          // With the card open the reminder is the banner inside the view.
+          controller.toast.isBeside ? 'beside' : 'hidden'
         }
         onOpen={openReminder}
         onSnooze={snoozeReminder}
-        onDismiss={(alert) => reminders.dismiss(alert.id)}
+        onDismiss={dismissReminder}
       />
 
       <PanelCard

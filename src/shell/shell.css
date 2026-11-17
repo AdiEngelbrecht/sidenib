@@ -233,8 +233,7 @@
     visibility 0s linear var(--sn-motion-dismiss);
 }
 
-.sn-toast.is-beside,
-.sn-toast.is-inside {
+.sn-toast.is-beside {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
@@ -243,13 +242,6 @@
     opacity var(--sn-motion-reveal) var(--sn-ease-out),
     transform var(--sn-motion-reveal) var(--sn-ease-out),
     visibility 0s;
-}
-
-/* With the card open the toast sits inside the card's own bounds. */
-.sn-toast.is-inside {
-  top: calc(var(--sn-card-y) + var(--sn-edge-clearance));
-  left: calc(var(--sn-card-x) + var(--sn-edge-clearance));
-  width: calc(var(--sn-card-w) - 2 * var(--sn-edge-clearance));
 }
 
 .sn-toast:empty {
@@ -372,8 +364,7 @@
 
   .sn-card.is-open,
   .sn-card.is-pulling,
-  .sn-toast.is-beside,
-  .sn-toast.is-inside {
+  .sn-toast.is-beside {
     transition-delay: 0s, 0s !important;
   }
 

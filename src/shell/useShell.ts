@@ -548,6 +548,8 @@ export function useShell(options: {
 
   // ---- notch gesture ------------------------------------------------------
 
+  const lastPointerEnd = useRef(-Infinity)
+
   const endNotchGesture = useCallback(() => {
     gesture.current = null
     gestureStart.current = null
@@ -626,6 +628,8 @@ export function useShell(options: {
         return
       }
 
+      lastPointerEnd.current = performance.now()
+
       try {
         event.currentTarget.releasePointerCapture(event.pointerId)
       } catch {
@@ -673,7 +677,17 @@ export function useShell(options: {
     (event: ReactPointerEvent<HTMLButtonElement>) => finishPointer(event, true),
     [finishPointer],
   )
-  const onKeyboardActivate = useCallback(() => toggle('shortcut'), [toggle])
+  // Enter or Space on the notch arrives as a click with no pointer press. Some
+  // input sources (assistive and automation tools) also report a pointer
+  // click that way; the gesture has already handled those, so a click that
+  // lands right after a pointer release is not a second activation.
+  const onKeyboardActivate = useCallback(() => {
+    if (performance.now() - lastPointerEnd.current < 400) {
+      return
+    }
+
+    toggle('shortcut')
+  }, [toggle])
 
   // ---- what the components draw -------------------------------------------
 

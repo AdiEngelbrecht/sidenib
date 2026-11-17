@@ -10,6 +10,7 @@ import {
 import { useLayoutEffect, useRef, useState } from 'react'
 import { PRIORITY_LABELS } from '../data/taskStore'
 import { formatReminder } from '../reminders/reminderTime'
+import { taskNote } from '../tasks'
 import type { Task } from '../tasks'
 import { IconButton } from './IconButton'
 import { ConfirmDelete, MenuItem, Popover } from './Popover'
@@ -21,6 +22,8 @@ export interface TaskRowProps {
   overdue?: boolean
   /** Extra words for the secondary line, e.g. the list name in the Calendar. */
   detail?: string
+  /** The list the task is in, so a stored note that only names it is hidden. */
+  listTitle?: string
   /** The clock used to word the reminder ("Yesterday 16:00"). */
   now?: number
   onToggleDone(): void
@@ -45,6 +48,7 @@ export function TaskRow({
   task,
   overdue = false,
   detail,
+  listTitle,
   now,
   onToggleDone,
   onRename,
@@ -61,7 +65,10 @@ export function TaskRow({
   const reminderLabel = formatReminder(task.reminderAt, now)
   const isEvent = task.kind === 'event'
   const gmailUrl = task.source?.type === 'gmail' ? task.source.url : undefined
-  const hasMeta = Boolean(reminderLabel || detail || isEvent || gmailUrl)
+  const note = taskNote(task, listTitle)
+  const hasMeta = Boolean(
+    reminderLabel || detail || note || isEvent || gmailUrl,
+  )
 
   useLayoutEffect(() => {
     const field = editRef.current
@@ -157,6 +164,7 @@ export function TaskRow({
               </span>
             ) : null}
             {isEvent ? <span className="sn-pill task-kind-pill">Event</span> : null}
+            {note ? <span className="sn-row-detail sn-row-note">{note}</span> : null}
             {detail ? <span className="sn-row-detail">{detail}</span> : null}
             {gmailUrl ? (
               <a href={gmailUrl} rel="noreferrer" target="_blank">

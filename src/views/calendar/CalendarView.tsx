@@ -407,6 +407,7 @@ export function CalendarView({
               now={now}
               overdue={isOverdue(task, now)}
               detail={task.kind === 'event' ? undefined : listTitle}
+              listTitle={listTitle}
               onToggleDone={() => store.toggleTask(ref, task.id)}
               onRename={(title) => store.renameTask(ref, task.id, title)}
               onSetReminder={(reminderAt) =>

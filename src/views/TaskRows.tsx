@@ -19,11 +19,17 @@ export function TaskRows({
   tasks: Task[]
   now: number
 }) {
+  const listTitle =
+    taskRef.source === 'custom'
+      ? store.customLists.find((list) => list.id === taskRef.listId)?.title
+      : undefined
+
   return tasks.map((task) => (
     <TaskRow
       key={task.id}
       task={task}
       now={now}
+      listTitle={listTitle}
       overdue={isOverdue(task, now)}
       onToggleDone={() => store.toggleTask(taskRef, task.id)}
       onRename={(title) => store.renameTask(taskRef, task.id, title)}

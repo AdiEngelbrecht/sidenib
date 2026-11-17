@@ -130,4 +130,11 @@
   height: 0.5px;
   margin: var(--sn-space-2) var(--sn-space-1) 0;
   background: var(--sn-separator);
+  transition: margin var(--sn-motion-quick) linear;
+}
+
+/* Once the agenda has scrolled, the line under the grid runs edge to edge:
+   the boundary the entries pass under is here, not under the header. */
+.sn-view-fixed.is-scrolled .sn-cal-divider {
+  margin-inline: calc(-1 * var(--sn-space-3));
 }

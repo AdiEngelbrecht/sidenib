@@ -8,8 +8,9 @@ export interface ReminderToastItem {
 
 /**
  * The compact reminder toast. Beside the closed notch it shows the newest
- * reminder and how many more are waiting; with the card open the same toast
- * sits inside the card. It never opens the card and never takes focus.
+ * reminder and how many more are waiting. With the card open the reminder is
+ * the ReminderBanner inside the view instead. It never opens the card by
+ * itself and never takes focus.
  */
 export function ReminderToast<Item extends ReminderToastItem>({
   items,
@@ -20,7 +21,7 @@ export function ReminderToast<Item extends ReminderToastItem>({
 }: {
   /** Newest first; the toast shows items[0]. */
   items: Item[]
-  placement: 'beside' | 'inside' | 'hidden'
+  placement: 'beside' | 'hidden'
   onOpen(item: Item): void
   onSnooze(item: Item): void
   onDismiss(item: Item): void

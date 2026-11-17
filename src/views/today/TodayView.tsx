@@ -25,7 +25,8 @@ const SHORTCUT = isMac ? '⌥⇧S' : 'Alt+Shift+S'
 
 /**
  * Today: overdue first, then the open tasks, then one group per list pinned
- * to Today, then a Completed disclosure.
+ * to Today (each can be folded; the fold is stored with the list), then a
+ * Completed disclosure.
  */
 export function TodayView({
   store,
@@ -105,8 +106,20 @@ export function TodayView({
               ? sorted
               : sorted.filter((task) => !task.done)
 
+            const openInList = list.tasks.filter((task) => !task.done).length
+
             return (
-              <Group key={list.id} label={list.title}>
+              <Group
+                key={list.id}
+                // Folded, the label carries what is hidden.
+                label={
+                  list.collapsed ? `${list.title} · ${openInList}` : list.title
+                }
+                collapsible={{
+                  open: !list.collapsed,
+                  onToggle: () => store.toggleListCollapsed(list.id),
+                }}
+              >
                 {visible.length > 0 ? (
                   <TaskRows
                     store={store}

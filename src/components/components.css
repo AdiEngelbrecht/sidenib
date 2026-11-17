@@ -203,6 +203,105 @@ input.sn-title-edit {
   scrollbar-color: var(--sn-border) transparent;
 }
 
+/* The fixed area (the calendar grid). Views style what is inside it. */
+.sn-view-fixed {
+  flex: none;
+}
+
+/* ---- Reminder banner ---------------------------------------------------- */
+
+/* A due reminder while the card is open. It sits above the scrolling body,
+   so the body keeps its scroll position. Gold fill, ink text in both themes. */
+.sn-banner {
+  flex: none;
+  padding: var(--sn-space-1) var(--sn-space-3);
+  animation: sn-banner-in var(--sn-motion-reveal) var(--sn-ease-out);
+}
+
+@keyframes sn-banner-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+.sn-banner-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 2px;
+  min-height: 52px;
+  padding: 0 var(--sn-space-1) 0 var(--sn-space-3);
+  color: var(--sn-accent-ink);
+  border-radius: var(--sn-radius-group);
+  background: var(--sn-accent);
+}
+
+.sn-banner-item button {
+  margin: 0;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  background: transparent;
+  cursor: pointer;
+}
+
+.sn-banner-item button:focus-visible {
+  outline: 2px solid var(--sn-accent-ink);
+  outline-offset: -2px;
+}
+
+.sn-banner-main {
+  min-width: 0;
+  display: grid;
+  padding: var(--sn-space-2) 0;
+  text-align: left;
+  border-radius: var(--sn-radius-control);
+}
+
+.sn-banner-main strong,
+.sn-banner-main span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sn-banner-main strong {
+  font: var(--sn-text-body);
+  font-weight: 600;
+}
+
+.sn-banner-main span {
+  font: var(--sn-text-caption);
+}
+
+.sn-banner-action {
+  height: var(--sn-icon-button);
+  padding: 0 var(--sn-space-2);
+  font: var(--sn-text-micro) !important;
+  font-size: 12px !important;
+  white-space: nowrap;
+  border-radius: var(--sn-radius-control);
+  transition: background-color var(--sn-motion-quick) linear;
+}
+
+.sn-banner-action.is-icon {
+  width: var(--sn-icon-button);
+  display: grid;
+  place-items: center;
+  padding: 0;
+}
+
+.sn-banner-action:hover {
+  background: color-mix(in srgb, var(--sn-accent-ink) 10%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sn-banner {
+    animation: none;
+  }
+}
+
 /* ---- Buttons ----------------------------------------------------------- */
 
 .sn-icon-button,

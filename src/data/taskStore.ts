@@ -8,7 +8,6 @@
  * localStorage themselves.
  */
 import { useEffect, useMemo, useState } from 'react'
-import { formatCalendarDay } from '../calendar/dates'
 import type { GmailThreadSuggestion } from '../gmail'
 import { scheduleLocalStorageWrite } from '../storage'
 import { initialToday, monthPlan } from '../tasks'
@@ -42,7 +41,7 @@ export type CustomTaskList = {
   id: string
   title: string
   tasks: Task[]
-  /** Kept from v0.1.14 storage; the compact Lists view does not use it. */
+  /** Folds the list's group on Today. Same stored flag as v0.1.14. */
   collapsed?: boolean
   showOnToday?: boolean
 }
@@ -78,6 +77,7 @@ export interface TaskStore {
   /** Returns the new list's id, or null for an empty title. */
   addList(title: string): string | null
   renameList(listId: string, title: string): void
+  toggleListCollapsed(listId: string): void
   deleteList(listId: string): void
   toggleListOnToday(listId: string): void
 }
@@ -141,11 +141,16 @@ function nextTaskId() {
   return lastTaskId
 }
 
-function createTask(title: string, meta: string, reminderAt?: string): Task {
+/**
+ * v0.1.14 wrote where a task lives into `meta` ("Today", the list name). The
+ * views say that themselves, so a new task starts with no note; stored notes
+ * are kept and shown through `taskNote`.
+ */
+function createTask(title: string, reminderAt?: string): Task {
   return {
     id: nextTaskId(),
     title,
-    meta,
+    meta: '',
     priority: 'normal',
     reminderAt: reminderAt || undefined,
   }
@@ -243,7 +248,7 @@ export function useTaskStore(): TaskStore {
                 ? {
                     ...list,
                     tasks: [
-                      createTask(trimmed, list.title, reminderAt),
+                      createTask(trimmed, reminderAt),
                       ...list.tasks,
                     ],
                   }
@@ -254,17 +259,14 @@ export function useTaskStore(): TaskStore {
         }
 
         updateTasks(ref, (tasks) => [
-          createTask(
-            trimmed,
-            ref.source === 'today' ? 'Today' : 'Calendar',
-            reminderAt,
-          ),
+          createTask(trimmed, reminderAt),
           ...tasks,
         ])
       },
       addCalendarEntry(
         title: string,
-        date: Date,
+        // The day is carried by reminderAt; kept for the callers' signature.
+        _date: Date,
         reminderAt: string,
         kind: CalendarEntryMode,
       ) {
@@ -281,7 +283,7 @@ export function useTaskStore(): TaskStore {
             id: nextTaskId(),
             title: trimmed,
             kind,
-            meta: `${formatCalendarDay(date)} · ${isEvent ? 'Event' : 'Calendar'}`,
+            meta: '',
             priority: isEvent ? 'focus' : 'normal',
             reminderAt,
           },
@@ -358,6 +360,13 @@ export function useTaskStore(): TaskStore {
       },
       deleteList(listId: string) {
         setCustomLists((lists) => lists.filter((list) => list.id !== listId))
+      },
+      toggleListCollapsed(listId: string) {
+        setCustomLists((lists) =>
+          lists.map((list) =>
+            list.id === listId ? { ...list, collapsed: !list.collapsed } : list,
+          ),
+        )
       },
       toggleListOnToday(listId: string) {
         setCustomLists((lists) =>

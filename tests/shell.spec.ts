@@ -534,6 +534,29 @@ test.describe('shell in the browser', () => {
     await expect(card(page)).toHaveClass(/is-open/)
   })
 
+  test('a pointer click reported without a click count toggles once', async ({
+    page,
+  }) => {
+    await page.goto('/')
+
+    // Some input sources send the click that follows a pointer press with
+    // detail 0, which is otherwise how Enter and Space arrive.
+    const clickWithoutCount = () =>
+      notch(page).evaluate((element) => {
+        element.dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 0 }))
+      })
+
+    await notch(page).click()
+    await clickWithoutCount()
+    await expect(card(page)).toHaveClass(/is-open/)
+    await page.waitForTimeout(500)
+    await expect(card(page)).toHaveClass(/is-open/)
+
+    // On its own it is still a keyboard activation.
+    await clickWithoutCount()
+    await expect(card(page)).not.toHaveClass(/is-open/)
+  })
+
   test('a 24 px pull springs back and a 60 px pull opens', async ({ page }) => {
     await page.goto('/')
     await dragFromNotch(page, -24, 2)

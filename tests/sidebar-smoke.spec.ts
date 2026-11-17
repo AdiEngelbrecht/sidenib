@@ -733,3 +733,291 @@ test('Gmail connector UI stays hidden while the feature is held back', async ({
     )
     .toBe(false)
 })
+
+test('a reminder due while the card is open is a banner in the view body', async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    if (window.sessionStorage.getItem('seeded')) {
+      return
+    }
+
+    window.sessionStorage.setItem('seeded', '1')
+    window.localStorage.setItem('sidenib.notified-reminders.v1', '{}')
+    window.localStorage.setItem(
+      'sidenib.today.v1',
+      JSON.stringify([
+        {
+          id: 99100,
+          meta: 'Today',
+          priority: 'normal',
+          reminderAt: '2020-01-01T09:00',
+          title: 'Banner reminder',
+        },
+        ...Array.from({ length: 16 }, (_, index) => ({
+          id: 99101 + index,
+          meta: 'Today',
+          priority: 'normal',
+          title: `Filler ${index + 1}`,
+        })),
+      ]),
+    )
+  })
+  await page.goto('/?open=1')
+
+  const banner = page.locator('.sn-view .sn-banner')
+  const body = page.locator('.sn-view-body')
+
+  // In the view, between the header and the scrolling body; the toast that
+  // belongs to the closed notch stays away and the view does not change.
+  await expect(banner.getByRole('status')).toContainText('Banner reminder')
+  await expect(page.locator('.sn-toast')).toBeHidden()
+  await expect(page.getByRole('tab', { name: 'Today' })).toHaveAttribute(
+    'aria-selected',
+    'true',
+  )
+
+  // Measured once the card's reveal and the banner's entrance have finished.
+  await page.evaluate(() =>
+    Promise.all(document.getAnimations().map((animation) => animation.finished)),
+  )
+
+  const [headerBox, bannerBox, bodyBox, cardBox] = await Promise.all([
+    page.locator('.sn-header').boundingBox(),
+    banner.boundingBox(),
+    body.boundingBox(),
+    page.locator('.sn-card').boundingBox(),
+  ])
+
+  expect(bannerBox!.y).toBeGreaterThanOrEqual(headerBox!.y + headerBox!.height - 0.5)
+  expect(bannerBox!.y + bannerBox!.height).toBeLessThanOrEqual(bodyBox!.y + 0.5)
+  expect(bannerBox!.x).toBeGreaterThanOrEqual(cardBox!.x)
+  expect(bannerBox!.x + bannerBox!.width).toBeLessThanOrEqual(
+    cardBox!.x + cardBox!.width,
+  )
+  // It never takes focus.
+  expect(
+    await page.evaluate(() =>
+      Boolean(document.activeElement?.closest('.sn-banner')),
+    ),
+  ).toBe(false)
+
+  // Dismiss removes it and leaves the task and its reminder alone.
+  await banner
+    .getByRole('button', { name: 'Dismiss reminder Banner reminder' })
+    .click()
+  await expect(banner).toHaveCount(0)
+  await expect(taskRow(page, 'Banner reminder')).toHaveClass(/is-overdue/)
+
+  // A banner that arrives while the body is scrolled does not move it.
+  await body.evaluate((element) => {
+    element.scrollTop = 200
+  })
+  await page.evaluate(() => {
+    window.localStorage.setItem('sidenib.notified-reminders.v1', '{}')
+  })
+  await page.reload()
+  await expect(banner).toBeVisible()
+  await banner
+    .getByRole('button', { name: 'Open reminder Banner reminder' })
+    .click()
+  await expect(page.getByRole('tab', { name: 'Calendar' })).toHaveAttribute(
+    'aria-selected',
+    'true',
+  )
+  await expect(banner).toHaveCount(0)
+})
+
+test('a pinned list folds on Today and the stored flag is kept', async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    if (window.sessionStorage.getItem('seeded')) {
+      return
+    }
+
+    window.sessionStorage.setItem('seeded', '1')
+    window.localStorage.setItem('sidenib.today.v1', '[]')
+    window.localStorage.setItem(
+      'sidenib.custom-lists.v1',
+      JSON.stringify([
+        {
+          id: 'groceries',
+          title: 'Groceries',
+          collapsed: true,
+          showOnToday: true,
+          tasks: [
+            { id: 1, title: 'Oat milk', meta: 'Groceries', priority: 'normal' },
+            {
+              id: 2,
+              title: 'Old receipt',
+              meta: 'Groceries',
+              priority: 'normal',
+              done: true,
+            },
+          ],
+        },
+      ]),
+    )
+  })
+  await page.goto('/?open=1')
+
+  // The v0.1.14 flag is honoured: folded, with the open count on the label.
+  const folded = page.getByRole('button', { name: 'Groceries · 1' })
+
+  await expect(folded).toHaveAttribute('aria-expanded', 'false')
+  await expect(taskRow(page, 'Oat milk')).toHaveCount(0)
+
+  await folded.click()
+
+  const unfolded = page.getByRole('button', { name: 'Groceries', exact: true })
+
+  await expect(unfolded).toHaveAttribute('aria-expanded', 'true')
+  await expect(taskRow(page, 'Oat milk')).toBeVisible()
+
+  const stored = () =>
+    page.evaluate(
+      () =>
+        JSON.parse(
+          window.localStorage.getItem('sidenib.custom-lists.v1') ?? '[]',
+        )[0] as { collapsed: boolean; showOnToday: boolean; tasks: unknown[] },
+    )
+
+  await expect.poll(async () => (await stored()).collapsed).toBe(false)
+
+  // Folding again survives a restart, and nothing else in the list changed.
+  await unfolded.click()
+  await expect.poll(async () => (await stored()).collapsed).toBe(true)
+  await page.reload()
+  await expect(
+    page.getByRole('button', { name: 'Groceries · 1' }),
+  ).toHaveAttribute('aria-expanded', 'false')
+  expect(await stored()).toMatchObject({ showOnToday: true })
+  expect((await stored()).tasks).toHaveLength(2)
+})
+
+test('a stored task note is shown without the labels the view already gives', async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    window.localStorage.setItem('sidenib.notified-reminders.v1', '{}')
+    window.localStorage.setItem(
+      'sidenib.today.v1',
+      JSON.stringify([
+        { id: 1, title: 'Design shell', meta: 'Today · 40 min', priority: 'normal' },
+        { id: 2, title: 'Plain task', meta: 'Today', priority: 'normal' },
+        { id: 3, title: 'Call supplier', meta: 'Waiting on Mara', priority: 'normal' },
+      ]),
+    )
+    window.localStorage.setItem(
+      'sidenib.month.v1',
+      JSON.stringify([
+        {
+          id: 4,
+          title: 'Team review',
+          meta: '16 Nov · Event',
+          kind: 'event',
+          priority: 'focus',
+          reminderAt: '2099-11-16T09:00',
+        },
+      ]),
+    )
+  })
+  await page.goto('/?open=1')
+
+  await expect(taskRow(page, 'Design shell').locator('.sn-row-note')).toHaveText(
+    '40 min',
+  )
+  await expect(taskRow(page, 'Call supplier').locator('.sn-row-note')).toHaveText(
+    'Waiting on Mara',
+  )
+  // Nothing but a derived label: the row stays a single line.
+  await expect(taskRow(page, 'Plain task').locator('.sn-row-meta')).toHaveCount(0)
+
+  // A new task starts without a note, in Today and in a list.
+  await addTask(page, 'Add a task to Today', 'Fresh task')
+  await expect(taskRow(page, 'Fresh task').locator('.sn-row-meta')).toHaveCount(0)
+  await page.getByRole('tab', { name: 'Lists' }).click()
+  await page.getByRole('button', { name: 'New list' }).click()
+  await page.getByLabel('Create a custom list').fill('Errands')
+  await page.getByLabel('Create a custom list').press('Enter')
+  await addTask(page, 'Add a task to Errands', 'Post parcel')
+  await expect(taskRow(page, 'Post parcel').locator('.sn-row-meta')).toHaveCount(0)
+
+  // Stored text is not rewritten.
+  expect(
+    await page.evaluate(
+      () =>
+        (
+          JSON.parse(window.localStorage.getItem('sidenib.today.v1') ?? '[]') as Array<{
+            meta: string
+            title: string
+          }>
+        ).find((task) => task.title === 'Design shell')?.meta,
+    ),
+  ).toBe('Today · 40 min')
+})
+
+test('the calendar separator is under the grid once the agenda scrolls', async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const today = new Date()
+    const pad = (value: number) => `${value}`.padStart(2, '0')
+    const day = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`
+
+    // Already notified, so no reminder banner joins in.
+    window.localStorage.setItem(
+      'sidenib.notified-reminders.v1',
+      JSON.stringify(
+        Object.fromEntries(
+          Array.from({ length: 14 }, (_, index) => [
+            `${500 + index}:${day}T23:59`,
+            true,
+          ]),
+        ),
+      ),
+    )
+    window.localStorage.setItem(
+      'sidenib.month.v1',
+      JSON.stringify(
+        Array.from({ length: 14 }, (_, index) => ({
+          id: 500 + index,
+          title: `Agenda ${index + 1}`,
+          meta: 'Calendar',
+          priority: 'normal',
+          reminderAt: `${day}T23:59`,
+        })),
+      ),
+    )
+  })
+  await page.goto('/?open=1')
+  await page.getByRole('tab', { name: 'Calendar' }).click()
+
+  const header = page.locator('[data-view="calendar"] .sn-header')
+  const fixed = page.locator('[data-view="calendar"] .sn-view-fixed')
+  const divider = page.locator('.sn-cal-divider')
+
+  await expect(fixed).not.toHaveClass(/is-scrolled/)
+
+  const restingWidth = (await divider.boundingBox())!.width
+
+  await page.locator('.sn-view-body').evaluate((element) => {
+    element.scrollTop = 80
+  })
+  await expect(fixed).toHaveClass(/is-scrolled/)
+  await expect(header).not.toHaveClass(/is-scrolled/)
+
+  // The line under the grid now spans the card; it sits on the body's edge.
+  const cardBox = (await page.locator('.sn-card').boundingBox())!
+  const bodyBox = (await page.locator('.sn-view-body').boundingBox())!
+
+  expect(restingWidth).toBeLessThan(cardBox.width - 20)
+  await expect
+    .poll(async () => (await divider.boundingBox())!.width)
+    .toBeGreaterThan(cardBox.width - 1.5)
+
+  const dividerBox = (await divider.boundingBox())!
+
+  expect(Math.abs(dividerBox.y + dividerBox.height - bodyBox.y)).toBeLessThan(1.5)
+})

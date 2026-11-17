@@ -45,13 +45,15 @@ export function PanelView({
   quickAdd,
   children,
 }: PanelViewProps) {
-  const { openSettings } = usePanelChrome()
+  const { openSettings, banner } = usePanelChrome()
   const [isScrolled, setIsScrolled] = useState(false)
   const titleId = useId()
 
   return (
     <section className="sn-view" data-view={id} aria-labelledby={titleId}>
-      <header className={`sn-header ${isScrolled ? 'is-scrolled' : ''}`}>
+      <header
+        className={`sn-header ${isScrolled && !fixed ? 'is-scrolled' : ''}`}
+      >
         <div className="sn-header-text">
           {back ? (
             <button type="button" className="sn-back" onClick={back.onBack}>
@@ -75,7 +77,14 @@ export function PanelView({
           ) : null}
         </div>
       </header>
-      {fixed}
+      {/* The scrolled hairline belongs to whatever sits directly above the
+          body: the fixed area when there is one, else the header. */}
+      {fixed ? (
+        <div className={`sn-view-fixed ${isScrolled ? 'is-scrolled' : ''}`}>
+          {fixed}
+        </div>
+      ) : null}
+      {banner}
       <div
         className="sn-view-body"
         onScroll={(event) => setIsScrolled(event.currentTarget.scrollTop > 0)}

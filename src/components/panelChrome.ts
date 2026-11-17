@@ -4,6 +4,7 @@
  * popovers read it, so views do not pass it around.
  */
 import { createContext, useContext } from 'react'
+import type { ReactNode } from 'react'
 import type { ViewId } from '../shell/types'
 
 export interface PanelChrome {
@@ -15,6 +16,8 @@ export interface PanelChrome {
   openSettings(): void
   /** False while the card is closed; open popovers close with it. */
   isOpen: boolean
+  /** Shown above the body of whichever view is up: the reminder banner. */
+  banner?: ReactNode
 }
 
 export const PanelChromeContext = createContext<PanelChrome>({
