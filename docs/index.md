@@ -13,6 +13,8 @@ Sidenib:
 - [Settings](settings.md)
 - [Release notes v0.2.0](release-notes-v0.2.0.md)
 - [Release verification v0.2.0](release-verification-v0.2.0.md)
+- [Gray notch rectangle and see-through card](native-transparency-adien-171.md):
+  cause, fix and native evidence for ADIEN-171
 - Screenshots and the demo recording are in [media/](media/).
 
 The task ids in those pages (ADIEN-161 to ADIEN-165) are the work items each
