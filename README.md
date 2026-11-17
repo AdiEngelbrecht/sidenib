@@ -17,8 +17,9 @@ project. See [Origin and attribution](#origin-and-attribution).
 The foundation is inherited and real: Tauri v2, React, local persisted tasks,
 reminders, custom in-app reminder toasts, global shortcuts, autostart,
 single-instance behavior, and build automation for Windows, macOS, and Android.
-The compact notch-and-panel redesign is in progress; until it lands, the
-interface is the inherited Todobar v0.1.14 sidebar under the Sidenib identity.
+The compact notch-and-panel redesign is in progress: the shell and the Today
+and Lists views are in the compact Notes-like style; Calendar and Settings
+work inside the same card and are still being refined.
 
 ## Origin and attribution
 
@@ -61,8 +62,10 @@ Most todo apps are full windows. Sidenib is designed as a desktop utility:
 - Single-instance desktop behavior
 - Always-on-top frameless window
 - Click-through transparent area outside the handle and open panel
-- Compact icon command rail for Today, Calendar, Lists, and setup
-- Planning status strip with today's progress, open task count, and list count
+- One segmented tab control for Today, Calendar, and Lists, with Settings in
+  the header
+- Today shows overdue tasks first, then open tasks, pinned lists, and a
+  Completed disclosure
 - Today tasks
 - Real calendar view with month navigation, selected-day capture, and scheduled
   task and event actions
@@ -71,8 +74,8 @@ Most todo apps are full windows. Sidenib is designed as a desktop utility:
 - Add, edit, complete, prioritize, collapse, and delete tasks
 - Rename and delete custom lists
 - Add reminder times while capturing tasks
-- Quick reminder cycling on existing tasks
-- Clean icon rail for Today, Calendar, Lists, and Settings
+- Reminder presets, an exact time, and Clear on existing tasks
+- Row actions (reminder, rename, priority, delete) on hover or keyboard focus
 - Custom Sidenib reminder toasts that appear inside the overlay instead of the
   operating system notification tray
 - 10-minute snooze from reminder toasts
@@ -180,8 +183,8 @@ migrate Todobar's tasks or settings; see
   tray/menu-bar menu shows the shortcut that is active.
 - Use the tray/menu-bar icon to toggle Sidenib, open settings, or quit.
 - Press `Esc` to close the panel.
-- Use the command rail to jump between Today, Calendar, Lists, and setup
-  without turning the sidebar into a full dashboard.
+- Use the tabs at the foot of the card to move between Today, Calendar, and
+  Lists; the left and right arrow keys work there too.
 - Use the settings button to adjust appearance, dock edge, desktop startup,
   window size, handle shape, task density, sorting, backdrop image, motion,
   radius, and opacity.

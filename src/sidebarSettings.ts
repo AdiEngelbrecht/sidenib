@@ -69,8 +69,9 @@ export const defaultSidebarSettings: SidebarSettings = {
   panelRadius: 24,
   surfaceAlpha: 96,
   taskRowHeight: 44,
-  taskGap: 7,
-  taskTextSize: 12.5,
+  // 0 gives hairline-separated groups; above 0 each row is its own block.
+  taskGap: 0,
+  taskTextSize: 14,
   showCompleted: true,
   launchAtLogin: true,
   notificationsEnabled: true,
@@ -171,7 +172,8 @@ export function sanitizeSettings(value: Partial<SidebarSettings>): SidebarSettin
       40,
       62,
     ),
-    taskGap: clamp(value.taskGap ?? defaultSidebarSettings.taskGap, 4, 14),
+    // Lower bound widened from v0.1.14's 4 to admit the grouped default.
+    taskGap: clamp(value.taskGap ?? defaultSidebarSettings.taskGap, 0, 14),
     taskTextSize: clamp(
       value.taskTextSize ?? defaultSidebarSettings.taskTextSize,
       11,

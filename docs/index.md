@@ -4,6 +4,7 @@ Sidenib:
 
 - [Sidenib identity](sidenib-identity.md)
 - [Compact shell](shell.md)
+- [Views and shared components](views.md)
 - [Brand direction](brand-direction.md)
 - [Release verification v0.2.0](release-verification-v0.2.0.md)
 

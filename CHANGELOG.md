@@ -38,6 +38,23 @@ earlier are the upstream Todobar history and keep the original product name.
   sizes, presets, backdrop and hover-only notch are kept; the notch thickness
   and length sliders now go down to 10 and 44, and a full-height panel is an
   opt-in setting.
+- Restyled Today and Lists as a compact Notes-like task pane: system type,
+  warm paper and ink with a restrained gold accent, one bold title per view,
+  soft groups with inset hairlines, 44 px rows (52 with a reminder line), and
+  one segmented tab control in place of the side rail and progress strip. See
+  [docs/views.md](docs/views.md).
+- Today lists overdue tasks first, then open tasks, one group per pinned list,
+  and a Completed disclosure. Lists is an index with one list at a time in
+  detail.
+- Row actions appear on hover or keyboard focus. Reminder opens presets, an
+  exact time and Clear; More holds Rename, Priority and Delete. Long titles
+  clamp to two lines and show in full as a tooltip and while renaming.
+- Escape now peels one layer at a time: a menu, a rename, a quick-add draft,
+  Settings, then the card.
+- Theme presets now recolour the card through the design tokens. Studio and
+  Obsidian, the stored defaults, are the Sidenib paper and ink palettes.
+- New installs default to 14 px task text and hairline-separated rows. Stored
+  text size and row gap are kept; the row gap slider now goes down to 0.
 - The macOS web view is now transparent through Tauri's `macOSPrivateApi`.
 
 ### Notes

@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import type { Page } from '@playwright/test'
 
 const viewports = [
   { height: 900, name: 'desktop', width: 1280 },
@@ -6,10 +7,29 @@ const viewports = [
   { height: 480, name: 'short', width: 900 },
 ] as const
 
-test('sidebar opens and completed-task visibility is configurable', async ({
+const SETTINGS_BUTTON = { name: 'Settings', exact: true } as const
+
+const taskRow = (page: Page, title: string) =>
+  page.locator('.sn-task').filter({ hasText: title })
+
+/** Row actions appear on hover (or keyboard focus); then the named one is used. */
+async function rowAction(page: Page, title: string, name: string | RegExp) {
+  const row = taskRow(page, title)
+
+  await row.hover()
+  await row.getByRole('button', { name }).click()
+}
+
+async function addTask(page: Page, label: string, title: string) {
+  await page.getByLabel(label).fill(title)
+  await page.getByRole('button', { name: 'Add task' }).click()
+}
+
+test('tasks, lists, reminders and settings work in the compact card', async ({
   page,
 }) => {
   const consoleMessages: string[] = []
+  const nextYear = new Date().getFullYear() + 1
 
   page.on('console', (message) => {
     if (message.type() === 'error' || message.type() === 'warning') {
@@ -29,19 +49,33 @@ test('sidebar opens and completed-task visibility is configurable', async ({
   await expect(page.locator('.sn-card')).toBeHidden()
   await page.getByRole('button', { name: 'Open Sidenib' }).click()
   await expect(page.locator('.sn-card')).toHaveClass(/is-open/)
-  await expect(page.getByText('Today').first()).toBeVisible()
-  await expect(page.locator('.section-meter')).toHaveCount(0)
+  await expect(page.getByRole('heading', { name: 'Today' })).toBeVisible()
 
-  await page.getByRole('button', { name: 'Sidebar settings' }).click()
+  // Compact chrome: one segmented control, no side rail, no progress strip,
+  // and no group inside a group.
+  await expect(page.getByRole('tablist').getByRole('tab')).toHaveText([
+    'Today',
+    'Calendar',
+    'Lists',
+  ])
+  await expect(
+    page.locator('.sidebar-rail, .focus-strip, .section-meter'),
+  ).toHaveCount(0)
+  await expect(page.locator('.sn-group .sn-group')).toHaveCount(0)
+
+  await page.getByRole('button', SETTINGS_BUTTON).click()
   await expect(page.getByRole('dialog', { name: 'Settings' })).toBeVisible()
   await expect(page.getByLabel('Show completed')).toBeVisible()
   await expect(page.getByText('Notifications', { exact: true })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Connectors' })).toHaveCount(0)
   await expect(page.getByText('Connect Gmail', { exact: true })).toHaveCount(0)
-  await page.getByRole('button', { name: 'Close settings' }).click()
-  await page.getByRole('button', { name: 'Sidebar settings' }).click()
+  await page.getByRole('button', { name: 'Done' }).click()
+  await expect(page.getByRole('dialog', { name: 'Today' })).toBeVisible()
+  await page.getByRole('button', SETTINGS_BUTTON).click()
   await expect(page.getByText('Connect Gmail', { exact: true })).toHaveCount(0)
-  await expect(page.getByRole('button', { name: 'Priority' })).toBeVisible()
+  await expect(
+    page.getByRole('button', { name: 'Priority', exact: true }),
+  ).toBeVisible()
   await page.getByRole('button', { name: 'Newest' }).click()
   await expect(page.getByRole('button', { name: 'Newest' })).toHaveAttribute(
     'aria-pressed',
@@ -71,6 +105,8 @@ test('sidebar opens and completed-task visibility is configurable', async ({
   await page.getByRole('option', { name: 'Choose Graphite' }).click()
   await expect(page.locator('.workspace')).toHaveClass(/theme-dark/)
   await expect(page.locator('.workspace')).toHaveClass(/style-graphite/)
+  // The preset reaches the card through the tokens.
+  await expect(page.locator('.sn-panel')).toHaveCSS('color', 'rgb(246, 247, 248)')
   await expect(page.getByText('Edge position', { exact: true })).toBeVisible()
   await page.getByText('Hover-only tab', { exact: true }).click()
   await expect(page.locator('.workspace')).toHaveClass(/tab-hover/)
@@ -96,6 +132,10 @@ test('sidebar opens and completed-task visibility is configurable', async ({
   const listsLayoutRow = page.locator('.section-order-row').filter({
     hasText: 'Lists',
   })
+
+  await todayLayoutRow.scrollIntoViewIfNeeded()
+  await listsLayoutRow.scrollIntoViewIfNeeded()
+
   const todayLayoutBox = await todayLayoutRow.boundingBox()
   const listsLayoutBox = await listsLayoutRow.boundingBox()
 
@@ -112,47 +152,70 @@ test('sidebar opens and completed-task visibility is configurable', async ({
     await expect(page.locator('.section-order-row').nth(2)).toContainText(
       'Today',
     )
+    // The tabs follow the stored order.
+    await expect(page.getByRole('tablist').getByRole('tab').last()).toHaveText(
+      'Today',
+    )
   }
   await page.getByRole('button', { name: 'Move Today up' }).click()
 
   await page.getByText('Show completed', { exact: true }).click()
   await expect(page.getByLabel('Show completed')).not.toBeChecked()
-  await page.getByRole('button', { name: 'Close settings' }).click()
+  await page.getByRole('button', { name: 'Done' }).click()
+  await page.getByRole('tab', { name: 'Today' }).click()
   await expect(page.getByText('Inbox suggestions', { exact: true })).toHaveCount(0)
-  await expect(page.getByText('Capture inbox', { exact: true })).toBeHidden()
-  await expect(page.locator('section[aria-labelledby="today-heading"]')).toBeVisible()
-  await expect(page.locator('section[aria-labelledby="calendar-heading"]')).toHaveCount(0)
+  await expect(page.getByText('Capture inbox', { exact: true })).toHaveCount(0)
+  await expect(page.getByText(/^Completed/)).toHaveCount(0)
+  await expect(page.locator('[data-view="today"]')).toBeVisible()
+  await expect(page.locator('[data-view="calendar"]')).toHaveCount(0)
 
+  // Create with a reminder, then rename inline.
   await page.getByLabel('Add a task to Today').fill('Reminder smoke')
-  await page
-    .locator('section[aria-labelledby="today-heading"] .quick-add .reminder-toggle')
-    .click()
-  await page
-    .getByRole('textbox', { name: 'Reminder time' })
-    .fill('2026-05-09T09:30')
-  await page
-    .locator('section[aria-labelledby="today-heading"] .quick-add .submit-task')
-    .click()
+  await page.getByRole('button', { name: 'Add reminder time' }).click()
+  await page.getByRole('textbox', { name: 'Reminder time' }).fill(`${nextYear}-05-09T09:30`)
+  await page.getByRole('button', { name: 'Add task' }).click()
+  await expect(page.getByLabel('Add a task to Today')).toHaveValue('')
+  await expect(page.getByLabel('Add a task to Today')).toBeFocused()
+  await expect(taskRow(page, 'Reminder smoke')).toBeVisible()
   await expect(
-    page
-      .locator('section[aria-labelledby="today-heading"]')
-      .getByText('Reminder smoke', { exact: true }),
-  ).toBeVisible()
-  await page.getByRole('button', { name: 'Edit Reminder smoke' }).click()
+    taskRow(page, 'Reminder smoke').locator('.task-reminder'),
+  ).toContainText('09:30')
+  await rowAction(page, 'Reminder smoke', 'More actions for Reminder smoke')
+  await page.getByRole('menuitem', { name: 'Rename' }).click()
   await page.getByRole('textbox', { name: 'Edit Reminder smoke' }).fill(
     'Renamed smoke',
   )
   await page.getByRole('textbox', { name: 'Edit Reminder smoke' }).press('Enter')
+  await expect(taskRow(page, 'Renamed smoke')).toBeVisible()
+
+  // Priority: the gold dot marks Focus.
+  await expect(taskRow(page, 'Renamed smoke').locator('.sn-flag')).toHaveCount(0)
+  await rowAction(page, 'Renamed smoke', 'More actions for Renamed smoke')
+  await page.getByRole('menuitem', { name: 'Priority: Normal. Change' }).click()
   await expect(
-    page
-      .locator('section[aria-labelledby="today-heading"]')
-      .getByText('Renamed smoke', { exact: true }),
+    page.getByRole('menuitem', { name: 'Priority: Focus. Change' }),
   ).toBeVisible()
-  await page.getByLabel('Add a task to Today').fill('Delete smoke')
-  await page
-    .locator('section[aria-labelledby="today-heading"] .quick-add .submit-task')
-    .click()
-  await page.getByRole('button', { name: 'Delete Delete smoke' }).click()
+  await page.keyboard.press('Escape')
+  await expect(page.getByRole('menu')).toHaveCount(0)
+  await expect(page.locator('.sn-card')).toHaveClass(/is-open/)
+  await expect(taskRow(page, 'Renamed smoke').locator('.sn-flag')).toHaveCount(1)
+
+  // Reminder selection on an existing row: clear, then set again by preset.
+  await rowAction(page, 'Renamed smoke', /^Reminder .* for Renamed smoke/)
+  await page.getByRole('button', { name: 'Clear reminder' }).click()
+  await expect(
+    taskRow(page, 'Renamed smoke').locator('.task-reminder'),
+  ).toHaveCount(0)
+  await rowAction(page, 'Renamed smoke', 'Add reminder for Renamed smoke')
+  await page.getByRole('button', { name: 'Next week at the same time' }).click()
+  await expect(
+    taskRow(page, 'Renamed smoke').locator('.task-reminder'),
+  ).toHaveCount(1)
+
+  // Delete asks first; Shift skips the question.
+  await addTask(page, 'Add a task to Today', 'Delete smoke')
+  await rowAction(page, 'Delete smoke', 'More actions for Delete smoke')
+  await page.getByRole('menuitem', { name: 'Delete' }).click()
   await expect(
     page.getByRole('alertdialog', { name: 'Confirm delete Delete smoke' }),
   ).toBeVisible()
@@ -161,26 +224,23 @@ test('sidebar opens and completed-task visibility is configurable', async ({
     .getByRole('button', { name: 'Cancel' })
     .click()
   await expect(page.getByText('Delete smoke', { exact: true })).toBeVisible()
+  await rowAction(page, 'Delete smoke', 'More actions for Delete smoke')
   await page
-    .getByRole('button', { name: 'Delete Delete smoke' })
+    .getByRole('menuitem', { name: 'Delete' })
     .click({ modifiers: ['Shift'] })
   await expect(page.getByText('Delete smoke', { exact: true })).toHaveCount(0)
-  await expect(page.locator('#reminders-section')).toHaveCount(0)
-  await expect(page.locator('.task-reminder').filter({ hasText: '09:30' })).toBeVisible()
 
+  // A due reminder raises the toast; opening it lands on the Calendar.
   await page.evaluate(() => {
     window.localStorage.setItem('sidenib.notified-reminders.v1', '{}')
   })
   await page.getByLabel('Add a task to Today').fill('Toast smoke')
-  await page
-    .locator('section[aria-labelledby="today-heading"] .quick-add .reminder-toggle')
-    .click()
-  await page
-    .getByRole('textbox', { name: 'Reminder time' })
-    .fill('2020-01-01T09:30')
-  await page
-    .locator('section[aria-labelledby="today-heading"] .quick-add .submit-task')
-    .click()
+  await page.getByRole('button', { name: 'Add reminder time' }).click()
+  await page.getByRole('textbox', { name: 'Reminder time' }).fill('2020-01-01T09:30')
+  await page.getByRole('button', { name: 'Add task' }).click()
+  // In the past, so it is listed as overdue.
+  await expect(page.getByText('Overdue · 1')).toBeVisible()
+  await expect(taskRow(page, 'Toast smoke')).toHaveClass(/is-overdue/)
   const reminderToast = page.getByRole('status').filter({ hasText: 'Toast smoke' })
   await expect(reminderToast).toBeVisible({ timeout: 15_000 })
   await expect(
@@ -189,107 +249,254 @@ test('sidebar opens and completed-task visibility is configurable', async ({
     }),
   ).toBeVisible()
   await reminderToast.getByRole('button', { name: 'Open' }).click()
-  await expect(page.getByRole('button', { name: 'Jump to Calendar' })).toHaveAttribute(
-    'aria-current',
+  await expect(page.getByRole('tab', { name: 'Calendar' })).toHaveAttribute(
+    'aria-selected',
     'true',
   )
+  await expect(page.getByRole('heading', { name: 'January' })).toBeVisible()
+  await expect(taskRow(page, 'Toast smoke')).toBeVisible()
 
-  await page.getByRole('button', { name: 'Jump to Calendar' }).click()
-  await expect(page.getByRole('button', { name: 'Jump to Calendar' })).toHaveAttribute(
-    'aria-current',
-    'true',
-  )
-  await expect(page.locator('.view-stack')).toHaveAttribute(
-    'data-motion',
-    /forward|backward/,
-  )
-  await expect(page.locator('section[aria-labelledby="calendar-heading"]')).toBeVisible()
-  await expect(
-    page.locator('section[aria-labelledby="calendar-heading"]'),
-  ).toHaveCSS('animation-name', 'view-section-in')
-  await expect(page.locator('.calendar-board')).toHaveCSS(
-    'animation-name',
-    'view-stagger-in',
-  )
+  // Calendar: back to today, then an event on a day next month.
+  const calendar = page.locator('[data-view="calendar"]')
+
+  await expect(calendar).toBeVisible()
   await expect(page.getByRole('grid')).toBeVisible()
+  await calendar
+    .getByRole('button', { name: 'Jump to today', exact: true })
+    .click()
+  await expect(page.locator('.calendar-grid .is-selected')).toHaveText(
+    String(new Date().getDate()),
+  )
+  await expect(page.locator('.calendar-grid .is-selected')).toHaveClass(
+    /is-today/,
+  )
+  await page.getByRole('button', { name: 'Next month' }).click()
+  await page.locator('.calendar-grid .sn-day:not(.is-outside)').nth(14).click()
+  await expect(page.locator('.calendar-grid .is-selected')).toHaveText('15')
   await expect(page.getByLabel('Add a task to selected calendar day')).toBeVisible()
   await page
     .getByLabel('Add a task to selected calendar day')
     .fill('Calendar smoke')
-  await page.getByRole('button', { name: 'Event' }).click()
-  await page
-    .locator('section[aria-labelledby="calendar-heading"] .quick-add .submit-task')
-    .click()
+  await page.getByRole('button', { name: /^Entry type: Task/ }).click()
   await expect(
-    page
-      .locator('section[aria-labelledby="calendar-heading"]')
-      .getByText('Calendar smoke', { exact: true }),
+    page.getByRole('button', { name: /^Entry type: Event/ }),
   ).toBeVisible()
+  await page.getByRole('button', { name: 'Add task' }).click()
+  await expect(taskRow(page, 'Calendar smoke')).toBeVisible()
   await expect(
-    page
-      .locator('section[aria-labelledby="calendar-heading"]')
+    taskRow(page, 'Calendar smoke')
       .locator('.task-kind-pill')
       .filter({ hasText: 'Event' }),
   ).toBeVisible()
-  await page
-    .locator('section[aria-labelledby="calendar-heading"]')
-    .getByRole('button', { name: 'Jump to today', exact: true })
-    .click()
-  await expect(page.locator('.calendar-grid button.is-selected')).toContainText(
-    String(new Date().getDate()),
+  await expect(page.locator('.calendar-grid .is-selected')).toHaveClass(
+    /has-items/,
   )
-  await expect(page.locator('section[aria-labelledby="today-heading"]')).toHaveCount(0)
-  await page.getByRole('button', { name: 'Jump to Lists' }).click()
-  await expect(page.getByRole('button', { name: 'Jump to Lists' })).toHaveAttribute(
-    'aria-current',
+  await expect(page.locator('[data-view="today"]')).toHaveCount(0)
+
+  // Lists: create, rename, add a task, pin to Today.
+  await page.getByRole('tab', { name: 'Lists' }).click()
+  await expect(page.getByRole('tab', { name: 'Lists' })).toHaveAttribute(
+    'aria-selected',
     'true',
   )
-  await expect(page.locator('.view-stack')).toHaveAttribute(
-    'data-motion',
-    /forward|backward/,
-  )
-  await expect(page.locator('section[aria-labelledby="lists-heading"]')).toBeVisible()
-  await expect(page.locator('.list-create')).toHaveCSS(
-    'animation-name',
-    'view-stagger-in',
-  )
-  await expect(page.locator('section[aria-labelledby="calendar-heading"]')).toHaveCount(0)
+  await expect(page.locator('[data-view="lists"]')).toBeVisible()
+  await expect(calendar).toHaveCount(0)
+  await page.getByRole('button', { name: 'New list' }).click()
   await page.getByLabel('Create a custom list').fill('Workstream')
   await page.getByRole('button', { name: 'Create list' }).click()
-  await page.getByRole('button', { name: 'Rename Workstream' }).click()
+  await expect(page.getByRole('heading', { name: 'Workstream' })).toBeVisible()
+  await page.getByRole('button', { name: 'Actions for Workstream' }).click()
+  await page.getByRole('menuitem', { name: 'Rename list' }).click()
   await page.getByRole('textbox', { name: 'Rename Workstream' }).fill('Planner')
   await page.getByRole('textbox', { name: 'Rename Workstream' }).press('Enter')
-  const customList = page.locator('.custom-list').filter({ hasText: 'Planner' })
-  await customList.getByLabel('Add a task to Planner').fill('Pinned task')
-  await customList.locator('.submit-task').click()
-  await customList.getByRole('button', { name: 'Show Planner on Today' }).click()
-  await page.getByRole('button', { name: 'Jump to Today' }).click()
-  await expect(page.locator('.view-stack')).toHaveAttribute(
-    'data-motion',
-    /forward|backward/,
-  )
-  await expect(page.getByText('Pinned lists', { exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Planner' })).toBeVisible()
+  await page.getByLabel('Add a task to Planner').fill('Pinned task')
+  await page.getByLabel('Add a task to Planner').press('Enter')
+  await expect(taskRow(page, 'Pinned task')).toBeVisible()
+  await page.getByRole('button', { name: 'Actions for Planner' }).click()
+  await page.getByRole('menuitemcheckbox', { name: 'Show on Today' }).click()
+  await expect(page.getByText('1 open · shown on Today')).toBeVisible()
+  await page.getByRole('button', { name: 'Lists', exact: true }).click()
   await expect(
-    page.locator('.today-goal-list-title strong').filter({ hasText: 'Planner' }),
+    page.getByRole('button', { name: 'Open Planner, 1 open' }),
   ).toBeVisible()
-  await expect(page.getByText('Pinned task', { exact: true })).toBeVisible()
-  // Pinned task list deliberately renders without an outer card so it
-  // doesn't nest a card-in-card inside the Today goal divider. The
-  // separation between pinned goal lists is provided by the second-and-later
-  // .today-goal-list border-top (first child has `border-top: 0`).
-  await expect(page.locator('.pinned-task-list').first()).toHaveCSS(
-    'border-top-style',
-    'none',
-  )
 
-  await page.getByRole('button', { name: 'Sidebar settings' }).click()
+  // The pinned list is one labelled group on Today, not a card in a card.
+  await page.getByRole('tab', { name: 'Today' }).click()
+  await expect(
+    page.locator('.sn-section-label').filter({ hasText: 'Planner' }),
+  ).toBeVisible()
+  await expect(taskRow(page, 'Pinned task')).toBeVisible()
+  await expect(page.locator('.sn-group .sn-group')).toHaveCount(0)
+
+  // Completed tasks come back with the setting, behind a disclosure.
+  await page.getByRole('button', SETTINGS_BUTTON).click()
   await page.getByText('Show completed', { exact: true }).click()
   await expect(page.getByLabel('Show completed')).toBeChecked()
-  await page.getByRole('button', { name: 'Close settings' }).click()
-  await page.getByRole('button', { name: 'Jump to Today' }).click()
+  await page.getByRole('button', { name: 'Done' }).click()
+  await page.getByRole('tab', { name: 'Today' }).click()
+  await page.getByRole('button', { name: 'Completed · 1' }).click()
   await expect(page.getByText('Capture inbox', { exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Complete Renamed smoke' }).click()
+  await expect(page.getByRole('button', { name: 'Completed · 2' })).toBeVisible()
+  await expect(taskRow(page, 'Renamed smoke')).toHaveClass(/is-done/)
+  await page.getByRole('button', { name: 'Mark Renamed smoke open' }).click()
+  await expect(page.getByRole('button', { name: 'Completed · 1' })).toBeVisible()
+  await expect(taskRow(page, 'Renamed smoke')).not.toHaveClass(/is-done/)
+
+  // Everything above is stored locally and survives a reload.
+  await expect
+    .poll(() =>
+      page.evaluate(() => ({
+        lists: window.localStorage.getItem('sidenib.custom-lists.v1') ?? '',
+        today: window.localStorage.getItem('sidenib.today.v1') ?? '',
+      })),
+    )
+    .toMatchObject({
+      lists: expect.stringContaining('Pinned task'),
+      today: expect.stringContaining('Renamed smoke'),
+    })
+  await page.goto('/?open=1')
+  await expect(taskRow(page, 'Renamed smoke')).toBeVisible()
+  await expect(taskRow(page, 'Renamed smoke').locator('.sn-flag')).toHaveCount(1)
+  await expect(taskRow(page, 'Pinned task')).toBeVisible()
 
   expect(consoleMessages).toEqual([])
+})
+
+test('row actions are reachable by keyboard and Escape peels one layer', async ({
+  page,
+}) => {
+  await page.goto('/?open=1')
+  await expect(page.locator('.sn-card')).toHaveClass(/is-open/)
+
+  const row = taskRow(page, 'Design sidebar shell')
+
+  // Hidden until hover or focus, but always in the tab order.
+  await expect(row.locator('.sn-row-actions')).toHaveCSS('opacity', '0')
+  await row.getByRole('button', { name: 'Complete Design sidebar shell' }).focus()
+  await page.keyboard.press('Tab')
+  await expect(
+    row.getByRole('button', { name: 'Add reminder for Design sidebar shell' }),
+  ).toBeFocused()
+  await expect(row.locator('.sn-row-actions')).toHaveCSS('opacity', '1')
+  await page.keyboard.press('Tab')
+
+  const more = row.getByRole('button', {
+    name: 'More actions for Design sidebar shell',
+  })
+
+  await expect(more).toBeFocused()
+  await page.keyboard.press('Enter')
+  await expect(page.getByRole('menuitem', { name: 'Rename' })).toBeFocused()
+  await page.keyboard.press('ArrowDown')
+  await expect(page.getByRole('menuitem', { name: /^Priority/ })).toBeFocused()
+  await page.keyboard.press('ArrowDown')
+  await page.keyboard.press('Enter')
+  await expect(
+    page.getByRole('alertdialog', {
+      name: 'Confirm delete Design sidebar shell',
+    }),
+  ).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Cancel' })).toBeFocused()
+
+  // Escape closes the confirmation only, and focus returns to the row.
+  await page.keyboard.press('Escape')
+  await expect(page.getByRole('alertdialog')).toHaveCount(0)
+  await expect(page.locator('.sn-card')).toHaveClass(/is-open/)
+  await expect(more).toBeFocused()
+  await expect(row).toBeVisible()
+
+  // Rename by keyboard; Escape leaves the rename without closing the card.
+  await page.keyboard.press('Enter')
+  await page.keyboard.press('Enter')
+
+  const edit = page.getByRole('textbox', { name: 'Edit Design sidebar shell' })
+
+  await expect(edit).toBeFocused()
+  await edit.fill('Should not be saved')
+  await page.keyboard.press('Escape')
+  await expect(edit).toHaveCount(0)
+  await expect(row).toBeVisible()
+  await expect(page.locator('.sn-card')).toHaveClass(/is-open/)
+
+  // A quick-add draft is cleared before Escape may close the card.
+  const quickAdd = page.getByLabel('Add a task to Today')
+
+  await quickAdd.fill('Half-typed')
+  await page.keyboard.press('Escape')
+  await expect(quickAdd).toHaveValue('')
+  await expect(page.locator('.sn-card')).toHaveClass(/is-open/)
+  await page.keyboard.press('Escape')
+  await expect(page.locator('.sn-card')).toBeHidden()
+
+  // Arrow keys move between the tabs.
+  await page.goto('/?open=1')
+  await page.getByRole('tab', { name: 'Today' }).focus()
+  await page.keyboard.press('ArrowRight')
+  await expect(page.getByRole('tab', { name: 'Calendar' })).toBeFocused()
+  await expect(page.getByRole('tab', { name: 'Calendar' })).toHaveAttribute(
+    'aria-selected',
+    'true',
+  )
+  await page.keyboard.press('ArrowLeft')
+  await page.keyboard.press('ArrowLeft')
+  await expect(page.getByRole('tab', { name: 'Lists' })).toHaveAttribute(
+    'aria-selected',
+    'true',
+  )
+})
+
+test('long titles clamp to two lines and stay readable and editable', async ({
+  page,
+}) => {
+  const longTitle =
+    'Write the long-form retrospective for the offsite including travel costs, catering feedback and the follow-up actions nobody has picked up yet'
+  const unbroken = `https://example.org/${'a-very-long-unbroken-path/'.repeat(6)}`
+
+  await page.addInitScript(
+    ([first, second]) => {
+      window.localStorage.setItem(
+        'sidenib.today.v1',
+        JSON.stringify([
+          { id: 7002, meta: 'Today', priority: 'normal', title: first },
+          { id: 7001, meta: 'Today', priority: 'normal', title: second },
+        ]),
+      )
+    },
+    [longTitle, unbroken],
+  )
+  await page.goto('/?open=1')
+
+  const row = taskRow(page, 'retrospective')
+  const title = row.locator('.sn-row-title')
+
+  // Two lines of 19 px, the full text as the tooltip, nothing overflowing.
+  await expect(title).toHaveAttribute('title', longTitle)
+  expect((await title.boundingBox())?.height).toBeLessThanOrEqual(39)
+  expect(
+    await page
+      .locator('.sn-view-body')
+      .evaluate((node) => node.scrollWidth <= node.clientWidth),
+  ).toBe(true)
+  expect(
+    (await taskRow(page, 'example.org').locator('.sn-row-title').boundingBox())
+      ?.width,
+  ).toBeLessThanOrEqual(300)
+
+  // Renaming shows the whole title, however long.
+  await title.dblclick()
+
+  const edit = page.getByRole('textbox', { name: `Edit ${longTitle}` })
+
+  await expect(edit).toHaveValue(longTitle)
+  expect(
+    await edit.evaluate((node) => node.scrollHeight <= node.clientHeight + 1),
+  ).toBe(true)
+  expect((await edit.boundingBox())?.height).toBeGreaterThan(60)
+  await edit.fill('Short again')
+  await edit.press('Enter')
+  await expect(taskRow(page, 'Short again')).toBeVisible()
 })
 
 for (const viewport of viewports) {
@@ -310,16 +517,35 @@ for (const viewport of viewports) {
     await expect(page.getByRole('separator', { name: 'Resize panel' })).toHaveCount(
       0,
     )
-    await expect(page.getByRole('button', { name: 'Sidebar settings' })).toBeVisible()
-    await expect.poll(async () =>
-      page.locator('.sidebar-rail button').evaluateAll((buttons) =>
-        buttons.every((button) => {
-          const rect = button.getBoundingClientRect()
+    await expect(page.getByRole('button', SETTINGS_BUTTON)).toBeVisible()
+    // Header, quick add and tabs all sit inside the card; only the body
+    // between them scrolls.
+    await expect
+      .poll(async () =>
+        page.evaluate(() => {
+          const frame = document
+            .querySelector('.sn-card')
+            ?.getBoundingClientRect()
 
-          return Math.round(rect.width) === Math.round(rect.height)
+          return ['.sn-header', '.sn-view-body', '.sn-quick', '.sn-tabs'].every(
+            (selector) => {
+              const rect = document
+                .querySelector(selector)
+                ?.getBoundingClientRect()
+
+              return Boolean(
+                frame &&
+                  rect &&
+                  rect.top >= frame.top - 0.5 &&
+                  rect.bottom <= frame.bottom + 0.5 &&
+                  rect.left >= frame.left - 0.5 &&
+                  rect.right <= frame.right + 0.5,
+              )
+            },
+          )
         }),
-      ),
-    ).toBe(true)
+      )
+      .toBe(true)
 
     await expect(sidebar).toHaveCSS('transform', 'none')
 
@@ -356,7 +582,7 @@ for (const viewport of viewports) {
       )
     }
 
-    await page.getByRole('button', { name: 'Sidebar settings' }).click()
+    await page.getByRole('button', SETTINGS_BUTTON).click()
     await expect(page.getByRole('dialog', { name: 'Settings' })).toBeVisible()
     await expect(page.getByText('Panel width', { exact: true })).toBeVisible()
   })
@@ -410,8 +636,8 @@ test('due reminders badge the closed notch without opening the card', async ({
     .getByRole('button', { name: 'Open reminder Closed reminder' })
     .click()
   await expect(page.locator('.sn-card')).toHaveClass(/is-open/)
-  await expect(page.getByRole('button', { name: 'Jump to Calendar' })).toHaveAttribute(
-    'aria-current',
+  await expect(page.getByRole('tab', { name: 'Calendar' })).toHaveAttribute(
+    'aria-selected',
     'true',
   )
 })
@@ -472,7 +698,7 @@ test('Gmail connector UI stays hidden while the feature is held back', async ({
     )
   })
   await page.goto('/?open=1')
-  await page.getByRole('button', { name: 'Sidebar settings' }).click()
+  await page.getByRole('button', SETTINGS_BUTTON).click()
 
   await expect(page.getByText('Reconnect required', { exact: true })).toHaveCount(0)
   await expect(page.getByRole('button', { name: 'Reconnect Gmail' })).toHaveCount(0)

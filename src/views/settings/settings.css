@@ -1,0 +1,286 @@
+/*
+ * Settings view styles. Scoped to .sn-settings; tokens only.
+ * Extracted in ADIEN-162 at a usable level. ADIEN-164 owns this file.
+ */
+
+.sn-settings {
+  display: grid;
+  gap: var(--sn-space-3);
+}
+
+.sn-settings .sn-section + .sn-section {
+  margin-top: 0;
+}
+
+/* Rows in a settings group are separated like task rows. */
+.sn-settings .sn-group > * + * {
+  border-top: 0.5px solid var(--sn-separator);
+}
+
+/* ---- Theme preset ------------------------------------------------------ */
+
+.theme-dropdown-trigger,
+.theme-dropdown-menu > button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: var(--sn-row-min-height);
+  padding: 6px var(--sn-space-3);
+  border: 0;
+  text-align: left;
+  background: transparent;
+  cursor: pointer;
+}
+
+.theme-dropdown-trigger:hover,
+.theme-dropdown-menu > button:hover {
+  background: var(--sn-surface-hover);
+}
+
+.theme-dropdown-trigger > span:not(.theme-swatch),
+.theme-dropdown-menu > button > span:not(.theme-swatch) {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+}
+
+.theme-dropdown em {
+  color: var(--sn-ink-secondary);
+  font: var(--sn-text-caption);
+}
+
+.theme-dropdown strong {
+  font-weight: 400;
+}
+
+.theme-dropdown-trigger > svg {
+  color: var(--sn-ink-secondary);
+  transition: transform var(--sn-motion-quick) var(--sn-ease-out);
+}
+
+.theme-dropdown.is-open .theme-dropdown-trigger > svg {
+  transform: rotate(180deg);
+}
+
+.theme-dropdown-menu {
+  border-top: 0.5px solid var(--sn-separator);
+}
+
+.theme-dropdown-menu > button + button {
+  border-top: 0.5px solid var(--sn-separator);
+}
+
+.theme-dropdown-menu > button > svg {
+  color: var(--sn-accent-text);
+}
+
+/* A two-tone chip: the preset's paper with a dot of its accent. */
+.theme-swatch {
+  --swatch-surface: #f6f2e9;
+  --swatch-accent: #f6c445;
+
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 50% 50%,
+    var(--swatch-accent) 0 4px,
+    var(--swatch-surface) 4.5px
+  );
+  box-shadow: 0 0 0 0.5px var(--sn-border);
+}
+
+.theme-swatch.is-dark {
+  --swatch-surface: #1f1e1b;
+}
+
+.theme-preview-porcelain {
+  --swatch-surface: #f4f5f7;
+  --swatch-accent: #1f2937;
+}
+
+.theme-preview-frost {
+  --swatch-surface: #eaf3fc;
+  --swatch-accent: #2676d9;
+}
+
+.theme-preview-paper {
+  --swatch-surface: #f5f0e4;
+  --swatch-accent: #7c5c2f;
+}
+
+.theme-preview-clay {
+  --swatch-surface: #f3e9e1;
+  --swatch-accent: #9e5d3f;
+}
+
+.theme-preview-blueprint {
+  --swatch-surface: #eaf1fd;
+  --swatch-accent: #1d4ed8;
+}
+
+.theme-preview-carbon.is-dark {
+  --swatch-surface: #101113;
+  --swatch-accent: #d8dde5;
+}
+
+.theme-preview-graphite.is-dark {
+  --swatch-surface: #14161a;
+  --swatch-accent: #e8edf4;
+}
+
+.theme-preview-midnight.is-dark {
+  --swatch-surface: #0b1322;
+  --swatch-accent: #8fbaff;
+}
+
+.theme-preview-clay.is-dark {
+  --swatch-surface: #1c1310;
+  --swatch-accent: #f2a47f;
+}
+
+.theme-preview-blueprint.is-dark {
+  --swatch-surface: #0c1729;
+  --swatch-accent: #7fb0ff;
+}
+
+/* ---- Tab order --------------------------------------------------------- */
+
+.section-order-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sn-space-2);
+  min-height: var(--sn-row-min-height);
+  padding: 0 var(--sn-space-2) 0 var(--sn-space-1);
+}
+
+.section-order-row + .section-order-row {
+  border-top: 0.5px solid var(--sn-separator);
+}
+
+.section-order-row.is-dragging {
+  background: var(--sn-surface-hover);
+}
+
+.section-order-row > span:nth-child(2) {
+  flex: 1;
+}
+
+.section-order-row > div {
+  display: flex;
+  gap: 2px;
+}
+
+.section-order-grip {
+  display: grid;
+  place-items: center;
+  width: var(--sn-icon-button);
+  height: var(--sn-icon-button);
+  color: var(--sn-ink-tertiary);
+  cursor: grab;
+  touch-action: none;
+}
+
+/* ---- Backdrop ---------------------------------------------------------- */
+
+.backdrop-setting {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sn-space-2) 10px;
+  padding: var(--sn-space-2) var(--sn-space-3);
+}
+
+.backdrop-preview {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--sn-radius-control);
+  color: var(--sn-ink-secondary);
+  background: var(--sn-surface-sunken) center / cover no-repeat;
+}
+
+.backdrop-copy {
+  flex: 1 1 150px;
+  min-width: 0;
+  display: grid;
+}
+
+.backdrop-copy strong {
+  overflow-wrap: anywhere;
+  font-weight: 400;
+}
+
+.backdrop-copy span {
+  color: var(--sn-ink-secondary);
+  font: var(--sn-text-caption);
+}
+
+.backdrop-copy em {
+  color: var(--sn-danger);
+  font: var(--sn-text-caption);
+}
+
+.backdrop-actions {
+  display: flex;
+  gap: var(--sn-space-2);
+}
+
+.backdrop-actions label {
+  position: relative;
+  overflow: hidden;
+}
+
+.backdrop-actions label:focus-within {
+  outline: 2px solid var(--sn-focus);
+  outline-offset: 2px;
+}
+
+.backdrop-actions input[type='file'] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* ---- Connector (held back; see ConnectorSetting.tsx) -------------------- */
+
+.connector-setting {
+  display: grid;
+  gap: var(--sn-space-2);
+  padding: var(--sn-space-3);
+  color: var(--sn-ink-secondary);
+  font: var(--sn-text-caption);
+}
+
+.connector-setting p,
+.connector-setting ol {
+  margin: 0;
+}
+
+.connector-summary {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sn-space-2);
+}
+
+.connector-copy {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+}
+
+.connector-copy strong {
+  color: var(--sn-ink);
+  font: var(--sn-text-body);
+}
+
+.connector-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sn-space-1);
+}

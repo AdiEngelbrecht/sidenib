@@ -1,0 +1,154 @@
+/*
+ * Theme presets as --sn-* overrides (design contract section 5).
+ *
+ * Landed by ADIEN-162 so the stored `visualStyle` keeps changing the card now
+ * that views read tokens only; ADIEN-164 owns this file from here on.
+ *
+ * - `codex` (Studio in light, Obsidian in dark) is the stored default and is
+ *   the Sidenib palette: tokens.css unchanged, so it has no block here.
+ * - Every other preset keeps the palette it had in v0.1.14, mapped onto the
+ *   token names. Lines and hover tints are derived from the preset's ink.
+ * - Selectors are the classes App.tsx already sets on the shell root, so the
+ *   notch and the toast follow the preset as well.
+ */
+
+.workspace:is(
+    .style-porcelain,
+    .style-frost,
+    .style-paper,
+    .style-clay,
+    .style-blueprint,
+    .style-carbon,
+    .style-graphite,
+    .style-midnight
+  ) {
+  --sn-surface-hover: color-mix(in srgb, var(--sn-ink) 6%, transparent);
+  --sn-separator: color-mix(in srgb, var(--sn-ink) 10%, transparent);
+  --sn-border: color-mix(in srgb, var(--sn-ink) 15%, transparent);
+  --sn-focus: var(--sn-accent-text);
+  --sn-notch-active: var(--sn-accent);
+}
+
+/* ---- Light ------------------------------------------------------------- */
+
+.workspace.theme-light.style-porcelain {
+  --sn-surface: #f4f5f7;
+  --sn-surface-raised: #ffffff;
+  --sn-surface-sunken: #e6e9ed;
+  --sn-ink: #16181d;
+  --sn-ink-secondary: #5b6570;
+  --sn-ink-tertiary: #8a939d;
+  --sn-accent: #1f2937;
+  --sn-accent-ink: #ffffff;
+  --sn-accent-text: #1f2937;
+}
+
+.workspace.theme-light.style-frost {
+  --sn-surface: #eaf3fc;
+  --sn-surface-raised: #f8fbff;
+  --sn-surface-sunken: #d9e7f5;
+  --sn-ink: #102033;
+  --sn-ink-secondary: #4f6680;
+  --sn-ink-tertiary: #7f93a8;
+  --sn-accent: #2676d9;
+  --sn-accent-ink: #ffffff;
+  --sn-accent-text: #1a5fb4;
+}
+
+.workspace.theme-light.style-paper {
+  --sn-surface: #f5f0e4;
+  --sn-surface-raised: #fcfaf4;
+  --sn-surface-sunken: #e9e2d2;
+  --sn-ink: #231f19;
+  --sn-ink-secondary: #6a6155;
+  --sn-ink-tertiary: #91887a;
+  --sn-accent: #7c5c2f;
+  --sn-accent-ink: #fffaf0;
+  --sn-accent-text: #6f5126;
+}
+
+.workspace.theme-light.style-clay {
+  --sn-surface: #f3e9e1;
+  --sn-surface-raised: #fbf5f0;
+  --sn-surface-sunken: #e8d9cd;
+  --sn-ink: #261d19;
+  --sn-ink-secondary: #6e5c52;
+  --sn-ink-tertiary: #978479;
+  --sn-accent: #9e5d3f;
+  --sn-accent-ink: #fff7f3;
+  --sn-accent-text: #8a4e33;
+}
+
+.workspace.theme-light.style-blueprint {
+  --sn-surface: #eaf1fd;
+  --sn-surface-raised: #f7faff;
+  --sn-surface-sunken: #d8e4f8;
+  --sn-ink: #10203a;
+  --sn-ink-secondary: #4f6283;
+  --sn-ink-tertiary: #8493ad;
+  --sn-accent: #1d4ed8;
+  --sn-accent-ink: #ffffff;
+  --sn-accent-text: #1d4ed8;
+}
+
+/* ---- Dark -------------------------------------------------------------- */
+
+.workspace.theme-dark.style-carbon {
+  --sn-surface: #101113;
+  --sn-surface-raised: #1b1c1f;
+  --sn-surface-sunken: #08090b;
+  --sn-ink: #f7f8f9;
+  --sn-ink-secondary: #a0a6af;
+  --sn-ink-tertiary: #70757d;
+  --sn-accent: #d8dde5;
+  --sn-accent-ink: #101113;
+  --sn-accent-text: #d8dde5;
+}
+
+.workspace.theme-dark.style-graphite {
+  --sn-surface: #14161a;
+  --sn-surface-raised: #1f2227;
+  --sn-surface-sunken: #0a0b0e;
+  --sn-ink: #f6f7f8;
+  --sn-ink-secondary: #a1a8b3;
+  --sn-ink-tertiary: #6f7681;
+  --sn-accent: #e8edf4;
+  --sn-accent-ink: #14161a;
+  --sn-accent-text: #e8edf4;
+}
+
+.workspace.theme-dark.style-midnight {
+  --sn-surface: #0b1322;
+  --sn-surface-raised: #152036;
+  --sn-surface-sunken: #060b16;
+  --sn-ink: #eef5ff;
+  --sn-ink-secondary: #9bb0cb;
+  --sn-ink-tertiary: #64789a;
+  --sn-accent: #8fbaff;
+  --sn-accent-ink: #0b1322;
+  --sn-accent-text: #8fbaff;
+}
+
+.workspace.theme-dark.style-clay {
+  --sn-surface: #1c1310;
+  --sn-surface-raised: #291c17;
+  --sn-surface-sunken: #140d0b;
+  --sn-ink: #fbf1ec;
+  --sn-ink-secondary: #b9a093;
+  --sn-ink-tertiary: #84695d;
+  --sn-accent: #f2a47f;
+  --sn-accent-ink: #1c1310;
+  --sn-accent-text: #f2a47f;
+}
+
+.workspace.theme-dark.style-blueprint {
+  --sn-surface: #0c1729;
+  --sn-surface-raised: #14233c;
+  --sn-surface-sunken: #08111f;
+  --sn-ink: #eaf2ff;
+  --sn-ink-secondary: #9db0cc;
+  --sn-ink-tertiary: #62779a;
+  --sn-accent: #7fb0ff;
+  --sn-accent-ink: #0c1729;
+  --sn-accent-text: #7fb0ff;
+}

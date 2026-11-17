@@ -501,7 +501,7 @@ test.describe('shell in the browser', () => {
     await page.goto('/')
     await notch(page).click()
     await expect(card(page)).toBeFocused()
-    await page.getByPlaceholder('Add task...').click()
+    await page.getByPlaceholder('New task').click()
     await page.keyboard.press('Escape')
     await expect(card(page)).toBeHidden()
     await expect(notch(page)).toBeFocused()
@@ -509,7 +509,7 @@ test.describe('shell in the browser', () => {
 
   test('Escape peels Settings before it closes the card', async ({ page }) => {
     await page.goto('/?open=1')
-    await page.getByRole('button', { name: 'Sidebar settings' }).click()
+    await page.getByRole('button', { name: 'Settings', exact: true }).click()
     await expect(page.getByRole('dialog', { name: 'Settings' })).toBeVisible()
     await page.keyboard.press('Escape')
     await expect(page.getByRole('dialog', { name: 'Settings' })).toHaveCount(0)
@@ -522,7 +522,7 @@ test.describe('shell in the browser', () => {
     await page.goto('/')
     await page.keyboard.press('Alt+Shift+KeyS')
     await expect(card(page)).toHaveClass(/is-open/)
-    await expect(page.getByPlaceholder('Add task...')).toBeFocused()
+    await expect(page.getByPlaceholder('New task')).toBeFocused()
     await page.keyboard.press('Alt+Shift+KeyS')
     await expect(card(page)).toBeHidden()
   })
@@ -608,7 +608,7 @@ test.describe('shell in the browser', () => {
     await page.goto('/?open=1')
 
     const frame = await openFrame(page)
-    const scroll = await page.locator('.sidebar-content').evaluate((node) => ({
+    const scroll = await page.locator('.sn-view-body').evaluate((node) => ({
       client: node.clientHeight,
       scroll: node.scrollHeight,
     }))
@@ -616,7 +616,7 @@ test.describe('shell in the browser', () => {
     expect(frame.height).toBeCloseTo(480, 0)
     expect(scroll.client).toBeLessThanOrEqual(480)
     expect(scroll.scroll).toBeGreaterThan(scroll.client * 2)
-    await page.locator('.sidebar-content').evaluate((node) => {
+    await page.locator('.sn-view-body').evaluate((node) => {
       node.scrollTop = node.scrollHeight
     })
     await expect(page.getByText('Long list task 40')).toBeVisible()
