@@ -222,15 +222,36 @@ body.is-capture {
   justify-content: flex-start;
 }
 
+.sn-notch-hit[data-edge='top'] {
+  align-items: flex-start;
+  justify-content: center;
+}
+
 .sn-notch {
+  /* Thickness is the size across the docked edge, length the size along it. */
+  --sn-notch-thickness: var(--sn-notch-width);
   position: relative;
-  width: var(--sn-notch-width);
+  width: var(--sn-notch-thickness);
   height: var(--sn-notch-height);
   background: var(--sn-notch);
   box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.18);
   transition:
     width var(--sn-motion-quick) var(--sn-ease-out),
+    height var(--sn-motion-quick) var(--sn-ease-out),
+    opacity var(--sn-motion-quick) linear,
     background-color var(--sn-motion-quick) linear;
+}
+
+[data-edge='top'] > .sn-notch {
+  width: var(--sn-notch-height);
+  height: var(--sn-notch-thickness);
+  border-radius: 0 0 var(--sn-radius-notch) var(--sn-radius-notch);
+}
+
+/* Advanced "show notch on hover": hidden until the pointer is on the edge. */
+.sn-notch-hit.is-hover-only:not(.is-open, .has-reminder, :hover, :focus-visible)
+  > .sn-notch {
+  opacity: 0;
 }
 
 [data-edge='right'] > .sn-notch {
@@ -243,12 +264,12 @@ body.is-capture {
 
 .sn-notch-hit:hover > .sn-notch,
 .sn-notch-hit.is-pulling > .sn-notch {
-  width: var(--sn-notch-width-hover);
+  --sn-notch-thickness: calc(var(--sn-notch-width) + var(--sn-notch-hover-grow));
   background: var(--sn-ink-secondary);
 }
 
 .sn-notch-hit.is-open > .sn-notch {
-  width: var(--sn-notch-width-open);
+  --sn-notch-thickness: var(--sn-notch-width-open);
   background: var(--sn-notch-active);
 }
 
@@ -288,6 +309,11 @@ body.is-capture {
   left: 4px;
 }
 
+[data-edge='top'] > .sn-notch > .sn-notch__badge {
+  top: 4px;
+  right: -7px;
+}
+
 /* Card */
 .sn-card {
   position: absolute;
@@ -312,6 +338,16 @@ body.is-capture {
 .sn-card[data-edge='left'] {
   transform: translateX(calc(var(--sn-reveal-offset) * -1))
     scale(var(--sn-reveal-scale));
+}
+
+.sn-card[data-edge='top'],
+.sn-toast[data-edge='top'] {
+  transform: translateY(calc(var(--sn-reveal-offset) * -1))
+    scale(var(--sn-reveal-scale));
+}
+
+.sn-toast[data-edge='left'] {
+  transform: translateX(calc(var(--sn-reveal-offset) * -1));
 }
 
 .sn-card.is-open {
@@ -930,6 +966,20 @@ button.sn-section-label {
   background: #282722;
 }
 
+/* Advanced settings only: a bounded numeric preference. */
+.sn-slider {
+  width: 104px;
+  height: 20px;
+  margin: 0;
+  accent-color: var(--sn-accent-text);
+}
+
+.sn-row__value {
+  min-width: 40px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
 .sn-keys {
   padding: 2px 6px;
   border-radius: 6px;
@@ -959,7 +1009,8 @@ button.sn-section-label {
     visibility 0s linear var(--sn-motion-dismiss);
 }
 
-.sn-toast.is-visible {
+.sn-toast.is-visible,
+.sn-toast[data-edge].is-visible {
   opacity: 1;
   visibility: visible;
   transform: none;

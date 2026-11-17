@@ -24,6 +24,9 @@ const STAGES = {
 // Right-hand slice of the laptop stage around the card.
 const CROP = { x: 800, y: 180, width: 640, height: 565 }
 const CROP_LEFT = { x: 0, y: 180, width: 640, height: 565 }
+const CROP_TOP = { x: 240, y: 0, width: 960, height: 565 }
+// Largest card the Advanced bounds allow; the default frames must stay 340 x 480.
+const ADVANCED = { width: 560, height: Infinity }
 
 const frames = [
   ['01-collapsed', 'annotate=1', CROP],
@@ -48,6 +51,11 @@ const frames = [
   ['20-fit-short', 'open=1&stage=short&view=calendar&annotate=1', null],
   ['21-fit-tiny', 'open=1&stage=tiny&view=calendar&annotate=1', null],
   ['22-fit-tiny-long', 'open=1&stage=tiny&data=long&annotate=1', null],
+  ['23-top-edge', 'open=1&edge=top&annotate=1', CROP_TOP],
+  ['24-top-edge-toast', 'edge=top&toast=1&annotate=1', CROP_TOP],
+  ['25-settings-advanced', 'open=1&view=settings&page=advanced', CROP],
+  ['26-advanced-wide-full', 'open=1&width=560&height=full&data=long&annotate=1', null, ADVANCED],
+  ['27-advanced-wide-short', 'open=1&stage=short&width=560&height=full&view=calendar', null, ADVANCED],
 ]
 
 const failures = []
@@ -64,7 +72,7 @@ const browser = await chromium.launch(
 )
 const metrics = {}
 
-for (const [name, query, clip] of frames) {
+for (const [name, query, clip, limit = { width: 340, height: 480 }] of frames) {
   const stage = new URLSearchParams(query).get('stage') ?? 'laptop'
   const [width, height] = STAGES[stage]
   const context = await browser.newContext({
@@ -109,7 +117,7 @@ for (const [name, query, clip] of frames) {
       m.card.x + m.card.width <= m.viewport.width - 10
     check(
       `${name}: card ${m.card.width}x${m.card.height} inside work area with 10 clearance`,
-      fits && m.card.height <= 480 && m.card.width <= 340,
+      fits && m.card.height <= limit.height && m.card.width <= limit.width,
     )
     check(
       `${name}: content scrolls inside the card, no sideways overflow`,
@@ -191,6 +199,65 @@ const before = box.y
 await drag(-2, 120)
 box = await notchBox()
 check('vertical drag repositions the notch and does not open', !(await isOpen()) && box.y > before + 100, `moved ${Math.round(box.y - before)} px`)
+
+// Top edge: the same rules with the axes swapped.
+await page.goto(`${page0}?capture=0&edge=top`)
+await settle()
+box = await notchBox()
+const pullDown = async (distance) => {
+  const x = box.x + box.width / 2
+  await page.mouse.move(x, box.y + 4)
+  await page.mouse.down()
+  for (let i = 1; i <= 8; i += 1) {
+    await page.mouse.move(x + 1, box.y + 4 + (distance * i) / 8)
+    await page.waitForTimeout(40)
+  }
+  await page.waitForTimeout(120)
+  await page.mouse.up()
+  await settle()
+}
+await pullDown(24)
+check('top edge: 24 px downward pull springs back', !(await isOpen()))
+await pullDown(60)
+check('top edge: 60 px downward pull opens the card', await isOpen())
+await page.keyboard.press('Escape')
+await settle()
+
+// Settings: the default page stays simple; every legacy preference is one level down.
+await page.goto(`${page0}?capture=0&open=1&view=settings`)
+await settle()
+const simple = await page.evaluate(() => ({
+  rows: document.querySelectorAll('#sn-body .sn-row').length,
+  sliders: document.querySelectorAll('#sn-body input[type=range]').length,
+  edges: [...document.querySelectorAll('[data-setting="edge"]')].map((b) => b.textContent).join(','),
+}))
+check('default Settings has no sliders and at most 10 rows', simple.sliders === 0 && simple.rows <= 10, `${simple.rows} rows`)
+check('Screen edge offers Left, Top and Right', simple.edges === 'Left,Top,Right', simple.edges)
+await page.locator('[data-act="advanced"]').click()
+await settle()
+const advanced = await page.evaluate(() =>
+  [...document.querySelectorAll('#sn-body input[type=range]')].map((i) => i.dataset.adv).join(','),
+)
+check(
+  'Advanced keeps the size, notch, density and motion preferences',
+  advanced === 'panelWidth,panelRadius,surfaceAlpha,notchWidth,notchHeight,taskRowHeight,taskTextSize,motionMs',
+  advanced,
+)
+await page.locator('[data-adv-choice="notchVisibility"][data-value="On hover"]').click()
+await page.keyboard.press('Escape')
+await settle()
+await page.mouse.move(400, 400)
+await settle()
+const notchOpacity = () =>
+  page.evaluate(() => getComputedStyle(document.querySelector('.sn-notch')).opacity)
+await page.evaluate(() => document.activeElement.blur())
+await settle()
+const hidden = await notchOpacity()
+box = await notchBox()
+await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+await settle()
+check('hover-only notch is hidden until the pointer reaches the edge', hidden === '0' && (await notchOpacity()) === '1', `${hidden} then visible`)
+check('hover-only notch still does not open on hover', !(await isOpen()))
 
 await page.goto(`${page0}?capture=0&toast=1`)
 await settle()

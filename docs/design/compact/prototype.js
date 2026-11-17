@@ -6,7 +6,8 @@
  * capture-frames.mjs can photograph them:
  *   ?stage=laptop|short|tiny &theme=light|dark &view=today|calendar|lists|settings
  *   &data=populated|empty|long|overdue|completed &open=1 &toast=1 &annotate=1
- *   &edge=left &motion=reduced &list=groceries &scroll=120 &capture=1
+ *   &edge=left|top &motion=reduced &list=groceries &scroll=120 &capture=1
+ *   &page=advanced &width=560 &height=full &notch=hover
  */
 
 const { SN, computeGeometry, classifyNotchGesture, pullProgress } =
@@ -21,7 +22,21 @@ const state = {
   open: params.get('open') === '1',
   toast: params.get('toast') === '1',
   annotate: params.get('annotate') === '1',
-  edge: params.get('edge') === 'left' ? 'left' : 'right',
+  edge: ['left', 'top'].includes(params.get('edge')) ? params.get('edge') : 'right',
+  settingsPage: params.get('page') === 'advanced' ? 'advanced' : null,
+  // Advanced preferences. Defaults are the compact Sidenib layout.
+  adv: {
+    panelWidth: Number(params.get('width') ?? 340),
+    heightMode: params.get('height') === 'full' ? 'Full' : 'Compact',
+    notchWidth: 12,
+    notchHeight: 48,
+    notchVisibility: params.get('notch') === 'hover' ? 'On hover' : 'Always',
+    panelRadius: 24,
+    taskRowHeight: 44,
+    taskTextSize: 14,
+    motionMs: 220,
+    surfaceAlpha: 100,
+  },
   reduced: params.get('motion') === 'reduced',
   list: params.get('list'),
   capture: params.get('capture') === '1',
@@ -32,7 +47,7 @@ const state = {
   lastView: 'today',
   settings: {
     appearance: 'System',
-    edge: 'Right',
+    edge: { left: 'Left', top: 'Top' }[params.get('edge')] ?? 'Right',
     launch: true,
     notifications: true,
     showCompleted: true,
@@ -325,14 +340,64 @@ const segmented = (key, options) =>
 const toggle = (key, label) =>
   `<button type="button" class="sn-switch" role="switch" data-switch="${key}" aria-checked="${state.settings[key]}" aria-label="${label}"></button>`
 
+const slider = (key, min, max, step, unit) =>
+  `<input type="range" class="sn-slider" data-adv="${key}" min="${min}" max="${max}" step="${step}"
+    value="${state.adv[key]}" aria-label="${key}" /><span class="sn-row__value">${state.adv[key]}${unit}</span>`
+const advSegmented = (key, options) =>
+  `<div class="sn-segmented" role="group">${options
+    .map(
+      (option) =>
+        `<button type="button" data-adv-choice="${key}" data-value="${option}" aria-pressed="${state.adv[key] === option}">${option}</button>`,
+    )
+    .join('')}</div>`
+const navRow = (label, value, attrs = '') =>
+  `<li><button type="button" class="sn-row sn-row--nav sn-row--plain" ${attrs}>
+    <div class="sn-row__text"><span class="sn-row__title">${label}</span></div>
+    <div class="sn-row__trail"><span>${value}</span>${icon('chevronRight')}</div></button></li>`
+
+// Every preference v0.1.14 supports stays available here, clamped to the
+// same safe bounds as geometry.js. The default Settings page stays short.
+function advancedView() {
+  return {
+    back: 'Settings',
+    title: 'Advanced',
+    headerActions: `<button type="button" class="sn-text-button" data-act="settings-done">Done</button>`,
+    body: `<div class="sn-section-label">Panel</div>
+      <ul class="sn-group">
+        ${settingRow('Height', advSegmented('heightMode', ['Compact', 'Full']))}
+        ${settingRow('Width', slider('panelWidth', 320, 560, 10, ''))}
+        ${settingRow('Corner radius', slider('panelRadius', 12, 28, 1, ''))}
+        ${settingRow('Surface opacity', slider('surfaceAlpha', 58, 100, 1, '%'))}
+      </ul>
+      <div class="sn-section-label">Notch</div>
+      <ul class="sn-group">
+        ${settingRow('Show', advSegmented('notchVisibility', ['Always', 'On hover']))}
+        ${settingRow('Thickness', slider('notchWidth', 10, 112, 1, ''))}
+        ${settingRow('Length', slider('notchHeight', 44, 176, 2, ''))}
+      </ul>
+      <div class="sn-section-label">Density</div>
+      <ul class="sn-group">
+        ${settingRow('Row height', slider('taskRowHeight', 40, 62, 1, ''))}
+        ${settingRow('Text size', slider('taskTextSize', 11, 14, 0.5, ''))}
+        ${settingRow('Motion', slider('motionMs', 140, 360, 10, ' ms'))}
+      </ul>
+      <div class="sn-section-label">Look</div>
+      <ul class="sn-group">
+        ${navRow('Theme preset', 'Sidenib')}
+        ${navRow('Backdrop image', 'None')}
+      </ul>`,
+  }
+}
+
 function settingsView() {
+  if (state.settingsPage === 'advanced') return advancedView()
   return {
     title: 'Settings',
     headerActions: `<button type="button" class="sn-text-button" data-act="settings-done">Done</button>`,
     body: `<div class="sn-section-label">Appearance</div>
       <ul class="sn-group">
         ${settingRow('Theme', segmented('appearance', ['System', 'Light', 'Dark']))}
-        ${settingRow('Screen edge', segmented('edge', ['Left', 'Right']))}
+        ${settingRow('Screen edge', segmented('edge', ['Left', 'Top', 'Right']))}
       </ul>
       <div class="sn-section-label">Tasks</div>
       <ul class="sn-group">
@@ -346,8 +411,9 @@ function settingsView() {
         ${settingRow('Launch at login', toggle('launch', 'Launch at login'))}
         ${settingRow('Open or close', '<span class="sn-keys">⌥T</span>')}
       </ul>
-      <div class="sn-section-label">Reset</div>
+      <div class="sn-section-label">More</div>
       <ul class="sn-group">
+        ${navRow('Advanced', 'Size, notch, presets', 'data-act="advanced"')}
         <li><button type="button" class="sn-row sn-row--nav sn-row--plain is-danger">
           <div class="sn-row__text"><span class="sn-row__title">Reset settings</span></div></button></li>
       </ul>`,
@@ -428,7 +494,10 @@ function outline(rect) {
 
 function annotate(workArea) {
   const { card, hit, notch, toast } = geometry
-  const right = geometry.edge === 'right'
+  const right = geometry.edge !== 'left'
+  const top = geometry.edge === 'top'
+  const thickness = top ? notch.height : notch.width
+  const length = top ? notch.width : notch.height
   outline(hit)
   outline({ ...workArea, height: workArea.height - 1, width: workArea.width - 1 })
   note(
@@ -437,7 +506,7 @@ function annotate(workArea) {
     workArea.y + 8,
   )
   const notchLabel = note(
-    `notch ${state.open ? SN.notch.openWidth : notch.width} × ${notch.height} visible · hit ${hit.width} × ${hit.height}`,
+    `notch ${state.open ? SN.notch.openWidth : thickness} × ${length} visible · hit ${Math.min(hit.width, hit.height)} × ${Math.max(hit.width, hit.height)}`,
     0,
     0,
   )
@@ -445,7 +514,7 @@ function annotate(workArea) {
 
   if (state.open) {
     const stageCard = stageEl.querySelector('.sn-card')
-    const top = (selector) => {
+    const offsetOf = (selector) => {
       const el = stageCard.querySelector(selector)
       return el ? el.offsetTop : null
     }
@@ -456,10 +525,10 @@ function annotate(workArea) {
     }
     place(`card ${card.width} × ${card.height} · radius ${SN.card.radius}`, 0)
     place(`header · title 22/26 bold`, 22)
-    if (top('.sn-cal') !== null) {
+    if (offsetOf('.sn-cal') !== null) {
       place(
         geometry.compactCalendar ? 'week strip (card < 420)' : 'month grid · fixed',
-        top('.sn-cal') + 8,
+        offsetOf('.sn-cal') + 8,
       )
     }
     const body = stageCard.querySelector('.sn-body')
@@ -467,15 +536,15 @@ function annotate(workArea) {
       `body ${body.offsetHeight} high · only scroll region${body.scrollHeight > body.clientHeight ? ` (content ${body.scrollHeight})` : ''}`,
       body.offsetTop + Math.min(40, body.offsetHeight / 2),
     )
-    if (top('.sn-quick') !== null) place('quick add · 36 field', top('.sn-quick') + 12)
-    place('tabs · 36 segmented', top('.sn-tabs') + 8)
+    if (offsetOf('.sn-quick') !== null) place('quick add · 36 field', offsetOf('.sn-quick') + 12)
+    place('tabs · 36 segmented', offsetOf('.sn-tabs') + 8)
     const gap = note(`${SN.clearance} clearance`, 0, card.y + card.height + 6)
     gap.style.left = `${right ? card.x + card.width - gap.offsetWidth : card.x}px`
-    notchLabel.style.left = `${right ? card.x + card.width - labelWidth : card.x}px`
-    notchLabel.style.top = `${card.y - 22}px`
+    notchLabel.style.left = `${top ? card.x + card.width + 8 : right ? card.x + card.width - labelWidth : card.x}px`
+    notchLabel.style.top = `${top ? card.y : card.y - 22}px`
   } else {
-    notchLabel.style.left = `${right ? hit.x - labelWidth - 8 : hit.x + hit.width + 8}px`
-    notchLabel.style.top = `${hit.y - 24}px`
+    notchLabel.style.left = `${top ? hit.x + hit.width + 8 : right ? hit.x - labelWidth - 8 : hit.x + hit.width + 8}px`
+    notchLabel.style.top = `${top ? hit.y + 4 : hit.y - 24}px`
     if (state.toast) {
       const el = note(
         `toast ${toast.width} × ${toast.height} · radius 16 · card stays closed`,
@@ -495,8 +564,17 @@ function render() {
     width: stage.width,
     height: stage.height - stage.menu,
   }
-  geometry = computeGeometry(workArea, { edge: state.edge, notchY: state.notchY })
+  geometry = computeGeometry(workArea, geometryOptions())
   const { card, hit, toast } = geometry
+  const origin =
+    state.edge === 'top'
+      ? `${geometry.anchor.x - card.x}px 0`
+      : `${state.edge === 'right' ? '100%' : '0'} ${geometry.anchor.y - card.y}px`
+  const cardVars =
+    `--sn-radius-card:${state.adv.panelRadius}px;--sn-row-min-height:${state.adv.taskRowHeight}px;` +
+    `--sn-text-body:400 ${state.adv.taskTextSize}px/${Math.round(state.adv.taskTextSize * 1.36)}px var(--sn-font);` +
+    `--sn-motion-reveal:${state.reduced ? 120 : state.adv.motionMs}ms;` +
+    `background:color-mix(in srgb, var(--sn-surface) ${state.adv.surfaceAlpha}%, transparent)`
   const bodyScroll = document.getElementById('sn-body')?.scrollTop ?? 0
 
   document.documentElement.dataset.theme = state.theme
@@ -521,13 +599,13 @@ function render() {
     <div class="proto-window" style="left:${Math.round(stage.width * 0.08)}px;top:${stage.menu + 40}px;width:${Math.round(stage.width * 0.58)}px;height:${Math.round((stage.height - stage.menu) * 0.72)}px">
       <i style="top:60px;width:38%"></i><i style="top:84px;width:62%"></i><i style="top:108px;width:51%"></i>
     </div>
-    <button type="button" class="sn-notch-hit${state.open ? ' is-open' : ''}${state.toast ? ' has-reminder' : ''}" id="sn-notch"
+    <button type="button" class="sn-notch-hit${state.open ? ' is-open' : ''}${state.toast ? ' has-reminder' : ''}${state.adv.notchVisibility === 'On hover' ? ' is-hover-only' : ''}" id="sn-notch"
       data-edge="${state.edge}" aria-label="${state.open ? 'Close Sidenib' : 'Open Sidenib'}${state.toast ? ', 1 reminder' : ''}"
       aria-expanded="${state.open}" aria-controls="sn-card"
-      style="left:${hit.x}px;top:${hit.y}px;width:${hit.width}px;height:${hit.height}px">
+      style="left:${hit.x}px;top:${hit.y}px;width:${hit.width}px;height:${hit.height}px;--sn-notch-width:${state.adv.notchWidth}px;--sn-notch-height:${state.adv.notchHeight}px">
       <span class="sn-notch">${state.toast && !state.open ? '<span class="sn-notch__badge">1</span>' : ''}</span>
     </button>
-    <div class="sn-toast${showToast ? ' is-visible' : ''}" role="status" aria-live="polite"
+    <div class="sn-toast${showToast ? ' is-visible' : ''}" data-edge="${state.edge}" role="status" aria-live="polite"
       style="left:${toast.x}px;top:${toast.y}px;width:${toast.width}px;height:${toast.height}px">
       ${icon('bell')}
       <button type="button" class="sn-toast__main" data-act="toast-open" ${showToast ? '' : 'tabindex="-1"'}>
@@ -538,7 +616,7 @@ function render() {
     </div>
     <section class="sn-card${wasOpen && state.open ? ' is-open' : ''}" id="sn-card" data-edge="${state.edge}"
       role="dialog" aria-labelledby="sn-title" tabindex="-1" ${state.open ? '' : 'inert'}
-      style="left:${card.x}px;top:${card.y}px;width:${card.width}px;height:${card.height}px;transform-origin:${state.edge === 'right' ? '100%' : '0'} ${geometry.centerY - card.y}px">
+      style="left:${card.x}px;top:${card.y}px;width:${card.width}px;height:${card.height}px;transform-origin:${origin};${cardVars}">
       ${renderCard()}
     </section>`
 
@@ -568,10 +646,32 @@ function render() {
   syncControls()
 }
 
+function geometryOptions() {
+  return {
+    edge: state.edge,
+    notchY: state.notchY,
+    panelWidth: state.adv.panelWidth,
+    heightMode: state.adv.heightMode === 'Full' ? 'full' : 'compact',
+    notchWidth: state.adv.notchWidth,
+    notchHeight: state.adv.notchHeight,
+  }
+}
+
+// dx is travel away from the docked edge, dy is travel along it.
+function gestureAxes(event, drag) {
+  const x = (event.clientX - drag.x) / scale
+  const y = (event.clientY - drag.y) / scale
+  if (state.edge === 'top') return { dx: y, dy: x }
+  return { dx: state.edge === 'right' ? -x : x, dy: y }
+}
+
 function setOpen(open, { keyboard = false } = {}) {
   if (state.open === open) return
   state.open = open
-  if (!open && state.view === 'settings') state.view = state.lastView
+  if (!open && state.view === 'settings') {
+    state.view = state.lastView
+    state.settingsPage = null
+  }
   render()
   if (open) {
     // Keyboard open lands in quick add; pointer open leaves typing alone.
@@ -595,7 +695,7 @@ function bindNotch() {
       x: event.clientX,
       y: event.clientY,
       startNotchY: state.notchY,
-      lastX: event.clientX,
+      lastDx: 0,
       lastTime: event.timeStamp,
       velocity: 0,
       mode: 'pending',
@@ -604,12 +704,10 @@ function bindNotch() {
 
   notchEl.addEventListener('pointermove', (event) => {
     if (!drag) return
-    const sign = state.edge === 'right' ? -1 : 1
-    const dx = ((event.clientX - drag.x) * sign) / scale
-    const dy = (event.clientY - drag.y) / scale
+    const { dx, dy } = gestureAxes(event, drag)
     const elapsed = Math.max(1, event.timeStamp - drag.lastTime)
-    drag.velocity = (((event.clientX - drag.lastX) * sign) / scale) / elapsed
-    drag.lastX = event.clientX
+    drag.velocity = (dx - drag.lastDx) / elapsed
+    drag.lastDx = dx
     drag.lastTime = event.timeStamp
     if (drag.mode === 'pending' || drag.mode === 'pulling') {
       const next = classifyNotchGesture({ dx, dy })
@@ -619,30 +717,30 @@ function bindNotch() {
     const cardEl = document.getElementById('sn-card')
     if (drag.mode === 'pulling' && !state.open) {
       const progress = state.reduced ? (dx >= SN.pull.commit ? 1 : 0) : pullProgress(dx)
-      const direction = state.edge === 'right' ? 1 : -1
+      const offset = (1 - progress) * 16 * (state.edge === 'right' ? 1 : -1)
       notchEl.classList.add('is-pulling')
       cardEl.classList.add('is-tracking')
       cardEl.style.opacity = String(progress)
-      cardEl.style.transform = `translateX(${(1 - progress) * 16 * direction}px) scale(${0.96 + 0.04 * progress})`
+      cardEl.style.transform = `translate${state.edge === 'top' ? 'Y' : 'X'}(${offset}px) scale(${0.96 + 0.04 * progress})`
     } else if (drag.mode === 'reposition' && !state.open) {
       const stage = STAGES[state.stage]
-      const travel = stage.height - stage.menu
+      const height = stage.height - stage.menu
+      const travel = state.edge === 'top' ? stage.width : height
       let next = drag.startNotchY + (dy / travel) * 100
       if (Math.abs(next - 50) <= SN.snapCenter) next = 50
       state.notchY = Math.min(100, Math.max(0, next))
       const g = computeGeometry(
-        { x: 0, y: stage.menu, width: stage.width, height: travel },
-        { edge: state.edge, notchY: state.notchY },
+        { x: 0, y: stage.menu, width: stage.width, height },
+        geometryOptions(),
       )
+      notchEl.style.left = `${g.hit.x}px`
       notchEl.style.top = `${g.hit.y}px`
     }
   })
 
   const finish = (event) => {
     if (!drag) return
-    const sign = state.edge === 'right' ? -1 : 1
-    const dx = ((event.clientX - drag.x) * sign) / scale
-    const dy = (event.clientY - drag.y) / scale
+    const { dx } = gestureAxes(event, drag)
     const mode = drag.mode
     const velocity = drag.velocity
     drag = null
@@ -689,8 +787,14 @@ stageEl.addEventListener('click', (event) => {
     state.view = 'settings'
   } else if (act === 'settings-done') {
     state.view = state.lastView
+    state.settingsPage = null
+  } else if (act === 'advanced') {
+    state.settingsPage = 'advanced'
   } else if (act === 'back') {
-    state.list = null
+    if (state.view === 'settings') state.settingsPage = null
+    else state.list = null
+  } else if (target.dataset.advChoice) {
+    state.adv[target.dataset.advChoice] = target.dataset.value
   } else if (act === 'toggle-completed') {
     state.completedOpen = !state.completedOpen
   } else if (act === 'entry-mode') {
@@ -767,7 +871,6 @@ function syncControls() {
   }
   const toggles = {
     toast: state.toast,
-    edgeLeft: state.edge === 'left',
     reduced: state.reduced,
     annotate: state.annotate,
   }
@@ -780,8 +883,12 @@ document.querySelector('.proto-bar').addEventListener('click', (event) => {
   const button = event.target.closest('button')
   if (!button) return
   const control = button.parentElement.dataset.control
-  if (control) state[control] = button.dataset.value
-  else if (button.dataset.toggle === 'toast') {
+  if (control) {
+    state[control] = button.dataset.value
+    if (control === 'edge') {
+      state.settings.edge = { left: 'Left', top: 'Top', right: 'Right' }[state.edge]
+    }
+  } else if (button.dataset.toggle === 'toast') {
     state.toast = !state.toast
     window.clearTimeout(toastTimer)
     // After 8 s the toast folds back into the notch badge. It never opens the card.
@@ -790,11 +897,23 @@ document.querySelector('.proto-bar').addEventListener('click', (event) => {
         stageEl.querySelector('.sn-toast')?.classList.remove('is-visible')
       }, 8000)
     }
-  } else if (button.dataset.toggle === 'edgeLeft') {
-    state.edge = state.edge === 'left' ? 'right' : 'left'
   } else if (button.dataset.toggle === 'reduced') state.reduced = !state.reduced
   else if (button.dataset.toggle === 'annotate') state.annotate = !state.annotate
   render()
+})
+
+// Sliders update their label while dragging and apply on release, so the
+// re-render does not interrupt the drag.
+stageEl.addEventListener('input', (event) => {
+  const key = event.target.dataset?.adv
+  if (key) event.target.nextElementSibling.textContent = event.target.value
+})
+stageEl.addEventListener('change', (event) => {
+  const key = event.target.dataset?.adv
+  if (!key) return
+  state.adv[key] = Number(event.target.value)
+  render()
+  stageEl.querySelector(`[data-adv="${key}"]`)?.focus({ preventScroll: true })
 })
 
 window.addEventListener('resize', render)

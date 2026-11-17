@@ -17,7 +17,7 @@ not gain a rich-text notes feature.
 | [prototype.html](prototype.html) | Static, clickable prototype of every state. Open it in a browser; no server or build needed. |
 | [prototype.css](prototype.css), [prototype.js](prototype.js) | Prototype styles and behaviour. Classes prefixed `sn-` are the product surface; `proto-` is review chrome. |
 | [capture-frames.mjs](capture-frames.mjs) | Regenerates [frames/](frames/) and runs the browser checks listed under Verification. |
-| [frames/](frames/) | 22 reference frames, most annotated, plus measured [metrics.json](frames/metrics.json). |
+| [frames/](frames/) | 27 reference frames, most annotated, plus measured [metrics.json](frames/metrics.json). |
 | [baseline/](baseline/) | Screenshots of the v0.1.14 baseline used for the audit. |
 
 If this document and the prototype disagree, this document wins and the
@@ -42,8 +42,8 @@ and read from `src/App.tsx`, `src/App.css`, `src/sidebarSettings.ts` and
 | Action icons always visible | Four icons on every row: edit, priority, reminder, delete | A three-row list shows twelve controls before the user has asked for one. |
 | Cool blue on cool grey | Accent near `#2563EB`, surfaces `#F5F6F7` to `#FFFFFF` | Unrelated to the Sidenib paper, gold and ink identity. |
 | The calendar does not fit a short display | At 1280 × 600 the month, day summary and entry switch push the add field to the bottom edge; the agenda is below the fold | The view only works because the panel is full height. |
-| Settings are a control panel | 9 theme presets and 13 sliders for width, radius, opacity, row height, text size, motion and backdrop | The user is asked to do the design work. The window scrolls well past two screens. |
-| A full-height transparent native window | 442 wide × screen height, with cursor pass-through polled every 72 to 128 ms | Needed only because the panel is full height. A card-sized window removes the polling. |
+| Settings open on a control panel | 9 theme presets and 13 sliders for width, radius, opacity, row height, text size, motion and backdrop, all on the first screen | The everyday switches are buried among tuning controls, and the page scrolls well past two screens. The controls are worth keeping; their place is one level down. |
+| A full-height transparent native window | 442 wide × screen height, with cursor pass-through polled every 72 to 128 ms | The window covers a screen-high strip of other apps even when three tasks are shown. Smaller bounds reduce what has to be passed through; they do not remove the need for hit testing (section 3). |
 
 Other baseline screens: [closed](baseline/v0.1.14-laptop-closed.png),
 [calendar](baseline/v0.1.14-laptop-calendar.png),
@@ -58,6 +58,12 @@ entries, custom lists with "show on Today", inline reminders with snooze, the
 focus/normal/later priority, sort order, tab order, launch at login, the tray
 menu, `Alt+T` with `Alt+Shift+T` as fallback, dragging the handle along the
 edge, and reminders that never open the panel by themselves.
+
+Every supported preference also stays: the right, left and top dock edges, the
+nine theme presets, the backdrop image, the size, density, opacity and motion
+controls, and the hover-only handle. This contract changes their defaults to
+the compact right-middle Sidenib look and moves the tuning controls to an
+Advanced page (section 5). No stored preference is deleted or converted.
 
 ## 2. iPhone Notes reference
 
@@ -84,7 +90,7 @@ language, not the assets.
 
 All values are logical pixels. [geometry.js](geometry.js) is the reference
 implementation; `node docs/design/compact/geometry.js --check` proves the rules
-on eight work areas.
+on seventeen work-area and preference combinations.
 
 ![Collapsed notch with hit target](frames/01-collapsed.png)
 
@@ -131,21 +137,80 @@ cardY      = clamp(notchCentreY − cardHeight / 2,
 | 1366 × 728 (Windows laptop) | 340 × 480 | self-check |
 | 1024 × 420 (very short) | 340 × 400, week-strip calendar | [calendar](frames/21-fit-tiny.png), [long list](frames/22-fit-tiny-long.png) |
 
-### Native window
+### Dock edges
 
-The shell workspace should size the window to what is drawn instead of the
-full screen height:
+Right is the default. Left mirrors it. Top is retained from the baseline: the
+notch lies along the top edge (48 long, 12 deep), `handleY` positions it along
+the width, and the same card drops down from it with 10 clearance, centred on
+the notch and clamped inside the work area. Pulling down opens it; dragging
+sideways repositions it. [top edge](frames/23-top-edge.png),
+[top edge toast](frames/24-top-edge-toast.png),
+[left edge](frames/18-left-edge.png).
 
-| Mode | Window rectangle |
-| --- | --- |
-| Collapsed | the 28 × 72 hit target |
-| Toast | hit target plus toast, with a 28 px shadow margin |
-| Open | hit target plus card, with a 28 px shadow margin (378 × 536 at default size) |
+The baseline's top panel was about twice as wide and laid its sections side by
+side. The compact card uses tabs instead, so the top edge shows the same card
+as the sides. A user who wants the wider top panel raises Width in Advanced.
 
-The window jumps to its final rectangle and the card animates inside it. The
-16 px reveal travel fits inside the 28 px margin. This replaces the baseline's
-per-frame native window animation and removes the cursor pass-through polling.
-The margin is clipped at the work-area edge.
+### Advanced sizes
+
+The numbers above are defaults, not limits on the user. The Advanced page
+(section 5) keeps the baseline's size preferences. `computeGeometry` accepts
+them as options and clamps them, so a stored value can never place the card
+outside the work area or shrink the notch below a usable target.
+
+| Preference (`SidebarSettings`) | Compact default | Safe bounds | Applied as |
+| --- | --- | --- | --- |
+| `panelWidth` | 340 | 320–560, then at most work-area width − 20 | card width |
+| `panelHeightMode` (new) | `'compact'` | `'compact'` or `'full'` | 480, or work-area height − 20 |
+| `tabWidth` | 12 | 10–112 | visible notch thickness; the hit target is at least 28 |
+| `handleHeight` | 48 | 44–176 | visible notch length; the hit target is at least 72 |
+| `handleY` | 50 | 0–100 | notch centre along the edge |
+| `panelRadius` | 24 | 12–28 | `--sn-radius-card` |
+
+Upper bounds equal v0.1.14's, so every stored value remains valid. Lower
+bounds for `tabWidth` and `handleHeight` are widened from 22 and 56 to admit
+the compact defaults. Clamping happens when a value is applied; the stored
+preference is not rewritten. Full height is the baseline's full-height layout
+inside the card frame: it keeps the radius, the 10 clearance and the internal
+scroll. It is opt-in and never a default.
+[560 wide, full height](frames/26-advanced-wide-full.png),
+[the same on a short display](frames/27-advanced-wide-short.png).
+
+### Native window and pointer pass-through
+
+`computeGeometry` returns suggested window bounds for each mode: the hit target
+when collapsed, hit target plus toast, and hit target plus card, the last two
+with a 28 px margin for the shadow (378 × 536 open at default size). The 16 px
+reveal travel fits inside that margin, so the card can animate inside a window
+that has already reached its final bounds.
+
+Smaller bounds only reduce the area in question. They do not make anything
+click-through: the shadow margin, the four rounded corners and the gap beside
+the open notch are transparent pixels inside the window, and a native window
+intercepts the pointer there unless the shell does something about it.
+
+The acceptance invariant for the shell workspace:
+
+- Pointer events are intercepted only over the visible notch hit target, the
+  visible card and the visible toast. `computeGeometry(...).interactive` lists
+  these rectangles per mode; the card and toast rectangles are rounded by their
+  radius.
+- Every other pixel inside the window bounds passes clicks, hovers, scrolls and
+  drags to whatever is underneath: the shadow margin, the area outside each
+  rounded corner, and the clearance gap.
+- This holds when collapsed, with a toast, when open, during the reveal and
+  dismiss transitions, on each dock edge, at 1× and 2× scale, and on a second
+  monitor.
+
+How it is achieved is the shell workspace's choice, and it must be a mechanism
+the platform and Tauri actually support, verified natively on macOS and
+Windows. Candidates include a native hit-test or window-region shape, and
+toggling `setIgnoreCursorEvents` from pointer position as the baseline does. If
+no event-driven approach is available on a platform, a polling fallback is
+acceptable when it is bounded: it runs only while the pointer is near the
+window, at a stated interval no shorter than the baseline's 72 ms, and stops
+when the pointer leaves. The browser checks in this folder cover layout only.
+They prove nothing about native pass-through.
 
 ## 4. Card anatomy
 
@@ -236,37 +301,90 @@ With an unread reminder it turns gold and shows a 16 px count badge.
 [light](frames/11-settings.png) is the same layout as
 [dark](frames/16-dark-settings.png). Settings is a view inside the card, not a
 drawer and not a window. It is opened from the header action or the tray menu;
-"Done" returns to the previous view. Grouped rows:
+"Done" returns to the previous view.
+
+The default page is short: ten rows, no sliders.
 
 | Group | Row | Control |
 | --- | --- | --- |
 | Appearance | Theme | System, Light, Dark |
-| Appearance | Screen edge | Left, Right |
+| Appearance | Screen edge | Left, Top, Right |
 | Tasks | Sort by | Priority, Newest, Oldest |
 | Tasks | Show completed | switch |
 | Tasks | Tab order | pushes a three-row reorder list |
 | Desktop | Reminders | switch |
 | Desktop | Launch at login | switch |
 | Desktop | Open or close | shows the shortcut, read-only |
-| Reset | Reset settings | danger text, confirms first |
+| More | Advanced | pushes the Advanced page |
+| More | Reset settings | danger text, confirms first; restores the compact defaults |
 
-Settings that are removed, and the fixed value that replaces each:
+The Advanced page, [frame](frames/25-settings-advanced.png), holds every tuning
+control the baseline has. It uses the same grouped rows, with a gold
+"‹ Settings" back label.
 
-| `SidebarSettings` field | Decision | Replacement |
+| Group | Row | Control | Field |
+| --- | --- | --- | --- |
+| Panel | Height | Compact, Full | `panelHeightMode` |
+| Panel | Width | slider 320–560 | `panelWidth` |
+| Panel | Corner radius | slider 12–28 | `panelRadius` |
+| Panel | Surface opacity | slider 58–100% | `surfaceAlpha` |
+| Notch | Show | Always, On hover | `tabVisibility` |
+| Notch | Thickness | slider 10–112 | `tabWidth` |
+| Notch | Length | slider 44–176 | `handleHeight` |
+| Density | Row height | slider 40–62 | `taskRowHeight` |
+| Density | Row spacing | slider 0–14 | `taskGap` |
+| Density | Text size | slider 11–14 | `taskTextSize` |
+| Density | Motion | slider 140–360 ms | `motionMs` |
+| Look | Theme preset | pushes a list: Sidenib plus the nine baseline presets for the current mode | `visualStyle` |
+| Look | Backdrop image | pushes upload, clear, opacity, blur and dim | `backdropImage`, `backdropImageName`, `backdropOpacity`, `backdropBlur`, `backdropDim` |
+
+The prototype shows Row spacing and the two pushed pages as rows only.
+
+How `SidebarSettings` changes. No field is removed.
+
+| Field | Change | Compact default (was) |
 | --- | --- | --- |
-| `panelWidth`, `panelRadius`, `tabWidth`, `handleHeight` | remove | Geometry tokens in section 3 |
-| `taskRowHeight`, `taskGap`, `taskTextSize` | remove | Type and space tokens |
-| `motionMs` | remove | Motion tokens; the system reduced-motion setting is honoured |
-| `surfaceAlpha`, `backdropImage`, `backdropImageName`, `backdropOpacity`, `backdropBlur`, `backdropDim` | remove | Solid token surfaces |
-| `visualStyle` and the nine presets | remove | One Sidenib theme in light and dark |
-| `tabVisibility` | remove | The notch is always visible; at 12 px there is nothing to hide |
-| `theme` | extend | `'system' \| 'light' \| 'dark'`, default `'system'` |
-| `dockEdge` | narrow | `'right' \| 'left'`; a stored `'top'` becomes `'right'` |
-| `handleY` | keep | Notch centre, percent of work-area height |
-| `showCompleted`, `launchAtLogin`, `notificationsEnabled`, `taskSortMode`, `sectionOrder` | keep | unchanged |
+| `dockEdge` | unchanged: `'right' \| 'left' \| 'top'`; a stored `'bottom'` still becomes `'top'` as it does today | `'right'` |
+| `panelWidth` | default only | 340 (400) |
+| `panelHeightMode` | new: `'compact' \| 'full'`; absent in stored settings means `'compact'` | `'compact'` |
+| `tabWidth` | lower bound 10 (22), default | 12 (42) |
+| `handleHeight` | lower bound 44 (56), default | 48 (84) |
+| `handleY` | unchanged | 50 |
+| `panelRadius` | default only | 24 (18) |
+| `surfaceAlpha` | default only | 100 (96) |
+| `taskRowHeight` | unchanged | 44 |
+| `taskGap` | lower bound 0 (4), default; 0 gives the hairline-separated group | 0 (7) |
+| `taskTextSize` | default only | 14 (12.5) |
+| `motionMs` | default only | 220 (230) |
+| `tabVisibility` | unchanged: `'always' \| 'hover'` | `'always'` |
+| `theme` | extended: `'system' \| 'light' \| 'dark'` | `'system'` (`'light'`) |
+| `visualStyle` | extended: `'sidenib'` added to both modes and made the default; the nine presets stay | `'sidenib'` (`'codex'`) |
+| `backdropImage`, `backdropImageName`, `backdropOpacity`, `backdropBlur`, `backdropDim` | unchanged | no image |
+| `showCompleted`, `launchAtLogin`, `notificationsEnabled`, `taskSortMode`, `sectionOrder` | unchanged | unchanged |
 
-Removed fields are dropped by the sanitiser when old settings are read; nothing
-else migrates.
+Rules for the Settings workspace:
+
+- Stored preferences are kept. The sanitiser continues to clamp each field to
+  its bounds and nothing else; it does not reset a field because its value
+  differs from the compact default. Whether settings stored under the Todobar
+  key are imported into Sidenib's own key belongs to the identity work; if they
+  are, they are imported as they stand.
+- New defaults apply to a fresh install and to "Reset settings".
+- Advanced values reach components only as token overrides set on the shell
+  root (`--sn-card-width`, `--sn-radius-card`, `--sn-row-min-height`,
+  `--sn-text-body`, `--sn-motion-reveal` and so on). Components keep reading
+  tokens and never read settings directly.
+- A preset is a block of `--sn-*` colour overrides per mode. `sidenib` is
+  [tokens.css](tokens.css) unchanged. Each baseline preset keeps its own
+  palette, mapped onto the same token names, and must keep body text at 4.5:1
+  or better.
+- A backdrop image is drawn behind the card surface and clipped to the card
+  radius; surface opacity below 100% lets it show through. Text always sits on
+  a token surface.
+- Hover-only notch: the notch is invisible until the pointer reaches its hit
+  target or a reminder is waiting, as in the baseline. It never opens on
+  hover.
+- The system reduced-motion setting overrides `motionMs`.
 
 ### Reminder toast
 
@@ -294,7 +412,7 @@ else migrates.
 [calendar](frames/15-dark-calendar.png),
 [settings](frames/16-dark-settings.png),
 [toast](frames/17-dark-toast.png). On the left edge everything mirrors:
-[frame](frames/18-left-edge.png).
+[frame](frames/18-left-edge.png). The top edge is described in section 3.
 
 ## 6. Tokens
 
@@ -357,10 +475,10 @@ distance.
 
 | Input | Result |
 | --- | --- |
-| Hover the notch | It widens to 14 and darkens. Nothing opens. |
+| Hover the notch | It grows 2 px thicker and darkens. Nothing opens. With the hover-only preference this is also when it becomes visible. |
 | Click the notch (press and release within 6 px) | Toggles the card. |
-| Pull inward from the notch | After 6 px of mostly horizontal travel the card follows the pointer. Release at 48 px or more, or with an inward flick faster than 0.5 px/ms, and it opens. Release earlier and it closes back. |
-| Drag along the edge from the notch | After 6 px of mostly vertical travel the notch moves with the pointer and the position is saved on release (`handleY`). Snaps to centre within ±3%. Only while the card is closed. |
+| Pull inward from the notch (downward on the top edge) | After 6 px of travel mostly away from the edge the card follows the pointer. Release at 48 px or more, or with an inward flick faster than 0.5 px/ms, and it opens. Release earlier and it closes back. |
+| Drag along the edge from the notch | After 6 px of travel mostly along the edge the notch moves with the pointer and the position is saved on release (`handleY`). Snaps to centre within ±3%. Only while the card is closed. |
 | `Alt+T`, or `⌥T` on macOS; fallback `Alt+Shift+T` | Toggles the card from any app. |
 | Tray icon click, tray "Open / Close" | Toggles the card. Tray "Settings" opens the card on Settings. |
 | `Escape` | Peels one layer at a time: an open menu, popover or inline rename; then a non-empty quick-add draft; then the card. |
@@ -398,12 +516,13 @@ agreement.
 | Path | Owner | Contents |
 | --- | --- | --- |
 | `src/design/tokens.css` | Shell | Copy of [tokens.css](tokens.css). Changes start in this folder. |
-| `src/shell/geometry.ts` | Shell | Port of [geometry.js](geometry.js), same constants, with unit tests of the eight self-check cases. |
-| `src/shell/` (`NotchHandle.tsx`, `PanelCard.tsx`, `PanelView.tsx`, `ViewTabs.tsx`, `useShell.ts`, `useNotchGesture.ts`, `shell.css`) | Shell | Notch, card frame, tabs, open and close state, focus rules, native window sizing. |
-| `src/components/` (`TaskRow.tsx`, `Group.tsx`, `QuickAdd.tsx`, `EmptyState.tsx`, `Segmented.tsx`, `Switch.tsx`, `IconButton.tsx`) | Shell lands them; all views consume them | The shared primitives. Views do not fork or restyle them. A missing variant is added here. |
+| `src/design/presets.css` | Settings | The nine baseline presets as `--sn-*` overrides per mode. |
+| `src/shell/geometry.ts` | Shell | Port of [geometry.js](geometry.js), same constants and bounds, with unit tests of the seventeen self-check cases. |
+| `src/shell/` (`NotchHandle.tsx`, `PanelCard.tsx`, `PanelView.tsx`, `ViewTabs.tsx`, `useShell.ts`, `useNotchGesture.ts`, `shell.css`) | Shell | Notch, card frame, tabs, open and close state, focus rules, native window bounds, and native pointer pass-through to the invariant in section 3. |
+| `src/components/` (`TaskRow.tsx`, `Group.tsx`, `QuickAdd.tsx`, `EmptyState.tsx`, `Segmented.tsx`, `Switch.tsx`, `Slider.tsx`, `IconButton.tsx`) | Shell lands them; all views consume them | The shared primitives. Views do not fork or restyle them. A missing variant is added here. |
 | `src/views/today/`, `src/views/lists/` | Today and Lists | The two task views and list management. |
 | `src/views/calendar/`, `src/calendar/dates.ts` | Calendar | The view, plus the date helpers moved out of `App.tsx` (`buildCalendarDays`, `formatDateKey`, `addMonths` and related). |
-| `src/views/settings/`, `src/sidebarSettings.ts` | Settings | The view, the settings type, and the sanitiser changes in section 5. |
+| `src/views/settings/`, `src/sidebarSettings.ts` | Settings | The default and Advanced pages, the settings type, the new defaults and bounds in section 5, and the mapping from settings to token overrides. |
 | `src/reminders/` (`useReminders.ts`, `ReminderToast.tsx`, `ReminderBanner.tsx`) | Reminders, or Shell if there is no separate task | The due check moved out of `App.tsx`, the toast and the banner. |
 | `src/App.tsx` | Shell | Becomes composition only. Other workspaces add one view import each. |
 | `src/App.css` | Shell | Retired as views move. No new rules are added to it. |
@@ -511,36 +630,41 @@ or Chrome executable.
 
 What was checked for this contract, in headless Chromium:
 
-- Placement on eight work areas, including top, bottom, left edge and a second
-  monitor with a negative origin: card inside the work area with 10 clearance.
-- All 22 frames: no console errors; open card at most 340 × 480 and inside the
-  work area; body shorter than the card; no sideways overflow.
+- Placement on seventeen work-area and preference combinations: right, left
+  and top edges, notch at either end, a second monitor with a negative origin,
+  width 560, a stored width wider than the work area, an out-of-range width,
+  full height, and the largest notch. The card always sits inside the work area
+  with 10 clearance.
+- All 27 frames: no console errors; default frames at most 340 × 480; every
+  card inside the work area; body shorter than the card; no sideways overflow.
 - Long list: 903 px of content scrolls inside a 317 px body at 480, and inside
   a 237 px body on the 420-high work area.
 - Calendar present at 875, 575 and 420 work-area heights.
 - Interaction: 28 × 72 hit target around a 12 × 48 notch; hover does not open;
   click opens; pointer open leaves focus on the card; Escape closes and returns
   focus to the notch; the shortcut opens and focuses quick add; Escape clears a
-  draft before closing; a 24 px pull springs back; a 60 px pull opens; a
-  vertical drag moves the notch without opening; a reminder shows the toast,
-  keeps the card closed and takes no focus; reduced motion removes travel.
+  draft before closing; a 24 px pull springs back; a 60 px pull opens, also
+  downward on the top edge; a drag along the edge moves the notch without
+  opening; a reminder shows the toast, keeps the card closed and takes no
+  focus; reduced motion removes travel.
+- Settings: the default page has ten rows and no sliders; Screen edge offers
+  Left, Top and Right; Advanced exposes the size, notch, density and motion
+  preferences; the hover-only notch is hidden until the pointer reaches the
+  edge and still does not open on hover.
 
 Not verified, because the compact shell is not built yet: the native window on
-macOS and Windows, focus return to the previous app, the global shortcut and
-tray, WebKit and WebView2 rendering, and VoiceOver or Narrator output. The
-prototype uses the CSS `:has()` selector for the 52 px reminder row; the shell
-workspace should confirm it in the oldest WebKit it supports or set a class
-instead. The baseline was audited in its web preview and source, not by
-measuring the installed `/Applications/Todobar.app`.
+macOS and Windows, native pointer pass-through, focus return to the previous
+app, the global shortcut and tray, WebKit and WebView2 rendering, and VoiceOver
+or Narrator output. The browser checks are layout and web-view behaviour only.
+The prototype uses the CSS `:has()` selector for the 52 px reminder row and
+`color-mix()` for surface opacity; the shell workspace should confirm both in
+the oldest WebKit it supports or use a class and an alpha colour instead. The
+nine baseline presets are specified by rule, not drawn. The baseline was
+audited in its web preview and source, not by measuring the installed
+`/Applications/Todobar.app`.
 
-## 10. Decisions for the user to confirm
+## 10. Defaults chosen
 
-These are set as stated above so that work can proceed. Each is cheap to
-reverse before the shell lands.
-
-1. The top dock edge is removed. A notch that pulls out sideways into a 340 ×
-   480 card has no natural top-edge form. Left and right remain.
-2. The nine theme presets, the backdrop image and the size sliders are removed
-   in favour of one Sidenib look in light and dark.
-3. Clicking outside the card does not close it. This matches the baseline. If
-   it should behave like a popover instead, the change is one rule in `useShell`.
+Clicking outside the card does not close it; it closes by notch, shortcut, tray
+or Escape. This matches the baseline. Nothing in this contract is waiting on a
+decision.

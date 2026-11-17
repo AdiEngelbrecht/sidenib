@@ -6,6 +6,11 @@
  * inside a monitor work area. All values are logical pixels. The shell
  * workspace ports this to src/shell/geometry.ts and keeps the same numbers.
  *
+ * Defaults are the compact right-middle Sidenib layout. The Advanced settings
+ * that v0.1.14 already supports (dock edge, panel width, notch size, full
+ * height) are accepted as options and clamped to safe bounds here, so a stored
+ * preference can never push the card outside the work area.
+ *
  * Loaded as a classic script by prototype.html (sets globalThis.SidenibGeometry)
  * and runnable as a self-check:  node docs/design/compact/geometry.js --check
  */
@@ -13,7 +18,7 @@
 // Block scope keeps these names out of the page's global lexical scope.
 {
 const SN = {
-  notch: { width: 12, hoverWidth: 14, openWidth: 6, height: 48 },
+  notch: { width: 12, hoverGrow: 2, openWidth: 6, height: 48 },
   hit: { width: 28, height: 72 },
   card: { width: 340, height: 480, minHeight: 320, radius: 24 },
   toast: { width: 296, height: 60, gap: 8 },
@@ -21,6 +26,14 @@ const SN = {
   shadowMargin: 28,
   pull: { slop: 6, commit: 48, travel: 120, flick: 0.5 },
   snapCenter: 3,
+  // Safe bounds for Advanced settings. Upper bounds equal v0.1.14's, so no
+  // stored value is rejected; lower bounds are widened to admit the compact
+  // defaults.
+  bounds: {
+    panelWidth: [320, 560],
+    notchWidth: [10, 112],
+    notchHeight: [44, 176],
+  },
 }
 
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max)
@@ -28,86 +41,156 @@ const clamp = (value, min, max) => Math.min(Math.max(value, min), max)
 /**
  * @param {{x:number,y:number,width:number,height:number}} workArea
  *   Monitor work area: the screen minus menu bar, Dock and taskbar.
- * @param {{edge?: 'right'|'left', notchY?: number}} options
- *   notchY is the notch centre as a percentage of the work-area height.
+ * @param {object} [options]
+ * @param {'right'|'left'|'top'} [options.edge] Dock edge. Default 'right'.
+ * @param {number} [options.notchY] Notch centre as a percentage along the
+ *   edge (settings.handleY). Default 50.
+ * @param {number} [options.panelWidth] Card width. Default 340.
+ * @param {'compact'|'full'} [options.heightMode] 'full' fills the work-area
+ *   height minus clearance. Default 'compact' (480).
+ * @param {number} [options.notchWidth] Visible notch thickness. Default 12.
+ * @param {number} [options.notchHeight] Visible notch length. Default 48.
  */
 const computeGeometry = function (workArea, options = {}) {
-  const edge = options.edge === 'left' ? 'left' : 'right'
-  const notchY = clamp(options.notchY ?? 50, 0, 100)
+  const edge =
+    options.edge === 'left' || options.edge === 'top' ? options.edge : 'right'
+  const along = clamp(options.notchY ?? 50, 0, 100)
   const right = workArea.x + workArea.width
   const bottom = workArea.y + workArea.height
-
-  // The notch centre stays far enough from the corners for its hit target.
-  const halfHit = SN.hit.height / 2
-  const centerY = clamp(
-    workArea.y + (workArea.height * notchY) / 100,
-    workArea.y + halfHit,
-    bottom - halfHit,
+  const thickness = clamp(
+    options.notchWidth ?? SN.notch.width,
+    ...SN.bounds.notchWidth,
   )
-
-  const notchX = edge === 'right' ? right - SN.notch.width : workArea.x
-  const hitX = edge === 'right' ? right - SN.hit.width : workArea.x
-  const notch = {
-    x: notchX,
-    y: centerY - SN.notch.height / 2,
-    width: SN.notch.width,
-    height: SN.notch.height,
-  }
-  const hit = {
-    x: hitX,
-    y: centerY - halfHit,
-    width: SN.hit.width,
-    height: SN.hit.height,
-  }
+  const length = clamp(
+    options.notchHeight ?? SN.notch.height,
+    ...SN.bounds.notchHeight,
+  )
+  // The hit target never shrinks below 28 x 72, whatever is drawn.
+  const hitThickness = Math.max(SN.hit.width, thickness)
+  const hitLength = Math.max(SN.hit.height, length)
 
   // The card never exceeds the work area minus one clearance on each side.
-  const cardWidth = Math.min(SN.card.width, workArea.width - SN.clearance * 2)
-  const cardHeight = Math.min(
-    SN.card.height,
-    workArea.height - SN.clearance * 2,
+  const cardWidth = Math.min(
+    clamp(options.panelWidth ?? SN.card.width, ...SN.bounds.panelWidth),
+    workArea.width - SN.clearance * 2,
   )
-  const cardX =
-    edge === 'right'
-      ? right - SN.clearance - cardWidth
-      : workArea.x + SN.clearance
-  // Centred on the notch, then pushed back inside the work area.
-  const cardY = clamp(
-    centerY - cardHeight / 2,
-    workArea.y + SN.clearance,
-    bottom - SN.clearance - cardHeight,
-  )
-  const card = { x: cardX, y: cardY, width: cardWidth, height: cardHeight }
-
+  const cardHeight =
+    options.heightMode === 'full'
+      ? workArea.height - SN.clearance * 2
+      : Math.min(SN.card.height, workArea.height - SN.clearance * 2)
   const toastWidth = Math.min(
     SN.toast.width,
-    workArea.width - SN.notch.width - SN.toast.gap - SN.clearance,
+    workArea.width - thickness - SN.toast.gap - SN.clearance,
   )
-  const toast = {
-    x:
-      edge === 'right'
-        ? right - SN.notch.width - SN.toast.gap - toastWidth
-        : workArea.x + SN.notch.width + SN.toast.gap,
-    y: clamp(
-      centerY - SN.toast.height / 2,
-      workArea.y + SN.clearance,
-      bottom - SN.clearance - SN.toast.height,
-    ),
-    width: toastWidth,
-    height: SN.toast.height,
+
+  let anchor
+  let notch
+  let hit
+  let card
+  let toast
+
+  if (edge === 'top') {
+    // The notch lies along the top edge; the card drops down from it.
+    const centerX = clamp(
+      workArea.x + (workArea.width * along) / 100,
+      workArea.x + hitLength / 2,
+      right - hitLength / 2,
+    )
+    anchor = { x: centerX, y: workArea.y }
+    notch = {
+      x: centerX - length / 2,
+      y: workArea.y,
+      width: length,
+      height: thickness,
+    }
+    hit = {
+      x: centerX - hitLength / 2,
+      y: workArea.y,
+      width: hitLength,
+      height: hitThickness,
+    }
+    card = {
+      x: clamp(
+        centerX - cardWidth / 2,
+        workArea.x + SN.clearance,
+        right - SN.clearance - cardWidth,
+      ),
+      y: workArea.y + SN.clearance,
+      width: cardWidth,
+      height: cardHeight,
+    }
+    toast = {
+      x: clamp(
+        centerX - toastWidth / 2,
+        workArea.x + SN.clearance,
+        right - SN.clearance - toastWidth,
+      ),
+      y: workArea.y + thickness + SN.toast.gap,
+      width: toastWidth,
+      height: SN.toast.height,
+    }
+  } else {
+    // The notch centre stays far enough from the corners for its hit target.
+    const centerY = clamp(
+      workArea.y + (workArea.height * along) / 100,
+      workArea.y + hitLength / 2,
+      bottom - hitLength / 2,
+    )
+    const isRight = edge === 'right'
+    anchor = { x: isRight ? right : workArea.x, y: centerY }
+    notch = {
+      x: isRight ? right - thickness : workArea.x,
+      y: centerY - length / 2,
+      width: thickness,
+      height: length,
+    }
+    hit = {
+      x: isRight ? right - hitThickness : workArea.x,
+      y: centerY - hitLength / 2,
+      width: hitThickness,
+      height: hitLength,
+    }
+    card = {
+      x: isRight
+        ? right - SN.clearance - cardWidth
+        : workArea.x + SN.clearance,
+      // Centred on the notch, then pushed back inside the work area.
+      y: clamp(
+        centerY - cardHeight / 2,
+        workArea.y + SN.clearance,
+        bottom - SN.clearance - cardHeight,
+      ),
+      width: cardWidth,
+      height: cardHeight,
+    }
+    toast = {
+      x: isRight
+        ? right - thickness - SN.toast.gap - toastWidth
+        : workArea.x + thickness + SN.toast.gap,
+      y: clamp(
+        centerY - SN.toast.height / 2,
+        workArea.y + SN.clearance,
+        bottom - SN.clearance - SN.toast.height,
+      ),
+      width: toastWidth,
+      height: SN.toast.height,
+    }
   }
 
-  // Native window rectangles. The window is only as large as what is drawn,
-  // plus room for the shadow, so no full-height transparent strip is needed.
-  const grow = (rect, margin) => ({
-    x: Math.max(workArea.x, rect.x - margin),
-    y: Math.max(workArea.y, rect.y - margin),
-    width:
-      Math.min(right, rect.x + rect.width + margin) -
-      Math.max(workArea.x, rect.x - margin),
-    height:
-      Math.min(bottom, rect.y + rect.height + margin) -
-      Math.max(workArea.y, rect.y - margin),
-  })
+  // Suggested native window bounds: what is drawn plus room for the shadow.
+  // These are bounds only. The shadow margin and the rounded corners inside
+  // them are transparent and must still pass pointer events through; how that
+  // is achieved natively is the shell workspace's decision (see README).
+  const grow = (rect, margin) => {
+    const x = Math.max(workArea.x, rect.x - margin)
+    const y = Math.max(workArea.y, rect.y - margin)
+    return {
+      x,
+      y,
+      width: Math.min(right, rect.x + rect.width + margin) - x,
+      height: Math.min(bottom, rect.y + rect.height + margin) - y,
+    }
+  }
   const union = (a, b) => {
     const x = Math.min(a.x, b.x)
     const y = Math.min(a.y, b.y)
@@ -121,12 +204,19 @@ const computeGeometry = function (workArea, options = {}) {
 
   return {
     edge,
-    centerY,
+    anchor,
     notch,
     hit,
     card,
     toast,
     compactCalendar: cardHeight < 420,
+    // Regions that intercept pointer events in each mode. Everything else
+    // inside the window bounds passes through.
+    interactive: {
+      collapsed: [hit],
+      toast: [hit, toast],
+      open: [hit, card],
+    },
     windows: {
       collapsed: hit,
       toast: union(hit, grow(toast, SN.shadowMargin)),
@@ -137,8 +227,8 @@ const computeGeometry = function (workArea, options = {}) {
 
 /**
  * Classifies a pointer gesture that started on the notch.
- * dx is travel toward the screen centre (positive = inward), dy is vertical
- * travel, velocity is inward px/ms at release.
+ * dx is travel away from the docked edge (positive = inward), dy is travel
+ * along the edge, velocity is inward px/ms at release.
  */
 const classifyNotchGesture = function ({ dx, dy, velocity = 0, released = false }) {
   const inward = Math.max(0, dx)
@@ -171,15 +261,25 @@ globalThis.SidenibGeometry = {
 }
 
 if (typeof process !== 'undefined' && process.argv?.includes('--check')) {
+  const mac = { x: 0, y: 25, width: 1440, height: 805 }
   const cases = [
-    ['MacBook Air 13 (1440x900, menu bar 25, Dock 70)', 0, 25, 1440, 805, 50],
-    ['MacBook Pro 14 (1512x982, menu bar 38)', 0, 38, 1512, 944, 50],
-    ['Short display (1280x600, menu bar 25)', 0, 25, 1280, 575, 50],
-    ['Windows laptop (1366x768, taskbar 40)', 0, 0, 1366, 728, 50],
-    ['Very short (1024x420)', 0, 0, 1024, 420, 50],
-    ['Notch dragged to top (1440x805)', 0, 25, 1440, 805, 0],
-    ['Notch dragged to bottom (1440x805)', 0, 25, 1440, 805, 100],
-    ['Second monitor, left edge (x=-1920)', -1920, 0, 1920, 1040, 30],
+    ['MacBook Air 13 (1440x900, menu bar 25, Dock 70)', mac, {}],
+    ['MacBook Pro 14 (1512x982, menu bar 38)', { x: 0, y: 38, width: 1512, height: 944 }, {}],
+    ['Short display (1280x600, menu bar 25)', { x: 0, y: 25, width: 1280, height: 575 }, {}],
+    ['Windows laptop (1366x768, taskbar 40)', { x: 0, y: 0, width: 1366, height: 728 }, {}],
+    ['Very short (1024x420)', { x: 0, y: 0, width: 1024, height: 420 }, {}],
+    ['Notch dragged to top', mac, { notchY: 0 }],
+    ['Notch dragged to bottom', mac, { notchY: 100 }],
+    ['Second monitor, left edge (x=-1920)', { x: -1920, y: 0, width: 1920, height: 1040 }, { edge: 'left', notchY: 30 }],
+    ['Top edge, centred', mac, { edge: 'top' }],
+    ['Top edge, notch at far right', mac, { edge: 'top', notchY: 100 }],
+    ['Top edge on very short display', { x: 0, y: 0, width: 1024, height: 420 }, { edge: 'top' }],
+    ['Advanced: panel width 560', mac, { panelWidth: 560 }],
+    ['Advanced: stored width 560 on a 500-wide work area', { x: 0, y: 0, width: 500, height: 700 }, { panelWidth: 560 }],
+    ['Advanced: out-of-range width 9999', mac, { panelWidth: 9999 }],
+    ['Advanced: full height', mac, { heightMode: 'full' }],
+    ['Advanced: v0.1.14 handle 42x84', mac, { notchWidth: 42, notchHeight: 84 }],
+    ['Advanced: largest notch 112x176 at bottom', mac, { notchWidth: 112, notchHeight: 176, notchY: 100 }],
   ]
   let failures = 0
   const inside = (r, wa, pad) =>
@@ -188,21 +288,24 @@ if (typeof process !== 'undefined' && process.argv?.includes('--check')) {
     r.x + r.width <= wa.x + wa.width - pad &&
     r.y + r.height <= wa.y + wa.height - pad
 
-  for (const [name, x, y, width, height, notchY] of cases) {
-    const wa = { x, y, width, height }
-    const edge = name.includes('left edge') ? 'left' : 'right'
-    const g = computeGeometry(wa, { edge, notchY })
+  for (const [name, wa, options] of cases) {
+    const g = computeGeometry(wa, options)
     const ok =
       inside(g.card, wa, SN.clearance) &&
       inside(g.toast, wa, 0) &&
       inside(g.hit, wa, 0) &&
+      inside(g.notch, g.hit, 0) &&
       inside(g.windows.open, wa, 0) &&
-      g.card.height <= SN.card.height &&
-      g.card.width <= SN.card.width
+      inside(g.windows.toast, wa, 0) &&
+      g.card.width <= SN.bounds.panelWidth[1] &&
+      (options.heightMode === 'full' || g.card.height <= SN.card.height) &&
+      g.hit.width >= SN.hit.width &&
+      g.hit.height >= SN.hit.width
     failures += ok ? 0 : 1
     console.log(
       `${ok ? 'ok  ' : 'FAIL'} ${name}: card ${g.card.width}x${g.card.height} at ` +
-        `(${g.card.x},${g.card.y}), window ${g.windows.open.width}x${g.windows.open.height}` +
+        `(${g.card.x},${g.card.y}), notch ${g.notch.width}x${g.notch.height}, ` +
+        `window ${g.windows.open.width}x${g.windows.open.height}` +
         `${g.compactCalendar ? ', week-strip calendar' : ''}`,
     )
   }

@@ -352,7 +352,7 @@
     "toastVisible": false,
     "body": {
       "client": 374,
-      "scroll": 540,
+      "scroll": 584,
       "top": 0
     },
     "overflowX": false,
@@ -517,7 +517,7 @@
     "toastVisible": false,
     "body": {
       "client": 374,
-      "scroll": 540,
+      "scroll": 584,
       "top": 0
     },
     "overflowX": false,
@@ -723,6 +723,171 @@
     "viewport": {
       "width": 1024,
       "height": 445
+    }
+  },
+  "23-top-edge": {
+    "open": true,
+    "card": {
+      "x": 550,
+      "y": 35,
+      "width": 340,
+      "height": 480
+    },
+    "notch": {
+      "x": 696,
+      "y": 25,
+      "width": 48,
+      "height": 6
+    },
+    "hit": {
+      "x": 684,
+      "y": 25,
+      "width": 72,
+      "height": 28
+    },
+    "toastVisible": false,
+    "body": {
+      "client": 317,
+      "scroll": 364,
+      "top": 0
+    },
+    "overflowX": false,
+    "workTop": 25,
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    }
+  },
+  "24-top-edge-toast": {
+    "open": false,
+    "card": {
+      "x": 556.7999877929688,
+      "y": 19,
+      "width": 326.39996337890625,
+      "height": 460.79998779296875
+    },
+    "notch": {
+      "x": 696,
+      "y": 25,
+      "width": 48,
+      "height": 12
+    },
+    "hit": {
+      "x": 684,
+      "y": 25,
+      "width": 72,
+      "height": 28
+    },
+    "toastVisible": true,
+    "body": {
+      "client": 317,
+      "scroll": 426,
+      "top": 0
+    },
+    "overflowX": false,
+    "workTop": 25,
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    }
+  },
+  "25-settings-advanced": {
+    "open": true,
+    "card": {
+      "x": 1090,
+      "y": 222.5,
+      "width": 340,
+      "height": 480
+    },
+    "notch": {
+      "x": 1434,
+      "y": 438.5,
+      "width": 6,
+      "height": 48
+    },
+    "hit": {
+      "x": 1412,
+      "y": 426.5,
+      "width": 28,
+      "height": 72
+    },
+    "toastVisible": false,
+    "body": {
+      "client": 351,
+      "scroll": 672,
+      "top": 0
+    },
+    "overflowX": false,
+    "workTop": 25,
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    }
+  },
+  "26-advanced-wide-full": {
+    "open": true,
+    "card": {
+      "x": 870,
+      "y": 35,
+      "width": 560,
+      "height": 855
+    },
+    "notch": {
+      "x": 1434,
+      "y": 438.5,
+      "width": 6,
+      "height": 48
+    },
+    "hit": {
+      "x": 1412,
+      "y": 426.5,
+      "width": 28,
+      "height": 72
+    },
+    "toastVisible": false,
+    "body": {
+      "client": 692,
+      "scroll": 903,
+      "top": 0
+    },
+    "overflowX": false,
+    "workTop": 25,
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    }
+  },
+  "27-advanced-wide-short": {
+    "open": true,
+    "card": {
+      "x": 710,
+      "y": 35,
+      "width": 560,
+      "height": 555
+    },
+    "notch": {
+      "x": 1274,
+      "y": 288.5,
+      "width": 6,
+      "height": 48
+    },
+    "hit": {
+      "x": 1252,
+      "y": 276.5,
+      "width": 28,
+      "height": 72
+    },
+    "toastVisible": false,
+    "body": {
+      "client": 196,
+      "scroll": 250,
+      "top": 0
+    },
+    "overflowX": false,
+    "workTop": 25,
+    "viewport": {
+      "width": 1280,
+      "height": 600
     }
   }
 }

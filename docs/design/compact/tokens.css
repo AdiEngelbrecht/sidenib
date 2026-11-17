@@ -41,7 +41,7 @@
 
   /* Geometry, logical pixels. Mirrors geometry.js. */
   --sn-notch-width: 12px;
-  --sn-notch-width-hover: 14px;
+  --sn-notch-hover-grow: 2px;
   --sn-notch-width-open: 6px;
   --sn-notch-height: 48px;
   --sn-notch-hit-width: 28px;
