@@ -26,7 +26,11 @@ import { NotchHandle } from './shell/NotchHandle'
 import { PanelCard } from './shell/PanelCard'
 import type { Route, ViewId } from './shell/types'
 import { useShell } from './shell/useShell'
-import { useSidebarSettings } from './sidebarSettings'
+import {
+  resolveThemePreset,
+  useResolvedTheme,
+  useSidebarSettings,
+} from './sidebarSettings'
 import { CalendarView } from './views/calendar/CalendarView'
 import { ListsView } from './views/lists/ListsView'
 import { SettingsView } from './views/settings/SettingsView'
@@ -108,14 +112,18 @@ function App() {
     }
   }, [isNative])
 
+  // 'system' is resolved here, once; nothing below sees the preference.
+  const theme = useResolvedTheme(settings.theme)
+  const preset = resolveThemePreset(settings.visualStyle, theme)
+
   useEffect(() => {
-    // The tokens (src/design/tokens.css) follow the chosen theme.
-    document.documentElement.dataset.theme = settings.theme
+    // The tokens (src/design/tokens.css) follow the resolved theme.
+    document.documentElement.dataset.theme = theme
 
     return () => {
       delete document.documentElement.dataset.theme
     }
-  }, [settings.theme])
+  }, [theme])
 
   useEffect(() => {
     if (!isNative || import.meta.env.DEV) {
@@ -223,8 +231,8 @@ function App() {
     settings.taskGap > 0 ? 'sn-rows-spaced' : '',
     `dock-${settings.dockEdge}`,
     `tab-${settings.tabVisibility}`,
-    `theme-${settings.theme}`,
-    `style-${settings.visualStyle}`,
+    `theme-${theme}`,
+    `style-${preset}`,
   ]
     .filter(Boolean)
     .join(' ')

@@ -1,15 +1,23 @@
 /*
- * Theme presets as --sn-* overrides (design contract section 5).
+ * Theme presets as --sn-* overrides (design contract section 5). ADIEN-164.
  *
- * Landed by ADIEN-162 so the stored `visualStyle` keeps changing the card now
- * that views read tokens only; ADIEN-164 owns this file from here on.
+ * The shell root carries `theme-light | theme-dark` and `style-<preset>`.
+ * Both are resolved in App.tsx first (useResolvedTheme, resolveThemePreset in
+ * src/sidebarSettings.ts), so only these combinations ever reach this file:
  *
- * - `codex` (Studio in light, Obsidian in dark) is the stored default and is
- *   the Sidenib palette: tokens.css unchanged, so it has no block here.
+ * - `style-sidenib`, either mode: the Sidenib palette. That is tokens.css
+ *   unchanged, so it has no block here. It is the default.
+ * - A stored `codex` (Studio in light, Obsidian in dark, the v0.1.14
+ *   default) is the same palette under its old name. It resolves to
+ *   `style-sidenib`; `style-codex` is never set.
+ * - A stored preset with no palette in the current mode (Graphite while the
+ *   appearance is light) also resolves to `style-sidenib` until the mode
+ *   comes back. The stored value is not changed.
  * - Every other preset keeps the palette it had in v0.1.14, mapped onto the
  *   token names. Lines and hover tints are derived from the preset's ink.
- * - Selectors are the classes App.tsx already sets on the shell root, so the
- *   notch and the toast follow the preset as well.
+ *
+ * The classes sit on the shell root, so the notch and the toast follow the
+ * preset as well.
  */
 
 .workspace:is(

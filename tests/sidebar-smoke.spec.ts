@@ -66,8 +66,8 @@ test('tasks, lists, reminders and settings work in the compact card', async ({
   await page.getByRole('button', SETTINGS_BUTTON).click()
   await expect(page.getByRole('dialog', { name: 'Settings' })).toBeVisible()
   await expect(page.getByLabel('Show completed')).toBeVisible()
-  await expect(page.getByText('Notifications', { exact: true })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Connectors' })).toHaveCount(0)
+  await expect(page.getByText('Reminders', { exact: true })).toBeVisible()
+  await expect(page.getByText('Connectors', { exact: true })).toHaveCount(0)
   await expect(page.getByText('Connect Gmail', { exact: true })).toHaveCount(0)
   await page.getByRole('button', { name: 'Done' }).click()
   await expect(page.getByRole('dialog', { name: 'Today' })).toBeVisible()
@@ -81,7 +81,15 @@ test('tasks, lists, reminders and settings work in the compact card', async ({
     'aria-pressed',
     'true',
   )
-  await expect(page.getByText('No custom backdrop', { exact: true })).toBeVisible()
+
+  // Tuning controls live one level down, on the Advanced page.
+  const backTo = (label: string) =>
+    page.locator('.sn-back').filter({ hasText: label }).click()
+
+  await page.getByRole('button', { name: 'Advanced' }).click()
+  await expect(page.getByRole('heading', { name: 'Advanced' })).toBeVisible()
+  await page.getByRole('button', { name: /Backdrop image/ }).click()
+  await expect(page.getByText('No backdrop image', { exact: true })).toBeVisible()
   await page.locator('.backdrop-actions input[type="file"]').setInputFiles({
     buffer: Buffer.from(
       'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAFgwJ/lFPccwAAAABJRU5ErkJggg==',
@@ -93,23 +101,29 @@ test('tasks, lists, reminders and settings work in the compact card', async ({
   await expect(page.locator('.workspace')).toHaveClass(/has-custom-backdrop/)
   await expect(page.locator('.sn-notch')).toBeVisible()
   await expect(page.getByText('Image strength', { exact: true })).toBeVisible()
+  await backTo('Advanced')
 
-  await page.getByRole('button', { name: 'Theme preset' }).click()
-  await expect(page.getByRole('option')).toHaveCount(6)
-  await expect(page.getByRole('option', { name: 'Choose Lumen' })).toHaveCount(0)
-  await expect(page.getByRole('option', { name: 'Choose Graphite' })).toHaveCount(0)
-  await page.getByRole('button', { name: 'Switch to dark mode' }).click()
-  await page.getByRole('button', { name: 'Theme preset' }).click()
-  await expect(page.getByRole('option')).toHaveCount(6)
-  await expect(page.getByRole('option', { name: 'Choose Smoke' })).toHaveCount(0)
-  await page.getByRole('option', { name: 'Choose Graphite' }).click()
+  await page.getByRole('button', { name: /Theme preset/ }).click()
+  await expect(page.getByRole('radio')).toHaveCount(6)
+  await expect(page.getByRole('radio', { name: /Lumen/ })).toHaveCount(0)
+  await expect(page.getByRole('radio', { name: /Graphite/ })).toHaveCount(0)
+  await backTo('Advanced')
+  await backTo('Settings')
+  await page.getByRole('button', { name: 'Dark', exact: true }).click()
+  await page.getByRole('button', { name: 'Advanced' }).click()
+  await page.getByRole('button', { name: /Theme preset/ }).click()
+  await expect(page.getByRole('radio')).toHaveCount(6)
+  await expect(page.getByRole('radio', { name: /Smoke/ })).toHaveCount(0)
+  await page.getByText('Graphite', { exact: true }).click()
   await expect(page.locator('.workspace')).toHaveClass(/theme-dark/)
   await expect(page.locator('.workspace')).toHaveClass(/style-graphite/)
   // The preset reaches the card through the tokens.
   await expect(page.locator('.sn-panel')).toHaveCSS('color', 'rgb(246, 247, 248)')
-  await expect(page.getByText('Edge position', { exact: true })).toBeVisible()
-  await page.getByText('Hover-only tab', { exact: true }).click()
+  await backTo('Advanced')
+  await expect(page.getByText('Position', { exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'On hover' }).click()
   await expect(page.locator('.workspace')).toHaveClass(/tab-hover/)
+  await backTo('Settings')
   await expect(page.getByText('Middle', { exact: true })).toHaveCount(0)
   await expect(page.getByRole('button', { name: 'Dock bottom' })).toHaveCount(0)
   await page.getByRole('button', { name: 'Dock left' }).click()
@@ -118,6 +132,9 @@ test('tasks, lists, reminders and settings work in the compact card', async ({
   await expect(page.locator('.workspace')).toHaveClass(/dock-top/)
   await page.getByRole('button', { name: 'Dock right' }).click()
   await expect(page.locator('.workspace')).toHaveClass(/dock-right/)
+  await page
+    .getByRole('button', { name: 'Reset settings' })
+    .scrollIntoViewIfNeeded()
   await page.getByRole('button', { name: 'Reset settings' }).click()
   await expect(
     page.getByRole('alertdialog', { name: 'Reset settings confirmation' }),
@@ -126,6 +143,7 @@ test('tasks, lists, reminders and settings work in the compact card', async ({
   await expect(
     page.getByRole('alertdialog', { name: 'Reset settings confirmation' }),
   ).toHaveCount(0)
+  await page.getByRole('button', { name: /Tab order/ }).click()
   const todayLayoutRow = page.locator('.section-order-row').filter({
     hasText: 'Today',
   })
@@ -158,6 +176,7 @@ test('tasks, lists, reminders and settings work in the compact card', async ({
     )
   }
   await page.getByRole('button', { name: 'Move Today up' }).click()
+  await backTo('Settings')
 
   await page.getByText('Show completed', { exact: true }).click()
   await expect(page.getByLabel('Show completed')).not.toBeChecked()
@@ -584,7 +603,7 @@ for (const viewport of viewports) {
 
     await page.getByRole('button', SETTINGS_BUTTON).click()
     await expect(page.getByRole('dialog', { name: 'Settings' })).toBeVisible()
-    await expect(page.getByText('Panel width', { exact: true })).toBeVisible()
+    await expect(page.getByText('Screen edge', { exact: true })).toBeVisible()
   })
 }
 

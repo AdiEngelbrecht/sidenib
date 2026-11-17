@@ -1,14 +1,18 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useSyncExternalStore } from 'react'
 import { scheduleLocalStorageWrite } from './storage'
 
 const STORAGE_KEY = 'sidenib.sidebar.settings.v27'
 
 export type DockEdge = 'right' | 'left' | 'top' | 'bottom'
+/** What is drawn. Rendering and the shell only ever see one of these two. */
 export type ThemeMode = 'light' | 'dark'
+/** What is stored. 'system' follows the OS appearance while the app runs. */
+export type ThemePreference = 'system' | ThemeMode
 export type TaskSortMode = 'priority' | 'newest' | 'oldest'
 export type TabVisibility = 'always' | 'hover'
 export type PanelHeightMode = 'compact' | 'full'
 export type ThemePreset =
+  | 'sidenib'
   | 'codex'
   | 'porcelain'
   | 'frost'
@@ -20,9 +24,48 @@ export type ThemePreset =
   | 'blueprint'
 export type SectionId = 'today' | 'calendar' | 'lists'
 
+/** The presets that have a palette in each mode, in the order they are listed. */
 export const themePresetsByMode: Record<ThemeMode, ThemePreset[]> = {
-  dark: ['codex', 'carbon', 'graphite', 'midnight', 'clay', 'blueprint'],
-  light: ['codex', 'porcelain', 'frost', 'paper', 'clay', 'blueprint'],
+  dark: ['sidenib', 'carbon', 'graphite', 'midnight', 'clay', 'blueprint'],
+  light: ['sidenib', 'porcelain', 'frost', 'paper', 'clay', 'blueprint'],
+}
+
+/**
+ * Stored preset ids that are another preset under an older name. `codex`
+ * (Studio in light, Obsidian in dark) was the v0.1.14 default and has been the
+ * Sidenib palette since the compact redesign. A stored `codex` is kept as it
+ * is and drawn as `sidenib`; it is never rewritten.
+ */
+export const legacyThemePresets: Partial<Record<ThemePreset, ThemePreset>> = {
+  codex: 'sidenib',
+}
+
+const validThemePresets: ThemePreset[] = [
+  'sidenib',
+  'codex',
+  'porcelain',
+  'frost',
+  'paper',
+  'carbon',
+  'graphite',
+  'midnight',
+  'clay',
+  'blueprint',
+]
+
+/**
+ * The preset that is drawn for a stored preset in a mode. A legacy id maps to
+ * its current name, and a preset with no palette in this mode (Graphite while
+ * the appearance is light) is drawn as Sidenib. The stored value is untouched,
+ * so the choice comes back when the mode does.
+ */
+export function resolveThemePreset(
+  preset: ThemePreset,
+  mode: ThemeMode,
+): ThemePreset {
+  const current = legacyThemePresets[preset] ?? preset
+
+  return themePresetsByMode[mode].includes(current) ? current : 'sidenib'
 }
 
 export type SidebarSettings = {
@@ -44,7 +87,7 @@ export type SidebarSettings = {
   launchAtLogin: boolean
   notificationsEnabled: boolean
   taskSortMode: TaskSortMode
-  theme: ThemeMode
+  theme: ThemePreference
   visualStyle: ThemePreset
   sectionOrder: SectionId[]
   backdropImage: string
@@ -67,7 +110,7 @@ export const defaultSidebarSettings: SidebarSettings = {
   handleY: 50,
   motionMs: 220,
   panelRadius: 24,
-  surfaceAlpha: 96,
+  surfaceAlpha: 100,
   taskRowHeight: 44,
   // 0 gives hairline-separated groups; above 0 each row is its own block.
   taskGap: 0,
@@ -76,8 +119,8 @@ export const defaultSidebarSettings: SidebarSettings = {
   launchAtLogin: true,
   notificationsEnabled: true,
   taskSortMode: 'priority',
-  theme: 'light',
-  visualStyle: 'codex',
+  theme: 'system',
+  visualStyle: 'sidenib',
   sectionOrder: ['today', 'calendar', 'lists'],
   backdropImage: '',
   backdropImageName: '',
@@ -85,6 +128,9 @@ export const defaultSidebarSettings: SidebarSettings = {
   backdropBlur: 0,
   backdropDim: 18,
 }
+
+const isThemePreference = (value: unknown): value is ThemePreference =>
+  value === 'system' || value === 'light' || value === 'dark'
 
 const clamp = (value: number, min: number, max: number) =>
   Math.min(Math.max(value, min), max)
@@ -110,11 +156,16 @@ function sanitizeSectionOrder(value?: SectionId[]) {
 }
 
 export function sanitizeSettings(value: Partial<SidebarSettings>): SidebarSettings {
-  const theme: ThemeMode = value.theme === 'dark' ? 'dark' : 'light'
-  const availableThemes = themePresetsByMode[theme]
-  const visualStyle = availableThemes.includes(value.visualStyle as ThemePreset)
+  // A stored 'light' or 'dark' stays an explicit choice; only a missing or
+  // unknown value falls back to following the system.
+  const theme: ThemePreference = isThemePreference(value.theme)
+    ? value.theme
+    : defaultSidebarSettings.theme
+  // Any known preset is kept, whatever the mode. What is drawn for it is
+  // decided by resolveThemePreset, so changing mode never drops the choice.
+  const visualStyle = validThemePresets.includes(value.visualStyle as ThemePreset)
     ? (value.visualStyle as ThemePreset)
-    : availableThemes[0]
+    : defaultSidebarSettings.visualStyle
   const dockEdge =
     value.dockEdge === 'left' ||
     value.dockEdge === 'right' ||
@@ -229,10 +280,7 @@ export function useSidebarSettings() {
           dockParam === 'top'
             ? dockParam
             : base.dockEdge,
-        theme:
-          themeParam === 'dark' || themeParam === 'light'
-            ? themeParam
-            : base.theme,
+        theme: isThemePreference(themeParam) ? themeParam : base.theme,
       })
     } catch {
       return sanitizeSettings({
@@ -243,10 +291,9 @@ export function useSidebarSettings() {
           dockParam === 'top'
             ? dockParam
             : defaultSidebarSettings.dockEdge,
-        theme:
-          themeParam === 'dark' || themeParam === 'light'
-            ? themeParam
-            : defaultSidebarSettings.theme,
+        theme: isThemePreference(themeParam)
+          ? themeParam
+          : defaultSidebarSettings.theme,
       })
     }
   })
@@ -262,4 +309,49 @@ export function useSidebarSettings() {
   const resetSettings = () => setSettings(defaultSidebarSettings)
 
   return [settings, updateSettings, resetSettings] as const
+}
+
+/**
+ * Follows a media query while mounted. `fallback` is the answer where
+ * `matchMedia` does not exist. The listener is added once per query and
+ * removed on unmount; `addListener` covers WebKit before 14.
+ */
+export function useMediaQuery(query: string, fallback = false) {
+  return useSyncExternalStore(
+    (onChange) => {
+      if (typeof window.matchMedia !== 'function') {
+        return () => {}
+      }
+
+      const media = window.matchMedia(query)
+
+      if (typeof media.addEventListener === 'function') {
+        media.addEventListener('change', onChange)
+        return () => media.removeEventListener('change', onChange)
+      }
+
+      media.addListener(onChange)
+      return () => media.removeListener(onChange)
+    },
+    () =>
+      typeof window.matchMedia === 'function'
+        ? window.matchMedia(query).matches
+        : fallback,
+    () => fallback,
+  )
+}
+
+/**
+ * Turns the stored preference into the mode that is drawn. 'system' follows
+ * `prefers-color-scheme` live and is light where the system gives no answer.
+ * Everything that renders a theme takes this value, never the preference.
+ */
+export function useResolvedTheme(preference: ThemePreference): ThemeMode {
+  const systemIsDark = useMediaQuery('(prefers-color-scheme: dark)')
+
+  if (preference === 'system') {
+    return systemIsDark ? 'dark' : 'light'
+  }
+
+  return preference
 }

@@ -1,22 +1,27 @@
 /*
- * Preference helpers moved out of App.tsx unchanged: the preset catalogue and
- * the tab-order moves. ADIEN-164 owns this folder.
+ * Preference helpers: the preset catalogue as it is listed, the shortcut
+ * labels, and the tab-order moves.
  */
-import { themePresetsByMode } from '../../sidebarSettings'
+import { legacyThemePresets, themePresetsByMode } from '../../sidebarSettings'
 import type {
   SectionId,
   ThemeMode,
   ThemePreset,
 } from '../../sidebarSettings'
 
+/**
+ * Sidenib plus the baseline presets, per mode. The v0.1.14 `codex` preset
+ * (Studio, Obsidian) is not listed separately: it is the Sidenib palette and
+ * resolves to it (see `legacyThemePresets`).
+ */
 export const THEME_PRESETS = [
-  { id: 'codex', label: 'Studio', mode: 'light', note: 'Sidenib paper' },
+  { id: 'sidenib', label: 'Sidenib', mode: 'light', note: 'Paper and gold' },
   { id: 'porcelain', label: 'Porcelain', mode: 'light', note: 'Soft white' },
   { id: 'frost', label: 'Frostline', mode: 'light', note: 'Cool blue' },
   { id: 'paper', label: 'Paper Trail', mode: 'light', note: 'Warm matte' },
   { id: 'clay', label: 'Terra', mode: 'light', note: 'Muted warm' },
   { id: 'blueprint', label: 'Blueprint', mode: 'light', note: 'Light blue' },
-  { id: 'codex', label: 'Obsidian', mode: 'dark', note: 'Sidenib ink' },
+  { id: 'sidenib', label: 'Sidenib', mode: 'dark', note: 'Ink and gold' },
   { id: 'carbon', label: 'Carbon', mode: 'dark', note: 'Soft black' },
   { id: 'graphite', label: 'Graphite', mode: 'dark', note: 'Deep focus' },
   { id: 'midnight', label: 'Nightfall', mode: 'dark', note: 'Blue black' },
@@ -31,27 +36,45 @@ export const THEME_PRESETS = [
 
 export type ThemePresetOption = (typeof THEME_PRESETS)[number]
 
-export function getThemeOptions(theme: ThemeMode) {
-  const allowed = themePresetsByMode[theme]
+export function getThemeOptions(mode: ThemeMode) {
+  const allowed = themePresetsByMode[mode]
 
   return THEME_PRESETS.filter(
-    (preset) => preset.mode === theme && allowed.includes(preset.id),
+    (preset) => preset.mode === mode && allowed.includes(preset.id),
   )
 }
 
-/** Switches light and dark, keeping the preset when the other mode has it. */
-export function getNextThemePatch(
-  currentTheme: ThemeMode,
-  currentPreset: ThemePreset,
-) {
-  const theme: ThemeMode = currentTheme === 'dark' ? 'light' : 'dark'
-  const allowed = themePresetsByMode[theme]
+/**
+ * The stored preset when it has no palette in `mode`, so the page can say
+ * which choice is being kept. Undefined when the stored preset is drawn.
+ */
+export function getParkedPreset(stored: ThemePreset, mode: ThemeMode) {
+  const current = legacyThemePresets[stored] ?? stored
 
-  return {
-    theme,
-    visualStyle: allowed.includes(currentPreset) ? currentPreset : allowed[0],
+  if (themePresetsByMode[mode].includes(current)) {
+    return undefined
   }
+
+  return THEME_PRESETS.find((preset) => preset.id === current)
 }
+
+const isMac = /Mac|iPhone|iPad/.test(navigator.platform)
+
+/**
+ * The global shortcut pair registered in src-tauri/src/lib.rs
+ * (TOGGLE_SHORTCUTS). The second is used when another app holds the first.
+ */
+export const TOGGLE_SHORTCUT = isMac
+  ? {
+      primary: { keys: '⌥⇧S', spoken: 'Option Shift S' },
+      fallback: { keys: '⌃⌥⇧S', spoken: 'Control Option Shift S' },
+      icon: 'menu bar icon',
+    }
+  : {
+      primary: { keys: 'Alt+Shift+S', spoken: 'Alt Shift S' },
+      fallback: { keys: 'Ctrl+Alt+Shift+S', spoken: 'Control Alt Shift S' },
+      icon: 'tray icon',
+    }
 
 export function moveSectionOrder(
   sections: SectionId[],
