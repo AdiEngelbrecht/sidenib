@@ -39,10 +39,15 @@ import type {
   DragEvent,
   KeyboardEvent,
   MouseEvent,
-  PointerEvent,
   ReactNode,
 } from 'react'
+import './design/tokens.css'
 import './App.css'
+import './shell/shell.css'
+import { ReminderToast } from './reminders/ReminderToast'
+import { NotchHandle } from './shell/NotchHandle'
+import { PanelCard } from './shell/PanelCard'
+import { useShell } from './shell/useShell'
 import { useGmailConnector } from './gmail'
 import type { GmailConnectorController, GmailThreadSuggestion } from './gmail'
 import { themePresetsByMode, useSidebarSettings } from './sidebarSettings'
@@ -60,9 +65,6 @@ import { initialToday, monthPlan } from './tasks'
 import type { Task } from './tasks'
 import { usePersistentTasks } from './usePersistentTasks'
 
-const DRAG_THRESHOLD = 5
-const NATIVE_HIT_TEST_EDGE_INTERVAL_MS = 72
-const NATIVE_HIT_TEST_IDLE_INTERVAL_MS = 128
 const TASK_STORAGE_KEYS = {
   today: 'sidenib.today.v1',
   month: 'sidenib.month.v1',
@@ -71,9 +73,7 @@ const CUSTOM_LISTS_STORAGE_KEY = 'sidenib.custom-lists.v1'
 const NOTIFIED_REMINDERS_STORAGE_KEY = 'sidenib.notified-reminders.v1'
 const SETTINGS_GROUPS_STORAGE_KEY = 'sidenib.settings.groups.v1'
 const GMAIL_CONNECTOR_VISIBLE = false
-const TOP_DOCK_MIN_PANEL_WIDTH = 720
-const TOP_DOCK_MAX_PANEL_WIDTH = 1120
-const TOP_DOCK_WIDTH_MULTIPLIER = 2
+const SHELL_CARD_ID = 'sidenib-card'
 const PRIORITY_ORDER: Record<Task['priority'], number> = {
   focus: 0,
   normal: 1,
@@ -212,24 +212,6 @@ const defaultCustomLists: CustomTaskList[] = [
     collapsed: false,
   },
 ]
-
-const isTauriRuntime = () =>
-  new URLSearchParams(window.location.search).get('runtime') === 'tauri' ||
-  window.location.protocol === 'tauri:' ||
-  navigator.userAgent.includes('Tauri') ||
-  '__TAURI_INTERNALS__' in window ||
-  '__TAURI__' in window
-
-type NativeWindowHandle<Position> = {
-  setPosition: (position: Position) => Promise<void>
-}
-type HandleDragState = {
-  startScreenY: number
-  startHandleY: number
-  height: number
-  moved: boolean
-  latestHandleY: number | null
-}
 
 function sortTasks(tasks: Task[], sortMode: TaskSortMode = 'priority') {
   return [...tasks].sort((a, b) => {
@@ -567,29 +549,6 @@ function getNextThemePatch(
   }
 }
 
-function getDockPanelWidth(
-  dockEdge: DockEdge,
-  panelWidth: number,
-  tabWidth: number,
-  viewportWidth: number,
-) {
-  const isTopDock = dockEdge === 'top'
-  const reservedWidth = isTopDock ? 16 : tabWidth + 8
-  const availableWidth = Math.max(280, viewportWidth - reservedWidth)
-  const requestedWidth = isTopDock
-    ? Math.max(
-        TOP_DOCK_MIN_PANEL_WIDTH,
-        Math.round(panelWidth * TOP_DOCK_WIDTH_MULTIPLIER),
-      )
-    : panelWidth
-
-  return Math.min(
-    requestedWidth,
-    availableWidth,
-    isTopDock ? TOP_DOCK_MAX_PANEL_WIDTH : Number.POSITIVE_INFINITY,
-  )
-}
-
 function loadCustomLists() {
   try {
     const stored = window.localStorage.getItem(CUSTOM_LISTS_STORAGE_KEY)
@@ -618,48 +577,7 @@ function loadCustomLists() {
   }
 }
 
-function animateNativePosition<Position>(
-  windowHandle: NativeWindowHandle<Position>,
-  createPosition: (x: number, y: number) => Position,
-  startX: number,
-  endX: number,
-  startY: number,
-  endY: number,
-  duration: number,
-) {
-  return new Promise<void>((resolve) => {
-    const startTime = performance.now()
-    let lastX = Number.NaN
-    let lastY = Number.NaN
-
-    const step = (time: number) => {
-      const progress = Math.min((time - startTime) / duration, 1)
-      const eased = progress * progress * (3 - 2 * progress)
-      const nextX = Math.round(startX + (endX - startX) * eased)
-      const nextY = Math.round(startY + (endY - startY) * eased)
-
-      if (nextX !== lastX || nextY !== lastY) {
-        lastX = nextX
-        lastY = nextY
-        void windowHandle.setPosition(createPosition(nextX, nextY))
-      }
-
-      if (progress < 1) {
-        requestAnimationFrame(step)
-      } else {
-        resolve()
-      }
-    }
-
-    requestAnimationFrame(step)
-  })
-}
-
 function App() {
-  const [isNative] = useState(() => isTauriRuntime())
-  const [isOpen, setIsOpen] = useState(
-    () => new URLSearchParams(window.location.search).get('open') === '1',
-  )
   const [isSettingsOpen, setIsSettingsOpen] = useState(
     () => new URLSearchParams(window.location.search).get('settings') === '1',
   )
@@ -675,16 +593,6 @@ function App() {
     useState<CalendarEntryMode>('task')
   const [settings, updateSettings, resetSettings] = useSidebarSettings()
   const gmail = useGmailConnector()
-  const [viewportWidth, setViewportWidth] = useState(() => window.innerWidth)
-  const [viewportHeight, setViewportHeight] = useState(() => window.innerHeight)
-  const [dragHandleY, setDragHandleY] = useState<number | null>(null)
-  const [edgeRevealVisible, setEdgeRevealVisible] = useState(false)
-  const didNativeLayout = useRef(false)
-  const previousOpenState = useRef(isOpen)
-  const dragState = useRef<HandleDragState | null>(null)
-  const hoverRevealUntil = useRef(0)
-  const edgeRevealVisibleRef = useRef(false)
-  const suppressNextClick = useRef(false)
   const [todayTasks, setTodayTasks] = usePersistentTasks(
     initialToday,
     TASK_STORAGE_KEYS.today,
@@ -840,294 +748,30 @@ function App() {
     () => monthTasks.filter((task) => !task.reminderAt),
     [monthTasks],
   )
-  const visibleHandleY = dragHandleY ?? settings.handleY
-  const effectivePanelWidth = useMemo(() => {
-    return getDockPanelWidth(
-      settings.dockEdge,
-      settings.panelWidth,
-      settings.tabWidth,
-      viewportWidth,
-    )
-  }, [
-    settings.dockEdge,
-    settings.panelWidth,
-    settings.tabWidth,
-    viewportWidth,
-  ])
-  const effectivePanelDepth = useMemo(() => {
-    const availableHeight = Math.max(280, viewportHeight - settings.tabWidth - 8)
-
-    return Math.min(settings.panelWidth, availableHeight, 560)
-  }, [settings.panelWidth, settings.tabWidth, viewportHeight])
-  const nativeHandleCenter = useMemo(() => {
-    const height = Math.max(settings.handleHeight, viewportHeight || 0)
-    const half = settings.handleHeight / 2
-    const travel = Math.max(0, height - settings.handleHeight)
-
-    return Math.min(
-      height - half - 8,
-      Math.max(half + 8, half + (travel * visibleHandleY) / 100),
-    )
-  }, [settings.handleHeight, visibleHandleY, viewportHeight])
-  const dockSurface = useMemo(() => {
-    const isLeftDock = settings.dockEdge === 'left'
-    const handleRadius = Math.max(
-      12,
-      Math.min(16, settings.tabWidth * 0.4, settings.handleHeight * 0.24),
-    )
-
-    if (settings.dockEdge === 'top' || settings.dockEdge === 'bottom') {
-      const width = effectivePanelWidth
-      const height = settings.tabWidth + effectivePanelDepth
-      const panelRadius = Math.max(
-        0,
-        Math.min(settings.panelRadius, width / 2, effectivePanelDepth / 2),
-      )
-      const handleLength = Math.min(
-        settings.handleHeight,
-        Math.max(72, width - 24),
-      )
-      const left = (width - handleLength) / 2
-      const right = left + handleLength
-      const dockRadius = Math.max(
-        0,
-        Math.min(18, settings.tabWidth * 0.5, left, width - right),
-      )
-      const isTopDock = settings.dockEdge === 'top'
-
-      if (isTopDock) {
-        const y = effectivePanelDepth
-        const closedPath = [
-          `M ${left - dockRadius} ${y}`,
-          `Q ${left} ${y} ${left} ${y + dockRadius}`,
-          `V ${height - handleRadius}`,
-          `Q ${left} ${height} ${left + handleRadius} ${height}`,
-          `H ${right - handleRadius}`,
-          `Q ${right} ${height} ${right} ${height - handleRadius}`,
-          `V ${y + dockRadius}`,
-          `Q ${right} ${y} ${right + dockRadius} ${y}`,
-          'Z',
-        ].join(' ')
-        const openPath = [
-          `M ${panelRadius} 0`,
-          `H ${width - panelRadius}`,
-          `Q ${width} 0 ${width} ${panelRadius}`,
-          `V ${y - panelRadius}`,
-          `Q ${width} ${y} ${width - panelRadius} ${y}`,
-          `H ${right + dockRadius}`,
-          `Q ${right} ${y} ${right} ${y + dockRadius}`,
-          `V ${height - handleRadius}`,
-          `Q ${right} ${height} ${right - handleRadius} ${height}`,
-          `H ${left + handleRadius}`,
-          `Q ${left} ${height} ${left} ${height - handleRadius}`,
-          `V ${y + dockRadius}`,
-          `Q ${left} ${y} ${left - dockRadius} ${y}`,
-          `H ${panelRadius}`,
-          `Q 0 ${y} 0 ${y - panelRadius}`,
-          `V ${panelRadius}`,
-          `Q 0 0 ${panelRadius} 0`,
-          'Z',
-        ].join(' ')
-
-        return {
-          height,
-          path: isOpen ? openPath : closedPath,
-          width,
-        }
-      }
-
-      const y = settings.tabWidth
-      const closedPath = [
-        `M ${left - dockRadius} ${y}`,
-        `Q ${left} ${y} ${left} ${y - dockRadius}`,
-        `V ${handleRadius}`,
-        `Q ${left} 0 ${left + handleRadius} 0`,
-        `H ${right - handleRadius}`,
-        `Q ${right} 0 ${right} ${handleRadius}`,
-        `V ${y - dockRadius}`,
-        `Q ${right} ${y} ${right + dockRadius} ${y}`,
-        'Z',
-      ].join(' ')
-      const openPath = [
-        `M ${left - dockRadius} ${y}`,
-        `Q ${left} ${y} ${left} ${y - dockRadius}`,
-        `V ${handleRadius}`,
-        `Q ${left} 0 ${left + handleRadius} 0`,
-        `H ${right - handleRadius}`,
-        `Q ${right} 0 ${right} ${handleRadius}`,
-        `V ${y - dockRadius}`,
-        `Q ${right} ${y} ${right + dockRadius} ${y}`,
-        `H ${width - panelRadius}`,
-        `Q ${width} ${y} ${width} ${y + panelRadius}`,
-        `V ${height - panelRadius}`,
-        `Q ${width} ${height} ${width - panelRadius} ${height}`,
-        `H ${panelRadius}`,
-        `Q 0 ${height} 0 ${height - panelRadius}`,
-        `V ${y + panelRadius}`,
-        `Q 0 ${y} ${panelRadius} ${y}`,
-        'Z',
-      ].join(' ')
-
-      return {
-        height,
-        path: isOpen ? openPath : closedPath,
-        width,
-      }
+  const openSettingsFromTray = useCallback(() => setIsSettingsOpen(true), [])
+  const moveNotch = useCallback(
+    (handleY: number) => updateSettings({ handleY }),
+    [updateSettings],
+  )
+  // Escape peels one layer: Settings first, then the card.
+  const peelEscapeLayer = useCallback(() => {
+    if (!isSettingsOpen) {
+      return false
     }
 
-    const width = settings.tabWidth + effectivePanelWidth
-    const height = Math.max(settings.handleHeight, viewportHeight || 0)
-    const x = isLeftDock ? effectivePanelWidth : settings.tabWidth
-    const half = settings.handleHeight / 2
-    const travel = Math.max(0, height - settings.handleHeight)
-    const center = Math.min(
-      height - half - 8,
-      Math.max(half + 8, half + (travel * visibleHandleY) / 100),
-    )
-    const top = center - half
-    const bottom = center + half
-    const topDockRadius = Math.max(
-      0,
-      Math.min(22, settings.tabWidth * 0.58, top),
-    )
-    const bottomDockRadius = Math.max(
-      0,
-      Math.min(22, settings.tabWidth * 0.58, height - bottom),
-    )
-    const topPanelRadius = Math.max(
-      0,
-      Math.min(settings.panelRadius, top - topDockRadius),
-    )
-    const bottomPanelRadius = Math.max(
-      0,
-      Math.min(settings.panelRadius, height - bottom - bottomDockRadius),
-    )
-    const closedPath = isLeftDock
-      ? [
-          `M ${x} ${top - topDockRadius}`,
-          `Q ${x} ${top} ${x + topDockRadius} ${top}`,
-          `H ${width - handleRadius}`,
-          `C ${width - handleRadius * 0.45} ${top} ${width} ${top + handleRadius * 0.45} ${width} ${top + handleRadius}`,
-          `V ${bottom - handleRadius}`,
-          `C ${width} ${bottom - handleRadius * 0.45} ${width - handleRadius * 0.45} ${bottom} ${width - handleRadius} ${bottom}`,
-          `H ${x + bottomDockRadius}`,
-          `Q ${x} ${bottom} ${x} ${bottom + bottomDockRadius}`,
-          'Z',
-        ].join(' ')
-      : [
-          `M ${x} ${top - topDockRadius}`,
-          `Q ${x} ${top} ${x - topDockRadius} ${top}`,
-          `H ${handleRadius}`,
-          `C ${handleRadius * 0.45} ${top} 0 ${top + handleRadius * 0.45} 0 ${top + handleRadius}`,
-          `V ${bottom - handleRadius}`,
-          `C 0 ${bottom - handleRadius * 0.45} ${handleRadius * 0.45} ${bottom} ${handleRadius} ${bottom}`,
-          `H ${x - bottomDockRadius}`,
-          `Q ${x} ${bottom} ${x} ${bottom + bottomDockRadius}`,
-          'Z',
-        ].join(' ')
-    const openPath = isLeftDock
-      ? [
-          `M 0 0`,
-          `H ${x - topPanelRadius}`,
-          `Q ${x} 0 ${x} ${topPanelRadius}`,
-          `V ${top - topDockRadius}`,
-          `Q ${x} ${top} ${x + topDockRadius} ${top}`,
-          `H ${width - handleRadius}`,
-          `Q ${width} ${top} ${width} ${top + handleRadius}`,
-          `V ${bottom - handleRadius}`,
-          `Q ${width} ${bottom} ${width - handleRadius} ${bottom}`,
-          `H ${x + bottomDockRadius}`,
-          `Q ${x} ${bottom} ${x} ${bottom + bottomDockRadius}`,
-          `V ${height - bottomPanelRadius}`,
-          `Q ${x} ${height} ${x - bottomPanelRadius} ${height}`,
-          `H 0`,
-          'Z',
-        ].join(' ')
-      : [
-          `M ${x + topPanelRadius} 0`,
-          `H ${width}`,
-          `V ${height}`,
-          `H ${x + bottomPanelRadius}`,
-          `Q ${x} ${height} ${x} ${height - bottomPanelRadius}`,
-          `V ${bottom + bottomDockRadius}`,
-          `Q ${x} ${bottom} ${x - bottomDockRadius} ${bottom}`,
-          `H ${handleRadius}`,
-          `Q 0 ${bottom} 0 ${bottom - handleRadius}`,
-          `V ${top + handleRadius}`,
-          `Q 0 ${top} ${handleRadius} ${top}`,
-          `H ${x - topDockRadius}`,
-          `Q ${x} ${top} ${x} ${top - topDockRadius}`,
-          `V ${topPanelRadius}`,
-          `Q ${x} 0 ${x + topPanelRadius} 0`,
-          'Z',
-        ].join(' ')
-
-    return {
-      height,
-      path: isOpen ? openPath : closedPath,
-      width,
-    }
-  }, [
-    settings.dockEdge,
-    isOpen,
-    settings.handleHeight,
-    settings.panelRadius,
-    settings.tabWidth,
-    effectivePanelDepth,
-    effectivePanelWidth,
-    visibleHandleY,
-    viewportHeight,
-  ])
-
-  useEffect(() => {
-    const onKeyDown = (event: globalThis.KeyboardEvent) => {
-      const shortcut =
-        event.altKey &&
-        event.shiftKey &&
-        event.code === 'KeyS' &&
-        !event.ctrlKey &&
-        !event.metaKey
-      const fallbackShortcut =
-        event.altKey &&
-        event.shiftKey &&
-        event.ctrlKey &&
-        event.code === 'KeyS' &&
-        !event.metaKey
-
-      if (shortcut || fallbackShortcut || event.key === 'Escape') {
-        event.preventDefault()
-        setIsOpen((current) => (event.key === 'Escape' ? false : !current))
-      }
-    }
-
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [])
-
-  useEffect(() => {
-    let frame = 0
-    const syncViewportSize = () => {
-      if (frame) {
-        return
-      }
-
-      frame = window.requestAnimationFrame(() => {
-        frame = 0
-        setViewportWidth(window.innerWidth)
-        setViewportHeight(window.innerHeight)
-      })
-    }
-
-    syncViewportSize()
-    window.addEventListener('resize', syncViewportSize)
-    return () => {
-      window.removeEventListener('resize', syncViewportSize)
-
-      if (frame) {
-        window.cancelAnimationFrame(frame)
-      }
-    }
-  }, [])
+    setIsSettingsOpen(false)
+    return true
+  }, [isSettingsOpen])
+  const controller = useShell({
+    settings,
+    motionMs: settings.motionMs,
+    hasToast: reminderToasts.length > 0,
+    onNotchMove: moveNotch,
+    onOpenSettings: openSettingsFromTray,
+    onEscape: peelEscapeLayer,
+  })
+  const { shell, isNative } = controller
+  const isOpen = shell.isOpen
 
   useEffect(() => {
     document.documentElement.dataset.runtime = isNative ? 'tauri' : 'web'
@@ -1136,6 +780,15 @@ function App() {
       delete document.documentElement.dataset.runtime
     }
   }, [isNative])
+
+  useEffect(() => {
+    // The shell tokens (src/design/tokens.css) follow the chosen theme.
+    document.documentElement.dataset.theme = settings.theme
+
+    return () => {
+      delete document.documentElement.dataset.theme
+    }
+  }, [settings.theme])
 
   useEffect(() => {
     return scheduleLocalStorageWrite(
@@ -1189,38 +842,6 @@ function App() {
   }, [pushReminderToast, reminderTasks, settings.notificationsEnabled])
 
   useEffect(() => {
-    if (!isNative) {
-      return
-    }
-
-    let unlistenToggle: (() => void) | undefined
-    let unlistenSettings: (() => void) | undefined
-
-    const setupTrayListeners = async () => {
-      try {
-        const { listen } = await import('@tauri-apps/api/event')
-
-        unlistenToggle = await listen('sidenib-tray-toggle', () => {
-          setIsOpen((current) => !current)
-        })
-        unlistenSettings = await listen('sidenib-tray-settings', () => {
-          setIsOpen(true)
-          setIsSettingsOpen(true)
-        })
-      } catch {
-        // Tray events are only available in the native desktop shell.
-      }
-    }
-
-    void setupTrayListeners()
-
-    return () => {
-      unlistenToggle?.()
-      unlistenSettings?.()
-    }
-  }, [isNative])
-
-  useEffect(() => {
     if (!isNative || import.meta.env.DEV) {
       return
     }
@@ -1251,353 +872,6 @@ function App() {
 
     void enableAutostart()
   }, [isNative, settings.launchAtLogin])
-
-  useEffect(() => {
-    if (!isNative) {
-      return
-    }
-
-    const syncNativeWindow = async () => {
-      try {
-        const {
-          PhysicalPosition,
-          PhysicalSize,
-          currentMonitor,
-          cursorPosition,
-          getCurrentWindow,
-          monitorFromPoint,
-        } = await import('@tauri-apps/api/window')
-        const appWindow = getCurrentWindow()
-        let monitor = null
-
-        try {
-          const cursor = await cursorPosition()
-
-          monitor = await monitorFromPoint(cursor.x, cursor.y)
-        } catch {
-          monitor = null
-        }
-
-        monitor ??= await currentMonitor()
-
-        if (!monitor) {
-          return
-        }
-
-        const workArea = monitor.workArea
-        const scaleFactor = monitor.scaleFactor || 1
-        const fullCssWidth = Math.round(workArea.size.width / scaleFactor)
-        const fullCssHeight = Math.round(workArea.size.height / scaleFactor)
-        const isHorizontalDock =
-          settings.dockEdge === 'top' || settings.dockEdge === 'bottom'
-        const panelCssWidth = getDockPanelWidth(
-          settings.dockEdge,
-          settings.panelWidth,
-          settings.tabWidth,
-          fullCssWidth,
-        )
-        const panelCssDepth = Math.min(
-          settings.panelWidth,
-          Math.max(280, fullCssHeight - settings.tabWidth - 8),
-          560,
-        )
-        const sideWindowWidth = Math.round(
-          (settings.tabWidth + panelCssWidth) * scaleFactor,
-        )
-        const horizontalWindowWidth = Math.round(panelCssWidth * scaleFactor)
-        const horizontalWindowHeight = Math.round(
-          (settings.tabWidth + panelCssDepth) * scaleFactor,
-        )
-        const windowWidth = isHorizontalDock
-          ? horizontalWindowWidth
-          : sideWindowWidth
-        const tabWidth = Math.round(settings.tabWidth * scaleFactor)
-        const panelWidth = Math.round(panelCssWidth * scaleFactor)
-        const panelDepth = Math.round(panelCssDepth * scaleFactor)
-        const closedOffset = Math.round(2 * scaleFactor)
-        const horizontalX =
-          workArea.position.x +
-          Math.round(
-            Math.max(0, workArea.size.width - windowWidth) *
-              (visibleHandleY / 100),
-          )
-        const openX = isHorizontalDock
-          ? horizontalX
-          : settings.dockEdge === 'left'
-            ? workArea.position.x
-            : workArea.position.x + workArea.size.width - windowWidth
-        const closedX = isHorizontalDock
-          ? horizontalX
-          : settings.dockEdge === 'left'
-            ? workArea.position.x - panelWidth - closedOffset
-            : workArea.position.x +
-              workArea.size.width -
-              tabWidth +
-              closedOffset
-        const openY =
-          settings.dockEdge === 'bottom'
-            ? workArea.position.y + workArea.size.height - horizontalWindowHeight
-            : workArea.position.y
-        const closedY =
-          settings.dockEdge === 'top'
-            ? workArea.position.y - panelDepth - closedOffset
-            : settings.dockEdge === 'bottom'
-              ? workArea.position.y +
-                workArea.size.height -
-                tabWidth +
-                closedOffset
-              : openY
-        const targetX = isOpen ? openX : closedX
-        const targetY = isOpen ? openY : closedY
-        const startX = isOpen ? closedX : openX
-        const startY = isOpen ? closedY : openY
-        const targetHeight = isHorizontalDock
-          ? horizontalWindowHeight
-          : workArea.size.height
-
-        const setTarget = async () => {
-          await appWindow.setSize(new PhysicalSize(windowWidth, targetHeight))
-          await appWindow.setPosition(new PhysicalPosition(targetX, targetY))
-        }
-        const didOpenStateChange = previousOpenState.current !== isOpen
-        previousOpenState.current = isOpen
-
-        if (!didNativeLayout.current) {
-          didNativeLayout.current = true
-          setViewportWidth(fullCssWidth)
-          setViewportHeight(fullCssHeight)
-          await setTarget()
-          return
-        }
-
-        if (!didOpenStateChange) {
-          setViewportWidth(fullCssWidth)
-          setViewportHeight(fullCssHeight)
-          await setTarget()
-          return
-        }
-
-        if (isOpen) {
-          setViewportWidth(fullCssWidth)
-          setViewportHeight(fullCssHeight)
-          await Promise.all([
-            appWindow.setSize(new PhysicalSize(windowWidth, targetHeight)),
-            appWindow.setPosition(new PhysicalPosition(startX, startY)),
-          ])
-          await animateNativePosition(
-            appWindow,
-            (x, y) => new PhysicalPosition(x, y),
-            startX,
-            openX,
-            startY,
-            openY,
-            settings.motionMs,
-          )
-          await appWindow.setFocus()
-          return
-        }
-
-        setViewportWidth(fullCssWidth)
-        setViewportHeight(fullCssHeight)
-        await animateNativePosition(
-          appWindow,
-          (x, y) => new PhysicalPosition(x, y),
-          startX,
-          closedX,
-          startY,
-          closedY,
-          settings.motionMs,
-        )
-        await setTarget()
-      } catch {
-        // Native window control can fail when the app is inspected in a browser.
-      }
-    }
-
-    void syncNativeWindow()
-  }, [
-    isNative,
-    isOpen,
-    settings.dockEdge,
-    settings.motionMs,
-    settings.panelWidth,
-    settings.tabWidth,
-    visibleHandleY,
-  ])
-
-  useEffect(() => {
-    if (!isNative) {
-      return
-    }
-
-    let cancelled = false
-    let isChecking = false
-    let lastIgnored: boolean | null = null
-
-    const syncHitTest = async () => {
-      if (isChecking) {
-        return
-      }
-
-      isChecking = true
-
-      try {
-        const { cursorPosition, currentMonitor, getCurrentWindow, monitorFromPoint } =
-          await import('@tauri-apps/api/window')
-        const appWindow = getCurrentWindow()
-        const [cursor, position] = await Promise.all([
-          cursorPosition(),
-          appWindow.outerPosition(),
-        ])
-        let monitor = await monitorFromPoint(cursor.x, cursor.y)
-
-        monitor ??= await currentMonitor()
-        const scaleFactor = monitor?.scaleFactor || 1
-        const relativeX = cursor.x - position.x
-        const relativeY = cursor.y - position.y
-        const tabWidth = settings.tabWidth * scaleFactor
-        const panelWidth = effectivePanelWidth * scaleFactor
-        const panelDepth = effectivePanelDepth * scaleFactor
-        const handleHitSlop = 3 * scaleFactor
-        const edgeRevealSlop = 14 * scaleFactor
-        const isHorizontalDock =
-          settings.dockEdge === 'top' || settings.dockEdge === 'bottom'
-        const horizontalHandleLength =
-          Math.min(
-            settings.handleHeight,
-            Math.max(72, effectivePanelWidth - 24),
-          ) * scaleFactor
-        const handleLeft = isHorizontalDock
-          ? (panelWidth - horizontalHandleLength) / 2
-          : settings.dockEdge === 'left'
-            ? panelWidth
-            : 0
-        const handleRight = isHorizontalDock
-          ? handleLeft + horizontalHandleLength
-          : handleLeft + tabWidth
-        const handleTop = isHorizontalDock
-          ? settings.dockEdge === 'top'
-            ? panelDepth
-            : 0
-          : (nativeHandleCenter - settings.handleHeight / 2) * scaleFactor
-        const handleBottom = isHorizontalDock
-          ? settings.dockEdge === 'top'
-            ? panelDepth + tabWidth
-            : tabWidth
-          : (nativeHandleCenter + settings.handleHeight / 2) * scaleFactor
-        const panelLeft = isHorizontalDock
-          ? 0
-          : settings.dockEdge === 'left'
-            ? 0
-            : tabWidth
-        const panelRight = isHorizontalDock ? panelWidth : panelLeft + panelWidth
-        const panelTop = isHorizontalDock
-          ? settings.dockEdge === 'top'
-            ? 0
-            : tabWidth
-          : 0
-        const panelBottom = isHorizontalDock
-          ? panelTop + panelDepth
-          : Number.POSITIVE_INFINITY
-        const isOnHandle =
-          relativeX >= handleLeft - handleHitSlop &&
-          relativeX <= handleRight + handleHitSlop &&
-          relativeY >= handleTop - handleHitSlop &&
-          relativeY <= handleBottom + handleHitSlop
-        const isHoverOnlyClosed =
-          settings.tabVisibility === 'hover' && !isOpen
-        const revealLeft = isHorizontalDock
-          ? 0
-          : settings.dockEdge === 'left'
-            ? panelWidth
-            : 0
-        const revealRight = isHorizontalDock ? panelWidth : revealLeft + tabWidth
-        const revealTop = isHorizontalDock
-          ? settings.dockEdge === 'top'
-            ? panelDepth
-            : 0
-          : 0
-        const revealBottom = isHorizontalDock
-          ? revealTop + tabWidth
-          : Number.POSITIVE_INFINITY
-        const isOnRevealEdge =
-          relativeX >= revealLeft - edgeRevealSlop &&
-          relativeX <= revealRight + edgeRevealSlop &&
-          relativeY >= revealTop - edgeRevealSlop &&
-          relativeY <= revealBottom + edgeRevealSlop
-
-        const now = Date.now()
-
-        if (isHoverOnlyClosed && isOnRevealEdge) {
-          hoverRevealUntil.current = now + 650
-        }
-
-        const shouldShowEdgeReveal =
-          isHoverOnlyClosed && now <= hoverRevealUntil.current
-
-        if (
-          !cancelled &&
-          edgeRevealVisibleRef.current !== shouldShowEdgeReveal
-        ) {
-          edgeRevealVisibleRef.current = shouldShowEdgeReveal
-          setEdgeRevealVisible(shouldShowEdgeReveal)
-        }
-
-        const isHandleActive = isHoverOnlyClosed
-          ? isOnHandle && shouldShowEdgeReveal
-          : isOnHandle
-        const isRevealStripActive = isHoverOnlyClosed && isOnRevealEdge
-        const isOnPanel =
-          isOpen &&
-          relativeX >= panelLeft &&
-          relativeX <= panelRight &&
-          relativeY >= panelTop &&
-          relativeY <= panelBottom
-        const shouldIgnore = dragState.current
-          ? false
-          : !(isHandleActive || isOnPanel || isRevealStripActive)
-
-        if (!cancelled && shouldIgnore !== lastIgnored) {
-          lastIgnored = shouldIgnore
-          await appWindow.setIgnoreCursorEvents(shouldIgnore)
-        }
-      } catch {
-        // Pointer passthrough is best-effort; the app still works without it.
-      } finally {
-        isChecking = false
-      }
-    }
-
-    void syncHitTest()
-    const interval = window.setInterval(
-      syncHitTest,
-      settings.tabVisibility === 'hover' && !isOpen
-        ? NATIVE_HIT_TEST_EDGE_INTERVAL_MS
-        : NATIVE_HIT_TEST_IDLE_INTERVAL_MS,
-    )
-
-    return () => {
-      cancelled = true
-      edgeRevealVisibleRef.current = false
-      setEdgeRevealVisible(false)
-      window.clearInterval(interval)
-      void import('@tauri-apps/api/window')
-        .then(({ getCurrentWindow }) =>
-          getCurrentWindow().setIgnoreCursorEvents(false),
-        )
-        .catch(() => undefined)
-    }
-  }, [
-    isNative,
-    isOpen,
-    nativeHandleCenter,
-    settings.dockEdge,
-    settings.handleHeight,
-    settings.tabWidth,
-    settings.tabVisibility,
-    effectivePanelDepth,
-    effectivePanelWidth,
-  ])
 
   const updateDraft = (listId: TaskListId, value: string) => {
     setDrafts((current) => ({ ...current, [listId]: value }))
@@ -1634,7 +908,6 @@ function App() {
     setDrafts((current) => ({ ...current, [listId]: '' }))
     setReminderDrafts((current) => ({ ...current, [listId]: '' }))
     setCollapsedSections((current) => ({ ...current, [listId]: false }))
-    setIsOpen(true)
   }
 
   const convertGmailSuggestionToTask = (suggestion: GmailThreadSuggestion) => {
@@ -1646,7 +919,6 @@ function App() {
     )
     setCollapsedSections((current) => ({ ...current, today: false }))
     activateRailSection('today')
-    setIsOpen(true)
   }
 
   const addCalendarTask = () => {
@@ -1669,7 +941,6 @@ function App() {
     ])
     setDrafts((current) => ({ ...current, month: '' }))
     setReminderDrafts((current) => ({ ...current, month: '' }))
-    setIsOpen(true)
   }
 
   const onDraftKeyDown = (
@@ -2003,7 +1274,6 @@ function App() {
   const focusSection = (section: SectionId) => {
     activateRailSection(section)
     setIsSettingsOpen(false)
-    setIsOpen(true)
   }
 
   const activateRailSection = (section: SectionId) => {
@@ -2030,7 +1300,7 @@ function App() {
 
     activateRailSection('calendar')
     setIsSettingsOpen(false)
-    setIsOpen(true)
+    shell.open('toast')
     dismissReminderToast(toast.id)
   }
 
@@ -2058,7 +1328,6 @@ function App() {
   }
 
   const openSettings = () => {
-    setIsOpen(true)
     setIsSettingsOpen(true)
   }
 
@@ -2066,99 +1335,9 @@ function App() {
     setIsSettingsOpen(false)
   }
 
-  const onHandlePointerDown = (event: PointerEvent<HTMLButtonElement>) => {
-    if (!isNative) {
-      return
-    }
-
-    event.currentTarget.setPointerCapture(event.pointerId)
-    suppressNextClick.current = false
-
-    const isHorizontalDock =
-      settings.dockEdge === 'top' || settings.dockEdge === 'bottom'
-    const drag: HandleDragState = {
-      startScreenY: isHorizontalDock ? event.screenX : event.screenY,
-      startHandleY: visibleHandleY,
-      height: isHorizontalDock ? window.innerWidth : window.innerHeight,
-      moved: false,
-      latestHandleY: null,
-    }
-
-    dragState.current = drag
-  }
-
-  const onHandlePointerMove = (event: PointerEvent<HTMLButtonElement>) => {
-    const drag = dragState.current
-
-    if (!drag) {
-      return
-    }
-
-    const isHorizontalDock =
-      settings.dockEdge === 'top' || settings.dockEdge === 'bottom'
-    const screenAxis = isHorizontalDock ? event.screenX : event.screenY
-    const deltaY = screenAxis - drag.startScreenY
-
-    if (Math.abs(deltaY) < DRAG_THRESHOLD && !drag.moved) {
-      return
-    }
-
-    drag.moved = true
-    suppressNextClick.current = true
-
-    const travel = Math.max(1, drag.height - settings.handleHeight)
-    const nextHandleY = Math.min(
-      100,
-      Math.max(0, drag.startHandleY + (deltaY / travel) * 100),
-    )
-
-    drag.latestHandleY = Math.round(nextHandleY)
-    setDragHandleY(nextHandleY)
-  }
-
-  const onHandlePointerUp = (event: PointerEvent<HTMLButtonElement>) => {
-    const drag = dragState.current
-    const shouldToggle = drag && !drag.moved
-
-    if (drag?.moved && drag.latestHandleY !== null) {
-      updateSettings({ handleY: drag.latestHandleY })
-    }
-
-    setDragHandleY(null)
-    dragState.current = null
-
-    try {
-      event.currentTarget.releasePointerCapture(event.pointerId)
-    } catch {
-      // Pointer capture can already be gone after native pointer handoff.
-    }
-
-    if (shouldToggle) {
-      suppressNextClick.current = true
-      setIsOpen((current) => !current)
-    }
-  }
-
-  const onHandleClick = () => {
-    if (suppressNextClick.current) {
-      suppressNextClick.current = false
-      return
-    }
-
-    setIsOpen((current) => !current)
-  }
-
   const appStyle = {
-    '--panel-width': `${effectivePanelWidth}px`,
-    '--panel-half': `${effectivePanelWidth / 2}px`,
-    '--panel-depth': `${effectivePanelDepth}px`,
-    '--tab-width': `${settings.tabWidth}px`,
-    '--handle-height': `${settings.handleHeight}px`,
-    '--handle-half': `${settings.handleHeight / 2}px`,
-    '--handle-y': `${visibleHandleY}%`,
-    '--native-handle-y-px': `${nativeHandleCenter}px`,
+    ...controller.rootStyle,
     '--motion-ms': `${settings.motionMs}ms`,
-    '--panel-radius': `${settings.panelRadius}px`,
     '--surface-alpha': `${settings.surfaceAlpha / 100}`,
     '--surface-alpha-percent': `${settings.surfaceAlpha}%`,
     '--task-row-height': `${settings.taskRowHeight}px`,
@@ -2177,9 +1356,9 @@ function App() {
 
   return (
     <main
-      className={`workspace ${isNative ? 'is-native' : 'is-web-preview'} ${
-        isOpen ? 'is-sidebar-open' : 'is-sidebar-closed'
-      } ${edgeRevealVisible ? 'is-edge-revealed' : ''} ${
+      className={`workspace ${controller.rootClassName} ${
+        isNative ? 'is-native' : 'is-web-preview'
+      } ${isOpen ? 'is-sidebar-open' : 'is-sidebar-closed'} ${
         settings.backdropImage ? 'has-custom-backdrop' : ''
       } dock-${settings.dockEdge} tab-${settings.tabVisibility} theme-${settings.theme} style-${settings.visualStyle}`}
       style={appStyle}
@@ -2240,86 +1419,32 @@ function App() {
         </section>
       </section>
 
-      {isNative ? (
-        <svg
-          className={`native-dock-surface ${isOpen ? 'is-open' : 'is-closed'}`}
-          width={dockSurface.width}
-          height={dockSurface.height}
-          viewBox={`0 0 ${dockSurface.width} ${dockSurface.height}`}
-          preserveAspectRatio="none"
-          aria-hidden="true"
-        >
-          {settings.backdropImage ? (
-            <defs>
-              <pattern
-                id="sidenib-dock-backdrop"
-                patternUnits="userSpaceOnUse"
-                width={dockSurface.width}
-                height={dockSurface.height}
-              >
-                <rect
-                  className="dock-backdrop-base"
-                  width={dockSurface.width}
-                  height={dockSurface.height}
-                />
-                <image
-                  href={settings.backdropImage}
-                  width={dockSurface.width}
-                  height={dockSurface.height}
-                  preserveAspectRatio="xMidYMid slice"
-                  opacity={Math.min(0.14, settings.backdropOpacity / 620)}
-                />
-              </pattern>
-            </defs>
-          ) : null}
-          <path
-            d={dockSurface.path}
-            style={
-              settings.backdropImage
-                ? { fill: 'url(#sidenib-dock-backdrop)' }
-                : undefined
-            }
-          />
-        </svg>
-      ) : null}
-
-      <span className="edge-hover-zone" aria-hidden="true" />
-
-      <button
-        className={`edge-handle ${isOpen ? 'is-open' : ''}`}
-        type="button"
-        aria-label={isOpen ? 'Close Sidenib' : 'Open Sidenib'}
-        aria-expanded={isOpen}
-        onPointerDown={onHandlePointerDown}
-        onPointerMove={onHandlePointerMove}
-        onPointerUp={onHandlePointerUp}
-        onPointerCancel={onHandlePointerUp}
-        onClick={onHandleClick}
-      >
-        <span className="handle-symbol" aria-hidden="true">
-          <PanelRightOpen className="handle-icon-open" size={15} />
-          <PanelRightClose className="handle-icon-close" size={15} />
-        </span>
-        {reminderToasts.length > 0 ? (
-          <span className="handle-badge" aria-label={`${reminderToasts.length} reminders`}>
-            {Math.min(reminderToasts.length, 9)}
-          </span>
-        ) : null}
-      </button>
-
-      <ReminderToastStack
-        toasts={reminderToasts}
-        onClose={dismissReminderToast}
-        onOpen={openReminderToast}
-        onSnooze={snoozeReminderToast}
+      <NotchHandle
+        controller={controller}
+        reminderCount={reminderToasts.length}
+        controls={SHELL_CARD_ID}
       />
 
+      <ReminderToast
+        items={reminderToasts}
+        placement={
+          controller.toast.isBeside
+            ? 'beside'
+            : controller.card.isOpen
+              ? 'inside'
+              : 'hidden'
+        }
+        onOpen={openReminderToast}
+        onSnooze={snoozeReminderToast}
+        onDismiss={(toast) => dismissReminderToast(toast.id)}
+      />
+
+      <PanelCard controller={controller} id={SHELL_CARD_ID} label="Sidenib">
       <aside
         className={`todo-sidebar ${isOpen ? 'is-open' : ''} ${
           isSettingsOpen ? 'is-settings-open' : ''
         }`}
         aria-label="Sidenib sidebar"
-        aria-hidden={!isOpen}
       >
         {isSettingsOpen ? (
           <div className="settings-drawer" role="dialog" aria-label="Settings">
@@ -2952,62 +2077,8 @@ function App() {
           onOpenSettings={openSettings}
         />
       </aside>
+      </PanelCard>
     </main>
-  )
-}
-
-function ReminderToastStack({
-  toasts,
-  onClose,
-  onOpen,
-  onSnooze,
-}: {
-  toasts: ReminderToast[]
-  onClose: (id: string) => void
-  onOpen: (toast: ReminderToast) => void
-  onSnooze: (toast: ReminderToast) => void
-}) {
-  return (
-    <section
-      className="reminder-toast-stack"
-      aria-label="Reminder alerts"
-      aria-live="polite"
-      aria-atomic="false"
-    >
-      {toasts.map((toast) => (
-        <article className="reminder-toast" key={toast.id} role="status">
-          <span className="reminder-toast-icon" aria-hidden="true">
-            <BellRing size={15} />
-          </span>
-          <div className="reminder-toast-copy">
-            <strong>{toast.title}</strong>
-            <span>{toast.body}</span>
-            <em>Due {toast.dueLabel}</em>
-          </div>
-          <div className="reminder-toast-actions">
-            <button
-              type="button"
-              className="is-subtle"
-              aria-label={`Snooze ${toast.title} 10 minutes`}
-              onClick={() => onSnooze(toast)}
-            >
-              10m
-            </button>
-            <button type="button" onClick={() => onOpen(toast)}>
-              Open
-            </button>
-            <button
-              type="button"
-              className="is-icon"
-              aria-label={`Dismiss reminder ${toast.title}`}
-              onClick={() => onClose(toast.id)}
-            >
-              <X size={13} />
-            </button>
-          </div>
-        </article>
-      ))}
-    </section>
   )
 }
 
@@ -3552,6 +2623,13 @@ function SidebarSettingsPanel({
         </div>
         <div className="settings-range-grid">
           <ToggleSetting
+            label="Full-height panel"
+            checked={settings.panelHeightMode === 'full'}
+            onChange={(checked) =>
+              onChange({ panelHeightMode: checked ? 'full' : 'compact' })
+            }
+          />
+          <ToggleSetting
             label="Hover-only tab"
             checked={settings.tabVisibility === 'hover'}
             onChange={(checked) =>
@@ -3563,7 +2641,7 @@ function SidebarSettingsPanel({
           <SliderSetting
             label="Visible tab"
             value={settings.tabWidth}
-            min={22}
+            min={10}
             max={112}
             step={2}
             suffix="px"
@@ -3572,7 +2650,7 @@ function SidebarSettingsPanel({
           <SliderSetting
             label="Button height"
             value={settings.handleHeight}
-            min={56}
+            min={44}
             max={176}
             step={2}
             suffix="px"

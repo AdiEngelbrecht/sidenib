@@ -10,12 +10,15 @@
     "beforeBuildCommand": "npm run build"
   },
   "app": {
+    "macOSPrivateApi": true,
     "windows": [
       {
         "label": "main",
         "title": "Sidenib",
-        "width": 442,
-        "height": 84,
+        "width": 28,
+        "height": 72,
+        "visible": false,
+        "acceptFirstMouse": true,
         "resizable": false,
         "decorations": false,
         "alwaysOnTop": true,

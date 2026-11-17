@@ -22,6 +22,24 @@ earlier are the upstream Todobar history and keep the original product name.
 - Gave the Android companion the Sidenib label and its own application id. The
   rolling Android prerelease now publishes only when started manually.
 
+- Replaced the full-height sidebar with a compact shell: a 12 × 48 notch
+  halfway down the right edge that opens a 340 × 480 rounded card by click,
+  inward pull, shortcut or tray. The native window is only as large as what is
+  drawn, starts hidden so launch never flashes, and long content scrolls inside
+  the card. See [docs/shell.md](docs/shell.md).
+- Pointer events are taken only by the notch, the card and the reminder toast.
+  Shadow margins, rounded corners and the edge gap pass through to other apps:
+  event driven on macOS, bounded polling on Windows.
+- Closing the card hands focus back to the previously frontmost app on macOS.
+  Escape closes Settings before the card.
+- Reminders show as a compact toast beside the closed notch and never open the
+  card.
+- New installs default to the compact right-middle layout. Stored dock edge,
+  sizes, presets, backdrop and hover-only notch are kept; the notch thickness
+  and length sliders now go down to 10 and 44, and a full-height panel is an
+  opt-in setting.
+- The macOS web view is now transparent through Tauri's `macOSPrivateApi`.
+
 ### Notes
 
 - Sidenib starts with empty data. It does not read or migrate Todobar's tasks,

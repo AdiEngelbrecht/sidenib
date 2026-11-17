@@ -22,7 +22,9 @@ tauri-build = { version = "2.6.1", features = [] }
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 log = "0.4"
-tauri = { version = "2.11.1", features = ["tray-icon"] }
+# macos-private-api lets the web view be transparent on macOS, so only the
+# notch and the card are drawn and nothing backs them with an opaque square.
+tauri = { version = "2.11.1", features = ["tray-icon", "macos-private-api"] }
 tauri-plugin-log = "2"
 base64 = "0.22"
 keyring = { version = "3", features = ["apple-native", "windows-native", "sync-secret-service"] }
@@ -36,3 +38,11 @@ url = "2"
 tauri-plugin-autostart = "2"
 tauri-plugin-global-shortcut = "2"
 tauri-plugin-single-instance = "2"
+
+# Compact shell: atomic window frames, event-driven pointer pass-through and
+# focus return (src/shell.rs). Same versions Tauri already resolves.
+[target.'cfg(target_os = "macos")'.dependencies]
+block2 = "0.6"
+objc2 = "0.6"
+objc2-app-kit = { version = "0.3", features = ["block2", "libc"] }
+objc2-foundation = { version = "0.3", features = ["block2"] }

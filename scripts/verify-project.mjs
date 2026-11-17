@@ -218,8 +218,16 @@ function verifyWorkflows() {
 
 function verifyNativeDesktopSurface() {
   const cargoToml = read('src-tauri/Cargo.toml')
-  const nativeShell = read('src-tauri/src/lib.rs')
-  const app = read('src/App.tsx')
+  // The compact shell owns window placement and pointer pass-through.
+  const nativeShell = [
+    read('src-tauri/src/lib.rs'),
+    read('src-tauri/src/shell.rs'),
+  ].join('\n')
+  const app = [
+    read('src/App.tsx'),
+    read('src/shell/useShell.ts'),
+    read('src/shell/nativeWindow.ts'),
+  ].join('\n')
   const defaultCapability = read('src-tauri/capabilities/default.json')
   const readme = read('README.md')
 
@@ -235,7 +243,9 @@ function verifyNativeDesktopSurface() {
     'Alt+Shift+S',
     'Control+Alt+Shift+S',
     'monitorFromPoint',
-    'monitor_from_point',
+    'shell_apply_layout',
+    'set_ignore_cursor_events',
+    'sidenib-shortcut-toggle',
     'sidenib-tray-toggle',
     'sidenib-tray-settings',
     'icon_as_template',

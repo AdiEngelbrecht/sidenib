@@ -7,6 +7,7 @@ export type DockEdge = 'right' | 'left' | 'top' | 'bottom'
 export type ThemeMode = 'light' | 'dark'
 export type TaskSortMode = 'priority' | 'newest' | 'oldest'
 export type TabVisibility = 'always' | 'hover'
+export type PanelHeightMode = 'compact' | 'full'
 export type ThemePreset =
   | 'codex'
   | 'porcelain'
@@ -27,6 +28,8 @@ export const themePresetsByMode: Record<ThemeMode, ThemePreset[]> = {
 export type SidebarSettings = {
   dockEdge: DockEdge
   panelWidth: number
+  /** 'compact' is the 480-high card; 'full' fills the work-area height. */
+  panelHeightMode: PanelHeightMode
   tabVisibility: TabVisibility
   tabWidth: number
   handleHeight: number
@@ -52,14 +55,18 @@ export type SidebarSettings = {
 }
 
 export const defaultSidebarSettings: SidebarSettings = {
+  // Compact right-middle defaults (docs/design/compact/README.md section 5).
+  // They apply to a fresh install and to Reset; stored values are only
+  // clamped, never converted.
   dockEdge: 'right',
-  panelWidth: 400,
+  panelWidth: 340,
+  panelHeightMode: 'compact',
   tabVisibility: 'always',
-  tabWidth: 42,
-  handleHeight: 84,
+  tabWidth: 12,
+  handleHeight: 48,
   handleY: 50,
-  motionMs: 230,
-  panelRadius: 18,
+  motionMs: 220,
+  panelRadius: 24,
   surfaceAlpha: 96,
   taskRowHeight: 44,
   taskGap: 7,
@@ -101,7 +108,7 @@ function sanitizeSectionOrder(value?: SectionId[]) {
   ]
 }
 
-function sanitizeSettings(value: Partial<SidebarSettings>): SidebarSettings {
+export function sanitizeSettings(value: Partial<SidebarSettings>): SidebarSettings {
   const theme: ThemeMode = value.theme === 'dark' ? 'dark' : 'light'
   const availableThemes = themePresetsByMode[theme]
   const visualStyle = availableThemes.includes(value.visualStyle as ThemePreset)
@@ -137,11 +144,14 @@ function sanitizeSettings(value: Partial<SidebarSettings>): SidebarSettings {
       320,
       560,
     ),
+    panelHeightMode: value.panelHeightMode === 'full' ? 'full' : 'compact',
     tabVisibility,
-    tabWidth: clamp(value.tabWidth ?? defaultSidebarSettings.tabWidth, 22, 112),
+    // Lower bounds are widened from v0.1.14's 22 and 56 to admit the compact
+    // notch; upper bounds are unchanged, so every stored value stays valid.
+    tabWidth: clamp(value.tabWidth ?? defaultSidebarSettings.tabWidth, 10, 112),
     handleHeight: clamp(
       value.handleHeight ?? defaultSidebarSettings.handleHeight,
-      56,
+      44,
       176,
     ),
     handleY: clamp(value.handleY ?? defaultSidebarSettings.handleY, 0, 100),

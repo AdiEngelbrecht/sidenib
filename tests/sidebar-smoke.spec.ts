@@ -24,14 +24,13 @@ test('sidebar opens and completed-task visibility is configurable', async ({
   await page.goto('/')
   await expect(page).toHaveTitle(/sidenib/i)
   await expect(page.getByText('Sidenib').first()).toBeVisible()
+
+  // Closed, only the notch is there; the card content is not shown.
+  await expect(page.locator('.sn-card')).toBeHidden()
+  await page.getByRole('button', { name: 'Open Sidenib' }).click()
+  await expect(page.locator('.sn-card')).toHaveClass(/is-open/)
   await expect(page.getByText('Today').first()).toBeVisible()
   await expect(page.locator('.section-meter')).toHaveCount(0)
-
-  const openButton = page.getByRole('button', { name: 'Open Sidenib' })
-
-  if (await openButton.count()) {
-    await openButton.click()
-  }
 
   await page.getByRole('button', { name: 'Sidebar settings' }).click()
   await expect(page.getByRole('dialog', { name: 'Settings' })).toBeVisible()
@@ -58,10 +57,7 @@ test('sidebar opens and completed-task visibility is configurable', async ({
     name: 'backdrop.png',
   })
   await expect(page.locator('.workspace')).toHaveClass(/has-custom-backdrop/)
-  await expect(page.locator('.edge-handle')).toHaveCSS(
-    'background-image',
-    /data:image\/png/,
-  )
+  await expect(page.locator('.sn-notch')).toBeVisible()
   await expect(page.getByText('Image strength', { exact: true })).toBeVisible()
 
   await page.getByRole('button', { name: 'Theme preset' }).click()
@@ -306,8 +302,8 @@ for (const viewport of viewports) {
     })
     await page.goto('/?open=1')
 
-    const sidebar = page.locator('.todo-sidebar')
-    const handle = page.locator('.edge-handle')
+    const sidebar = page.locator('.sn-card')
+    const handle = page.locator('.sn-notch')
 
     await expect(sidebar).toBeVisible()
     await expect(handle).toBeVisible()
@@ -325,6 +321,8 @@ for (const viewport of viewports) {
       ),
     ).toBe(true)
 
+    await expect(sidebar).toHaveCSS('transform', 'none')
+
     const sidebarBox = await sidebar.boundingBox()
     const handleBox = await handle.boundingBox()
     const documentWidth = await page.evaluate(
@@ -336,6 +334,14 @@ for (const viewport of viewports) {
     expect(documentWidth).toBeLessThanOrEqual(viewport.width + 2)
 
     if (sidebarBox && handleBox) {
+      // The card is bounded: never wider or taller than the compact frame,
+      // whatever the viewport, and always clear of the viewport edges.
+      expect(sidebarBox.width).toBeLessThanOrEqual(340.5)
+      expect(sidebarBox.height).toBeLessThanOrEqual(480.5)
+      expect(sidebarBox.y).toBeGreaterThanOrEqual(9.5)
+      expect(sidebarBox.y + sidebarBox.height).toBeLessThanOrEqual(
+        viewport.height - 9.5,
+      )
       expect(sidebarBox.x).toBeGreaterThanOrEqual(-1)
       expect(sidebarBox.x + sidebarBox.width).toBeLessThanOrEqual(
         viewport.width + 1,
@@ -356,7 +362,7 @@ for (const viewport of viewports) {
   })
 }
 
-test('due reminders badge the closed handle without opening the sidebar', async ({
+test('due reminders badge the closed notch without opening the card', async ({
   page,
 }) => {
   await page.addInitScript(() => {
@@ -376,26 +382,34 @@ test('due reminders badge the closed handle without opening the sidebar', async 
   })
   await page.goto('/')
 
-  await expect(page.locator('.workspace')).toHaveClass(/is-sidebar-closed/)
-  await expect(page.locator('.handle-badge')).toHaveText('1')
-  await expect(page.locator('.reminder-toast-stack')).toHaveCSS('opacity', '0')
-
-  await page.getByRole('button', { name: 'Open Sidenib' }).click()
   const reminderToast = page.getByRole('status').filter({
     hasText: 'Closed reminder',
   })
 
+  // The reminder shows beside the closed notch. It never opens the card and
+  // never takes focus.
+  await expect(page.locator('.workspace')).toHaveClass(/is-sidebar-closed/)
+  await expect(page.locator('.sn-card')).not.toHaveClass(/is-open/)
+  await expect(page.locator('.sn-notch-badge')).toHaveText('1')
+  await expect(page.locator('.sn-toast')).toHaveClass(/is-beside/)
   await expect(reminderToast).toBeVisible()
-  await expect(reminderToast.locator('.reminder-toast-copy strong')).toHaveCSS(
-    'color',
-    'rgb(17, 19, 24)',
-  )
+  expect(
+    await page.evaluate(() => document.activeElement === document.body),
+  ).toBe(true)
+
+  const toastBox = await page.locator('.sn-toast').boundingBox()
+
+  expect(toastBox?.width).toBeLessThanOrEqual(296.5)
+  expect(toastBox?.height).toBeCloseTo(60, 0)
   await expect(
     reminderToast.getByRole('button', {
       name: 'Snooze Closed reminder 10 minutes',
     }),
   ).toBeVisible()
-  await reminderToast.getByRole('button', { name: 'Open' }).click()
+  await reminderToast
+    .getByRole('button', { name: 'Open reminder Closed reminder' })
+    .click()
+  await expect(page.locator('.sn-card')).toHaveClass(/is-open/)
   await expect(page.getByRole('button', { name: 'Jump to Calendar' })).toHaveAttribute(
     'aria-current',
     'true',
@@ -473,97 +487,4 @@ test('Gmail connector UI stays hidden while the feature is held back', async ({
       ),
     )
     .toBe(false)
-})
-
-test('native closed dock keeps a rounded tab shape', async ({ page }) => {
-  await page.setViewportSize({ height: 900, width: 442 })
-  await page.goto('/?runtime=tauri')
-
-  const path = await page.locator('.native-dock-surface path').getAttribute('d')
-
-  expect(path).toContain('C')
-  expect(path).toContain('Q 42')
-  await expect(page.locator('.todo-sidebar')).toHaveCSS(
-    'background-color',
-    'rgba(0, 0, 0, 0)',
-  )
-  await expect(page.locator('.native-dock-surface')).toHaveClass(/is-closed/)
-  await expect(page.locator('.edge-handle')).toHaveCSS(
-    'border-top-left-radius',
-    '16px',
-  )
-  await expect(page.locator('.edge-handle')).toHaveCSS(
-    'border-top-right-radius',
-    '0px',
-  )
-})
-
-test('native left dock keeps the tab on the outside edge', async ({ page }) => {
-  await page.setViewportSize({ height: 900, width: 442 })
-  await page.goto('/?runtime=tauri&dock=left')
-
-  const path = await page.locator('.native-dock-surface path').getAttribute('d')
-
-  expect(path).toContain('C')
-  expect(path).toContain('Q 392')
-  await expect(page.locator('.edge-handle')).toHaveCSS(
-    'border-top-left-radius',
-    '0px',
-  )
-  await expect(page.locator('.edge-handle')).toHaveCSS(
-    'border-top-right-radius',
-    '16px',
-  )
-})
-
-test('native top dock keeps a wider outside tab shape', async ({ page }) => {
-  await page.setViewportSize({ height: 500, width: 900 })
-
-  await page.goto('/?runtime=tauri&dock=top')
-  await expect(page.locator('.native-dock-surface path')).toHaveAttribute(
-    'd',
-    /Q/,
-  )
-  await expect(page.locator('.edge-handle')).toHaveCSS(
-    'border-top-left-radius',
-    '0px',
-  )
-  await expect(page.locator('.edge-handle')).toHaveCSS(
-    'border-bottom-left-radius',
-    '16px',
-  )
-  await expect(page.locator('.todo-sidebar')).toHaveCSS('width', '800px')
-})
-
-test('native hover-only reveal zone stays inside the visible tab strip', async ({
-  page,
-}) => {
-  await page.addInitScript(() => {
-    window.localStorage.setItem(
-      'sidenib.sidebar.settings.v27',
-      JSON.stringify({
-        dockEdge: 'right',
-        handleHeight: 84,
-        panelWidth: 400,
-        tabVisibility: 'hover',
-        tabWidth: 42,
-      }),
-    )
-  })
-  await page.setViewportSize({ height: 900, width: 442 })
-
-  await page.goto('/?runtime=tauri&dock=right')
-  await expect(page.locator('.workspace')).toHaveClass(/tab-hover/)
-  await expect(page.locator('.edge-hover-zone')).toHaveCSS('left', '0px')
-  await expect(page.locator('.edge-hover-zone')).toHaveCSS('width', '42px')
-  await page.mouse.move(2, 450)
-  await expect(page.locator('.edge-handle')).toHaveCSS('opacity', '1')
-
-  await page.goto('/?runtime=tauri&dock=left')
-  await expect(page.locator('.edge-hover-zone')).toHaveCSS('left', '392px')
-  await expect(page.locator('.edge-hover-zone')).toHaveCSS('width', '42px')
-
-  await page.goto('/?runtime=tauri&dock=top')
-  await expect(page.locator('.edge-hover-zone')).toHaveCSS('top', '400px')
-  await expect(page.locator('.edge-hover-zone')).toHaveCSS('height', '42px')
 })

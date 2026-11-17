@@ -1,10 +1,4 @@
 .workspace {
-  --panel-width: 400px;
-  --tab-width: 44px;
-  --handle-height: 92px;
-  --handle-half: 46px;
-  --handle-y: 50%;
-  --native-handle-y-px: 50vh;
   --motion-ms: 230ms;
   --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
   --ease-out-soft: cubic-bezier(0.16, 0.86, 0.3, 1);
@@ -19,7 +13,6 @@
   --radius-lg: 12px;
   --radius-xl: 14px;
   --radius-2xl: 16px;
-  --panel-radius: 18px;
   --surface-alpha: 0.96;
   --surface-alpha-percent: 96%;
   --task-row-height: 44px;
@@ -445,11 +438,6 @@
   --settings-surface: #08111f;
 }
 
-.workspace.theme-dark .native-dock-surface path {
-  fill: var(--dock-bg);
-  stroke: var(--dock-stroke);
-}
-
 .workspace.theme-dark .todo-sidebar {
   background: var(--sidebar-bg);
 }
@@ -532,12 +520,6 @@
 }
 
 .workspace.is-native {
-  --native-handle-y: clamp(
-    calc(var(--handle-half) + 8px),
-    var(--native-handle-y-px),
-    calc(100vh - var(--handle-half) - 8px)
-  );
-
   width: 100vw;
   height: 100vh;
   min-height: 100vh;
@@ -547,80 +529,6 @@
 
 .workspace.is-native .desktop-preview {
   display: none;
-}
-
-.native-dock-surface {
-  display: none;
-}
-
-.workspace.is-native .native-dock-surface {
-  position: fixed;
-  inset: 0;
-  z-index: 14;
-  display: block;
-  width: 100vw;
-  height: 100vh;
-  filter: drop-shadow(-8px 14px 24px rgba(19, 25, 35, 0.08))
-    drop-shadow(-1px 2px 4px rgba(19, 25, 35, 0.05));
-  pointer-events: none;
-  transition: filter 220ms ease;
-}
-
-.workspace.is-native.dock-left .native-dock-surface {
-  filter: drop-shadow(8px 14px 24px rgba(19, 25, 35, 0.08))
-    drop-shadow(1px 2px 4px rgba(19, 25, 35, 0.05));
-}
-
-.workspace.is-native.dock-top .native-dock-surface {
-  filter: drop-shadow(0 10px 22px rgba(19, 25, 35, 0.08))
-    drop-shadow(0 2px 4px rgba(19, 25, 35, 0.05));
-}
-
-.workspace.theme-dark.is-native .native-dock-surface {
-  filter: drop-shadow(-8px 14px 24px rgba(0, 0, 0, 0.42))
-    drop-shadow(-1px 2px 4px rgba(0, 0, 0, 0.32));
-}
-
-.workspace.theme-dark.is-native.dock-left .native-dock-surface {
-  filter: drop-shadow(8px 14px 24px rgba(0, 0, 0, 0.42))
-    drop-shadow(1px 2px 4px rgba(0, 0, 0, 0.32));
-}
-
-.workspace.theme-dark.is-native.dock-top .native-dock-surface {
-  filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.42))
-    drop-shadow(0 2px 4px rgba(0, 0, 0, 0.32));
-}
-
-/* When the sidebar is closed, only the small edge tab is visible. The big
-   ambient drop-shadow above bleeds vertically above and below the tab and
-   shows as a faint gray stripe on the user's wallpaper. Reduce the cast to
-   a tight, edge-hugging shadow so the tab looks clean against the desktop. */
-.workspace.is-native .native-dock-surface.is-closed,
-.workspace.is-native.dock-left .native-dock-surface.is-closed,
-.workspace.is-native.dock-top .native-dock-surface.is-closed,
-.workspace.theme-dark.is-native .native-dock-surface.is-closed,
-.workspace.theme-dark.is-native.dock-left .native-dock-surface.is-closed,
-.workspace.theme-dark.is-native.dock-top .native-dock-surface.is-closed {
-  filter: none;
-}
-
-.native-dock-surface path {
-  fill: var(--dock-bg);
-  stroke: var(--dock-stroke);
-  stroke-width: 1;
-  vector-effect: non-scaling-stroke;
-}
-
-.native-dock-surface.is-closed path {
-  stroke: color-mix(in srgb, var(--dock-stroke) 58%, transparent);
-}
-
-.dock-backdrop-base {
-  fill: var(--dock-bg);
-}
-
-.workspace.has-custom-backdrop .native-dock-surface path {
-  stroke: color-mix(in srgb, var(--dock-stroke) 68%, transparent);
 }
 
 .desktop-preview {
@@ -808,7 +716,6 @@ button {
 .quick-add button:focus-visible,
 .check-button:focus-visible,
 .edit-button:focus-visible,
-.edge-handle:focus-visible,
 .priority-button:focus-visible,
 .reminder-button:focus-visible,
 .delete-button:focus-visible,
@@ -826,8 +733,7 @@ button {
 .workspace.theme-dark .quick-add button:focus-visible,
 .workspace.theme-dark .check-button:focus-visible,
 .workspace.theme-dark .edit-button:focus-visible,
-.workspace.theme-dark .edge-handle:focus-visible,
-.workspace.theme-dark .priority-button:focus-visible,
+.workspace.theme-dark .workspace.theme-dark .priority-button:focus-visible,
 .workspace.theme-dark .reminder-button:focus-visible,
 .workspace.theme-dark .delete-button:focus-visible,
 .workspace.theme-dark .custom-list-title:focus-visible,
@@ -963,554 +869,12 @@ kbd {
   width: 52%;
 }
 
-.edge-handle {
-  position: fixed;
-  z-index: 20;
-  top: var(--handle-y);
-  right: 12px;
-  width: var(--tab-width);
-  height: var(--handle-height);
-  display: grid;
-  grid-template-rows: 1fr;
-  place-items: center;
-  color: var(--muted);
-  border: 1px solid var(--sidebar-border);
-  border-radius: 14px;
-  background: var(--handle-bg);
-  box-shadow:
-    -8px 16px 28px rgba(15, 23, 42, 0.08),
-    -1px 2px 6px rgba(15, 23, 42, 0.05),
-    inset 0 1px 0 rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(22px) saturate(1.24);
-  transform: translateY(-50%);
-  cursor: pointer;
-  user-select: none;
-  touch-action: none;
-  transition:
-    bottom var(--motion-ms) var(--ease-out),
-    left var(--motion-ms) var(--ease-out),
-    right var(--motion-ms) var(--ease-out),
-    top var(--motion-ms) var(--ease-out),
-    opacity 180ms ease,
-    width var(--motion-ms) var(--ease-out),
-    height var(--motion-ms) var(--ease-out),
-    border-color 200ms ease,
-    box-shadow 200ms ease,
-    color 160ms ease,
-    transform 160ms ease;
-}
-
-.edge-handle svg {
-  display: block;
-}
-
-.handle-badge {
-  position: absolute;
-  top: 6px;
-  left: 5px;
-  z-index: 2;
-  min-width: 16px;
-  height: 16px;
-  display: grid;
-  place-items: center;
-  padding: 0 5px;
-  color: #fff;
-  font-size: 9px;
-  line-height: 1;
-  font-weight: 800;
-  border: 2px solid var(--dock-bg);
-  border-radius: 999px;
-  background: var(--accent);
-  box-shadow: 0 4px 10px color-mix(in srgb, var(--accent) 38%, transparent);
-  animation: badge-arrive 260ms var(--ease-out) both;
-}
-
-.workspace.dock-left .handle-badge {
-  right: 6px;
-  left: auto;
-}
-
-.workspace.dock-top .handle-badge {
-  top: 5px;
-  left: 8px;
-}
-
-.handle-symbol {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  place-items: center;
-  width: 22px;
-  height: 22px;
-  margin-left: 0;
-  color: #4d5968;
-  opacity: 0.94;
-  filter: none;
-}
-
-.handle-symbol svg {
-  grid-area: 1 / 1;
-  transition:
-    opacity 160ms ease,
-    transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-.handle-icon-close {
-  opacity: 0;
-  transform: translateX(3px) scale(0.94);
-}
-
-.edge-handle.is-open .handle-icon-open {
-  opacity: 0;
-  transform: translateX(-3px) scale(0.94);
-}
-
-.edge-handle.is-open .handle-icon-close {
-  opacity: 1;
-  transform: translateX(0) scale(1);
-}
-
-.edge-handle:hover {
-  color: var(--ink);
-  border-color: color-mix(in srgb, var(--accent-line) 64%, var(--sidebar-border));
-  background: var(--handle-hover-bg);
-  box-shadow:
-    -10px 18px 32px rgba(15, 23, 42, 0.12),
-    -1px 2px 8px rgba(15, 23, 42, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.85);
-}
-
-.edge-handle:hover .handle-symbol {
-  opacity: 1;
-}
-
-.workspace.theme-dark .edge-handle {
-  color: var(--muted);
-  border-color: rgba(255, 255, 255, 0.08);
-  box-shadow:
-    -10px 18px 30px rgba(0, 0, 0, 0.45),
-    -1px 2px 6px rgba(0, 0, 0, 0.28),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
-}
-
-.workspace.theme-dark .edge-handle:hover {
-  color: var(--ink);
-  border-color: rgba(255, 255, 255, 0.14);
-}
-
-.edge-hover-zone {
-  display: none;
-}
-
-.workspace.has-custom-backdrop .edge-handle {
-  color: #f8fafc;
-  background:
-    linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.36)),
-    var(--custom-backdrop-image),
-    var(--handle-bg);
-  background-position: center;
-  background-size: auto, cover, auto;
-  border-color: color-mix(in srgb, var(--dock-stroke) 70%, transparent);
-  box-shadow:
-    -9px 16px 30px rgba(15, 23, 42, 0.16),
-    inset 1px 1px 0 rgba(255, 255, 255, 0.18);
-}
-
-.workspace.theme-dark.has-custom-backdrop .edge-handle {
-  background:
-    linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.52)),
-    var(--custom-backdrop-image),
-    var(--handle-bg);
-}
-
-.workspace.has-custom-backdrop .edge-handle:hover {
-  color: #ffffff;
-  background:
-    linear-gradient(180deg, rgba(0, 0, 0, 0.04), rgba(0, 0, 0, 0.28)),
-    var(--custom-backdrop-image),
-    var(--handle-hover-bg);
-  background-position: center;
-  background-size: auto, cover, auto;
-}
-
-.workspace.tab-hover.is-sidebar-closed .edge-hover-zone {
-  position: fixed;
-  z-index: 19;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: 8px;
-  display: block;
-  background: transparent;
-}
-
-.workspace.dock-left.tab-hover.is-sidebar-closed .edge-hover-zone {
-  right: auto;
-  left: 0;
-}
-
-.workspace.dock-top.tab-hover.is-sidebar-closed .edge-hover-zone {
-  right: 0;
-  bottom: auto;
-  left: 0;
-  width: auto;
-  height: 8px;
-}
-
-.workspace.is-native.dock-right.tab-hover.is-sidebar-closed .edge-hover-zone {
-  right: auto;
-  left: 0;
-  width: var(--tab-width);
-}
-
-.workspace.is-native.dock-left.tab-hover.is-sidebar-closed .edge-hover-zone {
-  right: auto;
-  left: var(--panel-width);
-  width: var(--tab-width);
-}
-
-.workspace.is-native.dock-top.tab-hover.is-sidebar-closed .edge-hover-zone {
-  top: var(--panel-depth);
-  height: var(--tab-width);
-}
-
-.workspace.tab-hover.is-sidebar-closed .edge-handle {
-  opacity: 0;
-  pointer-events: none;
-}
-
-.workspace.tab-hover.is-sidebar-closed .edge-hover-zone:hover + .edge-handle,
-.workspace.tab-hover.is-sidebar-closed.is-edge-revealed .edge-handle,
-.workspace.tab-hover.is-sidebar-closed .edge-handle:hover,
-.workspace.tab-hover.is-sidebar-closed .edge-handle:focus-visible,
-.workspace.tab-hover.is-sidebar-closed .edge-handle:has(.handle-badge) {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.edge-handle.is-open {
-  right: min(var(--panel-width), calc(100vw - var(--tab-width)));
-}
-
-.workspace.dock-left .edge-handle {
-  right: auto;
-  left: 12px;
-}
-
-.workspace.dock-left .edge-handle.is-open {
-  right: auto;
-  left: min(var(--panel-width), calc(100vw - var(--tab-width)));
-}
-
-.workspace.dock-left .handle-symbol {
-  transform: rotate(180deg);
-}
-
-.workspace.dock-top .edge-handle,
-.workspace.dock-bottom .edge-handle {
-  right: auto;
-  left: clamp(
-    calc(var(--handle-half) + 8px),
-    var(--handle-y),
-    calc(100vw - var(--handle-half) - 8px)
-  );
-  width: var(--handle-height);
-  height: var(--tab-width);
-  transform: translateX(-50%);
-}
-
-.workspace.dock-top .edge-handle {
-  top: 12px;
-  border-radius: 0 0 16px 16px;
-}
-
-.workspace.dock-bottom .edge-handle {
-  top: auto;
-  bottom: 12px;
-  border-radius: 16px 16px 0 0;
-}
-
-.workspace.dock-top .edge-handle.is-open {
-  top: min(var(--panel-depth), calc(100vh - var(--tab-width)));
-  left: clamp(
-    calc(var(--handle-half) + 8px),
-    var(--handle-y),
-    calc(100vw - var(--handle-half) - 8px)
-  );
-  right: auto;
-}
-
-.workspace.dock-bottom .edge-handle.is-open {
-  right: auto;
-  bottom: min(var(--panel-depth), calc(100vh - var(--tab-width)));
-  left: clamp(
-    calc(var(--handle-half) + 8px),
-    var(--handle-y),
-    calc(100vw - var(--handle-half) - 8px)
-  );
-}
-
-.workspace.dock-top .handle-symbol {
-  transform: rotate(90deg);
-}
-
-.workspace.dock-bottom .handle-symbol {
-  transform: rotate(-90deg);
-}
-
-.workspace.is-native .edge-handle {
-  top: var(--native-handle-y);
-  left: 0;
-  right: auto;
-  width: var(--tab-width);
-  height: var(--handle-height);
-  border-color: transparent;
-  border-radius: 16px 0 0 16px;
-  background: transparent;
-  box-shadow: none;
-  overflow: hidden;
-  transform: translateY(-50%);
-}
-
-.workspace.is-native.tab-hover.is-sidebar-closed .native-dock-surface {
-  opacity: 0;
-  transition: opacity 180ms ease;
-}
-
-.workspace.is-native.tab-hover.is-sidebar-closed:has(.edge-hover-zone:hover)
-  .native-dock-surface,
-.workspace.is-native.tab-hover.is-sidebar-closed.is-edge-revealed
-  .native-dock-surface,
-.workspace.is-native.tab-hover.is-sidebar-closed:focus-within .native-dock-surface {
-  opacity: 1;
-}
-
-.workspace.is-native .edge-handle.is-open {
-  top: var(--native-handle-y);
-  left: 0;
-  right: auto;
-  width: var(--tab-width);
-  height: var(--handle-height);
-  border-radius: 16px 0 0 16px;
-  transform: translateY(-50%);
-}
-
-.workspace.is-native.dock-left .edge-handle,
-.workspace.is-native.dock-left .edge-handle.is-open {
-  left: var(--panel-width);
-  right: auto;
-  border-radius: 0 16px 16px 0;
-}
-
-.workspace.is-native.dock-top .edge-handle,
-.workspace.is-native.dock-top .edge-handle.is-open {
-  top: var(--panel-depth);
-  left: 50%;
-  right: auto;
-  bottom: auto;
-  width: min(var(--handle-height), calc(var(--panel-width) - 24px));
-  height: var(--tab-width);
-  border-radius: 0 0 16px 16px;
-  transform: translateX(-50%);
-}
-
-.workspace.is-native.dock-bottom .edge-handle,
-.workspace.is-native.dock-bottom .edge-handle.is-open {
-  top: 0;
-  left: 50%;
-  right: auto;
-  bottom: auto;
-  width: min(var(--handle-height), calc(var(--panel-width) - 24px));
-  height: var(--tab-width);
-  border-radius: 16px 16px 0 0;
-  transform: translateX(-50%);
-}
-
-.workspace.is-native .edge-handle:hover,
-.workspace.is-native.is-sidebar-open .edge-handle,
-.workspace.is-native.is-sidebar-open .edge-handle:hover {
-  color: #40556e;
-  border-color: transparent;
-  background: transparent;
-  box-shadow: none;
-}
-
-.workspace.is-native.has-custom-backdrop .edge-handle,
-.workspace.is-native.has-custom-backdrop .edge-handle:hover {
-  background: transparent;
-  box-shadow: none;
-}
-
-.workspace.is-native .edge-handle:focus-visible {
-  outline: none;
-}
-
-.reminder-toast-stack {
-  position: fixed;
-  z-index: 60;
-  right: calc(var(--tab-width) + 16px);
-  bottom: 22px;
-  width: min(320px, calc(100vw - var(--tab-width) - 32px));
-  display: grid;
-  gap: 8px;
-  opacity: 1;
-  pointer-events: none;
-  transform: translateY(0);
-  transition:
-    opacity 170ms ease,
-    transform 190ms cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-.workspace.is-sidebar-closed .reminder-toast-stack {
-  opacity: 0;
-  transform: translateY(12px);
-}
-
-.workspace.dock-left .reminder-toast-stack {
-  right: auto;
-  left: calc(var(--tab-width) + 14px);
-}
-
-.workspace.dock-top .reminder-toast-stack {
-  top: auto;
-  bottom: 18px;
-  right: 14px;
-}
-
-.reminder-toast {
-  min-height: 72px;
-  display: grid;
-  grid-template-columns: 32px minmax(0, 1fr);
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  color: var(--toast-ink);
-  border: 1px solid var(--toast-border);
-  border-radius: var(--radius-2xl);
-  background: var(--toast-bg);
-  box-shadow:
-    0 14px 32px rgba(14, 23, 38, 0.14),
-    0 2px 6px rgba(14, 23, 38, 0.06);
-  pointer-events: auto;
-  animation: toast-in 260ms var(--ease-out) both;
-  backdrop-filter: blur(16px) saturate(132%);
-}
-
-.workspace.theme-dark .reminder-toast {
-  box-shadow:
-    0 20px 44px rgba(0, 0, 0, 0.46),
-    0 4px 12px rgba(0, 0, 0, 0.32);
-}
-
-.reminder-toast-icon {
-  width: 32px;
-  height: 32px;
-  display: grid;
-  place-items: center;
-  color: var(--accent);
-  border: 0;
-  border-radius: var(--radius-md);
-  background: var(--toast-icon-bg);
-}
-
-.reminder-toast-copy {
-  min-width: 0;
-  display: grid;
-  gap: 2px;
-}
-
-.reminder-toast-copy strong,
-.reminder-toast-copy span,
-.reminder-toast-copy em {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.reminder-toast-copy strong {
-  color: var(--toast-ink);
-  font-size: 12px;
-  line-height: 1.25;
-  font-weight: 780;
-}
-
-.reminder-toast-copy span {
-  color: var(--toast-muted);
-  font-size: 10.8px;
-  line-height: 1.25;
-  font-weight: 640;
-}
-
-.reminder-toast-copy em {
-  color: var(--accent);
-  font-size: 10px;
-  font-style: normal;
-  font-weight: 760;
-}
-
-.reminder-toast-actions {
-  grid-column: 2;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 5px;
-  margin-top: 3px;
-}
-
-.reminder-toast-actions button {
-  height: 28px;
-  display: grid;
-  place-items: center;
-  padding: 0 10px;
-  color: var(--toast-button-ink);
-  font-size: 10.5px;
-  font-weight: 780;
-  border: 1px solid transparent;
-  border-radius: 999px;
-  background: var(--toast-button-bg);
-  cursor: pointer;
-  transition: background 160ms ease, color 160ms ease, border-color 160ms ease;
-}
-
-.reminder-toast-actions button:hover {
-  border-color: var(--accent);
-  background: var(--accent);
-  color: var(--task-bg);
-}
-
-.reminder-toast-actions button.is-subtle {
-  color: var(--toast-muted);
-  border-color: var(--line);
-  background: var(--control-bg);
-}
-
-.reminder-toast-actions button.is-subtle:hover {
-  color: var(--toast-ink);
-  border-color: transparent;
-  background: var(--surface-hover);
-}
-
-.reminder-toast-actions button.is-icon {
-  width: 28px;
-  padding: 0;
-  color: var(--toast-muted);
-  border-color: var(--line);
-  background: var(--control-bg);
-}
-
-.reminder-toast-actions button.is-icon:hover {
-  color: var(--toast-ink);
-  border-color: transparent;
-  background: var(--surface-hover);
-}
-
+/* The card frame (src/shell/shell.css) owns position, size, radius, shadow
+   and the reveal. This is only the content layout inside it. */
 .todo-sidebar {
-  position: fixed;
-  z-index: 15;
-  top: 0;
-  right: 0;
-  width: min(var(--panel-width), calc(100vw - 32px));
-  height: 100svh;
+  position: relative;
+  width: 100%;
+  height: 100%;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 46px;
   grid-template-rows: minmax(0, 1fr);
@@ -1518,18 +882,9 @@ kbd {
   overflow: hidden;
   padding: 0;
   color: var(--ink);
-  border-left: 1px solid var(--sidebar-border);
-  border-radius: var(--panel-radius) 0 0 var(--panel-radius);
+  border-radius: inherit;
   background: var(--sidebar-bg);
-  box-shadow: var(--panel-shadow);
-  backdrop-filter: blur(22px);
   isolation: isolate;
-  transform: translateX(calc(100% + 18px));
-  transition:
-    width var(--motion-ms) cubic-bezier(0.2, 0.8, 0.2, 1),
-    height var(--motion-ms) cubic-bezier(0.2, 0.8, 0.2, 1),
-    transform var(--motion-ms) cubic-bezier(0.2, 0.8, 0.2, 1),
-    box-shadow var(--motion-ms) ease;
 }
 
 .todo-sidebar::before {
@@ -1616,10 +971,6 @@ kbd {
   background-color: rgba(226, 232, 240, 0.32);
 }
 
-.todo-sidebar.is-open {
-  transform: translateX(0);
-}
-
 .todo-sidebar.is-settings-open {
   overflow: hidden;
   background: color-mix(
@@ -1627,112 +978,6 @@ kbd {
     var(--settings-surface) var(--surface-alpha-percent),
     transparent
   );
-}
-
-.workspace.dock-left .todo-sidebar {
-  right: auto;
-  left: 0;
-  border-right: 1px solid var(--sidebar-border);
-  border-left: 0;
-  border-radius: 0 var(--panel-radius) var(--panel-radius) 0;
-  box-shadow: 28px 0 72px rgba(19, 25, 35, 0.14);
-  transform: translateX(calc(-100% - 18px));
-}
-
-.workspace.dock-left .todo-sidebar.is-open {
-  transform: translateX(0);
-}
-
-.workspace.dock-top .todo-sidebar,
-.workspace.dock-bottom .todo-sidebar {
-  right: auto;
-  left: clamp(
-    0px,
-    calc(var(--handle-y) - var(--panel-half)),
-    calc(100vw - var(--panel-width))
-  );
-  width: min(var(--panel-width), 100vw);
-  height: min(var(--panel-depth), calc(100vh - var(--tab-width)));
-  border-left: 0;
-  border-right: 0;
-  transform: translateY(calc(-100% - 18px));
-}
-
-.workspace.dock-top .todo-sidebar {
-  top: 0;
-  bottom: auto;
-  border-radius: 0 0 var(--panel-radius) var(--panel-radius);
-  box-shadow: 0 28px 72px rgba(19, 25, 35, 0.14);
-}
-
-.workspace.dock-bottom .todo-sidebar {
-  top: auto;
-  bottom: 0;
-  border-radius: var(--panel-radius) var(--panel-radius) 0 0;
-  box-shadow: 0 -28px 72px rgba(19, 25, 35, 0.14);
-  transform: translateY(calc(100% + 18px));
-}
-
-.workspace.dock-top .todo-sidebar.is-open,
-.workspace.dock-bottom .todo-sidebar.is-open {
-  transform: translateY(0);
-}
-
-.workspace.is-native .todo-sidebar {
-  left: var(--tab-width);
-  right: auto;
-  width: var(--panel-width);
-  max-width: none;
-  height: 100vh;
-  display: grid;
-  border-left: 0;
-  border-radius: var(--panel-radius) 0 0 var(--panel-radius);
-  background: transparent;
-  box-shadow: none;
-  backdrop-filter: none;
-  transform: none;
-}
-
-.workspace.is-native .todo-sidebar::before {
-  opacity: 0;
-}
-
-.workspace.is-native.dock-left .todo-sidebar {
-  left: 0;
-  right: auto;
-  border-right: 0;
-  border-left: 0;
-  border-radius: 0 var(--panel-radius) var(--panel-radius) 0;
-}
-
-.workspace.is-native.dock-top .todo-sidebar,
-.workspace.is-native.dock-bottom .todo-sidebar {
-  left: 0;
-  right: auto;
-  width: var(--panel-width);
-  height: var(--panel-depth);
-  border: 0;
-  box-shadow: none;
-}
-
-.workspace.is-native.dock-top .todo-sidebar {
-  top: 0;
-  bottom: auto;
-  border-radius: 0 0 var(--panel-radius) var(--panel-radius);
-}
-
-.workspace.is-native.dock-bottom .todo-sidebar {
-  top: var(--tab-width);
-  bottom: auto;
-  border-radius: var(--panel-radius) var(--panel-radius) 0 0;
-}
-
-.workspace.is-native .todo-sidebar.is-open {
-  transform: none;
-}
-
-.workspace.is-native.is-sidebar-closed {
-  overflow: hidden;
 }
 
 .sidebar-content {
@@ -5409,30 +4654,6 @@ kbd {
   }
 }
 
-@keyframes toast-in {
-  from {
-    opacity: 0;
-    transform: translateY(14px) scale(0.985);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-@keyframes badge-arrive {
-  from {
-    opacity: 0;
-    transform: scale(0.72);
-  }
-
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
 @keyframes reminder-popover-in {
   from {
     opacity: 0;
@@ -5509,9 +4730,7 @@ kbd {
   }
 
   .todo-sidebar {
-    width: calc(100vw - 18px);
     grid-template-columns: minmax(0, 1fr) 44px;
-    padding: 0;
   }
 
   .sidebar-content,
@@ -5528,10 +4747,6 @@ kbd {
     block-size: 34px;
   }
 
-  .edge-handle.is-open {
-    right: calc(100vw - var(--tab-width));
-  }
-
   .task-row {
     gap: 7px;
     padding-right: 6px;
@@ -5539,44 +4754,6 @@ kbd {
 
   .row-actions {
     min-width: 72px;
-  }
-}
-
-@media (max-width: 96px) and (max-height: 160px) {
-  .desktop-preview,
-  .todo-sidebar {
-    display: none !important;
-  }
-
-  .workspace {
-    width: 100vw;
-    height: 100vh;
-    min-height: 100vh;
-    overflow: hidden;
-    background: transparent;
-  }
-
-  .edge-handle {
-    top: 0;
-    right: 0;
-    width: 64px;
-    height: 118px;
-    color: #f8fbff;
-    border: 1px solid rgba(255, 255, 255, 0.22);
-    border-right: 0;
-    border-radius: 22px 0 0 22px;
-    background:
-      linear-gradient(180deg, rgba(28, 38, 52, 0.92), rgba(12, 18, 28, 0.94)),
-      #111927;
-    box-shadow:
-      0 18px 42px rgba(12, 18, 28, 0.28),
-      inset 1px 1px 0 rgba(255, 255, 255, 0.16),
-      inset 0 -1px 0 rgba(0, 0, 0, 0.24);
-    transform: none;
-  }
-
-  .edge-handle > svg:first-child {
-    display: none;
   }
 }
 
