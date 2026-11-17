@@ -1,77 +1,160 @@
 /*
- * Settings view styles. Scoped to .sn-settings; tokens only.
- * Extracted in ADIEN-162 at a usable level. ADIEN-164 owns this file.
+ * Settings view styles (ADIEN-164). Scoped to .sn-settings and the settings
+ * rows; tokens only, apart from the preset swatch colours.
  */
 
 .sn-settings {
   display: grid;
-  gap: var(--sn-space-3);
+  gap: var(--sn-space-4);
 }
 
 .sn-settings .sn-section + .sn-section {
   margin-top: 0;
 }
 
-/* Rows in a settings group are separated like task rows. */
-.sn-settings .sn-group > * + * {
-  border-top: 0.5px solid var(--sn-separator);
+/* Rows in a settings group are separated like task rows: an inset hairline. */
+.sn-settings .sn-group > *,
+.sn-preset-list > * {
+  position: relative;
 }
 
-/* ---- Theme preset ------------------------------------------------------ */
+.sn-settings .sn-group > * + *::before,
+.sn-preset-list > * + *::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: var(--sn-space-3);
+  height: 0.5px;
+  background: var(--sn-separator);
+}
 
-.theme-dropdown-trigger,
-.theme-dropdown-menu > button {
+/* With Row spacing above zero every row is its own block; no hairlines. */
+.sn-rows-spaced .sn-settings .sn-group > * + *::before {
+  content: none;
+}
+
+/* ---- Rows --------------------------------------------------------------- */
+
+.sn-setting-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--sn-space-2);
   width: 100%;
   min-height: var(--sn-row-min-height);
   padding: 6px var(--sn-space-3);
   border: 0;
   text-align: left;
   background: transparent;
+}
+
+.sn-setting-row > span:first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.sn-setting-row > .sn-segmented {
+  flex: none;
+}
+
+button.sn-setting-row {
   cursor: pointer;
 }
 
-.theme-dropdown-trigger:hover,
-.theme-dropdown-menu > button:hover {
+button.sn-setting-row:hover {
   background: var(--sn-surface-hover);
 }
 
-.theme-dropdown-trigger > span:not(.theme-swatch),
-.theme-dropdown-menu > button > span:not(.theme-swatch) {
+/* The group clips its corners, so the ring is drawn inside the row. */
+.sn-panel button.sn-setting-row:focus-visible,
+.sn-preset-row:has(input:focus-visible) {
+  outline: 2px solid var(--sn-focus);
+  outline-offset: -2px;
+  border-radius: var(--sn-radius-group);
+}
+
+.sn-setting-row.is-nav > em {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--sn-ink-secondary);
+  font: var(--sn-text-caption);
+  font-style: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sn-setting-row.is-nav > svg {
+  color: var(--sn-ink-tertiary);
+}
+
+.sn-settings .sn-setting-row.is-danger {
+  color: var(--sn-danger);
+}
+
+.sn-setting-row.is-apply > span:first-child {
+  color: var(--sn-ink-secondary);
+  font: var(--sn-text-caption);
+}
+
+.sn-settings kbd {
+  padding: 2px 6px;
+  border-radius: 6px;
+  color: var(--sn-ink);
+  font: var(--sn-text-caption);
+  font-weight: 600;
+  white-space: nowrap;
+  background: var(--sn-surface-sunken);
+}
+
+/* A footnote under a group, as in Notes settings. */
+.sn-settings-note {
+  margin: calc(var(--sn-space-2) - var(--sn-space-4)) var(--sn-space-1) 0;
+  color: var(--sn-ink-secondary);
+  font: var(--sn-text-caption);
+}
+
+.sn-settings-note:empty {
+  display: none;
+}
+
+.sn-settings-note kbd {
+  padding: 0 4px;
+  font-weight: 400;
+}
+
+.sn-reset-confirm {
+  max-width: 264px;
+}
+
+/* ---- Theme preset ------------------------------------------------------ */
+
+.sn-preset-row {
+  gap: 10px;
+  cursor: pointer;
+}
+
+.sn-preset-row:hover {
+  background: var(--sn-surface-hover);
+}
+
+.sn-preset-row > span:not(.theme-swatch) {
   flex: 1;
   min-width: 0;
   display: grid;
 }
 
-.theme-dropdown em {
-  color: var(--sn-ink-secondary);
-  font: var(--sn-text-caption);
-}
-
-.theme-dropdown strong {
+.sn-preset-row strong {
   font-weight: 400;
 }
 
-.theme-dropdown-trigger > svg {
+.sn-preset-row em {
   color: var(--sn-ink-secondary);
-  transition: transform var(--sn-motion-quick) var(--sn-ease-out);
+  font: var(--sn-text-caption);
+  font-style: normal;
 }
 
-.theme-dropdown.is-open .theme-dropdown-trigger > svg {
-  transform: rotate(180deg);
-}
-
-.theme-dropdown-menu {
-  border-top: 0.5px solid var(--sn-separator);
-}
-
-.theme-dropdown-menu > button + button {
-  border-top: 0.5px solid var(--sn-separator);
-}
-
-.theme-dropdown-menu > button > svg {
+.sn-preset-row > svg {
   color: var(--sn-accent-text);
 }
 

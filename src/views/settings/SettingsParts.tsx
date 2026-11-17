@@ -1,17 +1,17 @@
 /*
- * The larger Settings controls, moved out of App.tsx with their behaviour
- * kept: the preset dropdown, the backdrop image, and the tab-order list.
+ * The Settings rows and larger controls: a labelled row, a row that pushes a
+ * page, the preset list, the backdrop image, and the tab-order list.
  */
 import {
   ArrowDown,
   ArrowUp,
   Check,
-  ChevronDown,
+  ChevronRight,
   GripVertical,
   ImagePlus,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import type { ChangeEvent, DragEvent } from 'react'
+import type { ChangeEvent, DragEvent, ReactNode } from 'react'
 import { VIEW_LABELS } from '../../components/panelChrome'
 import type {
   SectionId,
@@ -19,6 +19,48 @@ import type {
   ThemePreset,
 } from '../../sidebarSettings'
 import type { ThemePresetOption } from './themePresets'
+
+/** A label on the left and one control on the right. */
+export function SettingRow({
+  label,
+  children,
+}: {
+  label: string
+  children: ReactNode
+}) {
+  return (
+    <div className="sn-setting-row">
+      <span>{label}</span>
+      {children}
+    </div>
+  )
+}
+
+/** A row that pushes another Settings page. `id` is where focus comes back to. */
+export function NavRow({
+  id,
+  label,
+  value,
+  onOpen,
+}: {
+  id: string
+  label: string
+  value?: string
+  onOpen(): void
+}) {
+  return (
+    <button
+      type="button"
+      className="sn-setting-row is-nav"
+      data-nav={id}
+      onClick={onOpen}
+    >
+      <span>{label}</span>
+      {value ? <em>{value}</em> : null}
+      <ChevronRight aria-hidden="true" />
+    </button>
+  )
+}
 
 function ThemeSwatch({ id, mode }: { id: ThemePreset; mode: string }) {
   return (
@@ -29,80 +71,39 @@ function ThemeSwatch({ id, mode }: { id: ThemePreset; mode: string }) {
   )
 }
 
-export function ThemePresetDropdown({
+/**
+ * The preset list as native radios: Tab reaches the group, the arrow keys
+ * move and choose, as in any radio group.
+ */
+export function ThemePresetList({
   options,
-  selectedTheme,
   value,
   onChange,
 }: {
   options: ThemePresetOption[]
-  selectedTheme: ThemePresetOption
+  /** The preset being drawn, after legacy and mode resolution. */
   value: ThemePreset
-  onChange: (value: ThemePreset) => void
+  onChange(value: ThemePreset): void
 }) {
-  const [isOpen, setIsOpen] = useState(false)
-
   return (
-    <div
-      className={`theme-dropdown ${isOpen ? 'is-open' : ''}`}
-      onBlur={(event) => {
-        const nextTarget = event.relatedTarget
-
-        if (
-          !(nextTarget instanceof Node) ||
-          !event.currentTarget.contains(nextTarget)
-        ) {
-          setIsOpen(false)
-        }
-      }}
-      onKeyDown={(event) => {
-        if (event.key === 'Escape' && isOpen) {
-          event.preventDefault()
-          event.stopPropagation()
-          setIsOpen(false)
-        }
-      }}
-    >
-      <button
-        type="button"
-        className="theme-dropdown-trigger"
-        aria-label="Theme preset"
-        aria-haspopup="listbox"
-        aria-expanded={isOpen}
-        onClick={() => setIsOpen((current) => !current)}
-      >
-        <ThemeSwatch id={selectedTheme.id} mode={selectedTheme.mode} />
-        <span>
-          <strong>{selectedTheme.label}</strong>
-          <em>{selectedTheme.note}</em>
-        </span>
-        <ChevronDown aria-hidden="true" />
-      </button>
-
-      {isOpen ? (
-        <div className="theme-dropdown-menu" role="listbox" aria-label="Theme preset">
-          {options.map((preset) => (
-            <button
-              type="button"
-              key={`${preset.mode}-${preset.id}`}
-              role="option"
-              aria-label={`Choose ${preset.label}`}
-              aria-selected={value === preset.id}
-              onClick={() => {
-                onChange(preset.id)
-                setIsOpen(false)
-              }}
-            >
-              <ThemeSwatch id={preset.id} mode={preset.mode} />
-              <span>
-                <strong>{preset.label}</strong>
-                <em>{preset.note}</em>
-              </span>
-              {value === preset.id ? <Check aria-hidden="true" /> : null}
-            </button>
-          ))}
-        </div>
-      ) : null}
+    <div className="sn-preset-list" role="radiogroup" aria-label="Theme preset">
+      {options.map((preset) => (
+        <label className="sn-setting-row sn-preset-row" key={preset.id}>
+          <input
+            className="sn-visually-hidden"
+            type="radio"
+            name="sn-theme-preset"
+            checked={value === preset.id}
+            onChange={() => onChange(preset.id)}
+          />
+          <ThemeSwatch id={preset.id} mode={preset.mode} />
+          <span>
+            <strong>{preset.label}</strong>
+            <em>{preset.note}</em>
+          </span>
+          {value === preset.id ? <Check aria-hidden="true" /> : null}
+        </label>
+      ))}
     </div>
   )
 }
@@ -132,10 +133,12 @@ export function BackdropSetting({
         {settings.backdropImage ? null : <ImagePlus />}
       </div>
       <div className="backdrop-copy">
-        <strong>{settings.backdropImageName || 'No custom backdrop'}</strong>
+        <strong>{settings.backdropImage
+            ? settings.backdropImageName || 'Custom image'
+            : 'No backdrop image'}</strong>
         <span>
           {settings.backdropImage
-            ? 'Shown softly behind the panel.'
+            ? 'Shown behind the card.'
             : 'PNG, JPG or WebP under 1.5 MB.'}
         </span>
         {error ? <em role="alert">{error}</em> : null}
