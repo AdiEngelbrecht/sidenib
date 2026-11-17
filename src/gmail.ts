@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
-const GMAIL_ACTIVITY_STORAGE_KEY = 'todobar.gmail.activity.v1'
-const GMAIL_IGNORED_STORAGE_KEY = 'todobar.gmail.ignored.v1'
-const GMAIL_MOCK_STORAGE_KEY = 'todobar.gmail.mock.v1'
+const GMAIL_ACTIVITY_STORAGE_KEY = 'sidenib.gmail.activity.v1'
+const GMAIL_IGNORED_STORAGE_KEY = 'sidenib.gmail.ignored.v1'
+const GMAIL_MOCK_STORAGE_KEY = 'sidenib.gmail.mock.v1'
 const GMAIL_SCOPE = 'https://www.googleapis.com/auth/gmail.readonly'
 
 export type GmailConnectionState =
@@ -85,7 +85,7 @@ const defaultMockSuggestions: GmailThreadSuggestion[] = [
     from: 'Maya Chen',
     gmailUrl: 'https://mail.google.com/mail/u/0/#inbox/mock-thread-1',
     snippet: 'Can you turn the desktop sidebar review into a short action list?',
-    subject: 'Review Todobar demo notes',
+    subject: 'Review Sidenib demo notes',
     threadId: 'mock-thread-1',
   },
   {
@@ -159,7 +159,7 @@ function loadBrowserMockStatus(): GmailConnectionStatus {
       accountEmail: null,
       message:
         stored.message ??
-        "Gmail login is built, but this app build does not include Todobar's Google OAuth client ID yet.",
+        "Gmail login is built, but this app build does not include Sidenib's Google OAuth client ID yet.",
       scope: GMAIL_SCOPE,
       state: 'unconfigured',
       syncState: 'idle',

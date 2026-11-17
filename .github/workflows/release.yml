@@ -54,9 +54,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tagName: v__VERSION__
-          releaseName: Todobar v__VERSION__
+          releaseName: Sidenib v__VERSION__
           releaseBody: |
-            Todobar desktop release.
+            Sidenib desktop release.
 
             macOS artifacts are currently unsigned until Apple Developer signing
             and notarization are configured.

@@ -1,17 +1,18 @@
 [package]
-name = "todobar"
-version = "0.1.14"
-description = "Right-edge todo sidebar for macOS and Windows"
-authors = ["Leonxlnx"]
+name = "sidenib"
+version = "0.2.0"
+description = "Sidenib, a small task companion at the screen edge for macOS and Windows"
+# Sidenib is an independent remake that starts from Todobar by Leonxlnx.
+authors = ["Adi Engelbrecht", "Leonxlnx (original Todobar author)"]
 license = "Apache-2.0"
-repository = "https://github.com/Leonxlnx/todobar"
+repository = "https://github.com/AdiEngelbrecht/sidenib"
 edition = "2021"
 rust-version = "1.77.2"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [lib]
-name = "todobar_lib"
+name = "sidenib_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]

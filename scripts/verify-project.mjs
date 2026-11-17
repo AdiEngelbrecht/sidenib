@@ -48,13 +48,18 @@ function verifyVersions() {
     'src-tauri/Cargo.lock': matchVersion(
       'src-tauri/Cargo.lock',
       cargoLock,
-      /\[\[package\]\]\s+name = "todobar"\s+version = "([^"]+)"/m,
+      /\[\[package\]\]\s+name = "sidenib"\s+version = "([^"]+)"/m,
     ),
     'src-tauri/tauri.conf.json': tauriConfig.version,
-    'README current stable release': matchVersion(
+    'README current version': matchVersion(
       'README.md',
       readme,
-      /Current stable release: `v([^`]+)`\./,
+      /Current version: `v([^`]+)`/,
+    ),
+    'android/app/build.gradle.kts': matchVersion(
+      'android/app/build.gradle.kts',
+      read('android/app/build.gradle.kts'),
+      /versionName = "([^"]+)"/,
     ),
   }
 
@@ -91,6 +96,20 @@ function listMarkdownFiles(relativeDir) {
   }
 
   return files
+}
+
+function listFiles(relativeDir, pattern) {
+  return readdirSync(join(root, relativeDir), { withFileTypes: true }).flatMap(
+    (entry) => {
+      const relativePath = join(relativeDir, entry.name)
+
+      if (entry.isDirectory()) {
+        return listFiles(relativePath, pattern)
+      }
+
+      return pattern.test(entry.name) ? [relativePath] : []
+    },
+  )
 }
 
 function verifyMarkdownLinks() {
@@ -213,12 +232,13 @@ function verifyNativeDesktopSurface() {
     'setup_global_shortcuts',
     '.global_shortcut()',
     '.on_shortcut(shortcut',
-    'Alt+T',
-    'Alt+Shift+T',
+    'Alt+Shift+S',
+    'Control+Alt+Shift+S',
     'monitorFromPoint',
     'monitor_from_point',
-    'todobar-tray-toggle',
-    'todobar-tray-settings',
+    'sidenib-tray-toggle',
+    'sidenib-tray-settings',
+    'icon_as_template',
     'show_menu_on_left_click(false)',
   ]) {
     if (!nativeShell.includes(token) && !app.includes(token)) {
@@ -265,7 +285,90 @@ function verifyProductVision() {
   }
 }
 
+// Sidenib must keep its own native identity and storage namespaces so it can
+// run beside the installed Todobar baseline, and must keep crediting it.
+function verifyIdentity() {
+  const packageJson = readJson('package.json')
+  const tauriConfig = readJson('src-tauri/tauri.conf.json')
+  const cargoToml = read('src-tauri/Cargo.toml')
+  const readme = read('README.md')
+  const repository = 'github.com/AdiEngelbrecht/sidenib'
+
+  if (packageJson.name !== 'sidenib') {
+    fail('package.json: expected package name sidenib')
+  }
+
+  if (!packageJson.repository?.url?.includes(repository)) {
+    fail(`package.json: repository must point to ${repository}`)
+  }
+
+  if (!cargoToml.includes(`https://${repository}`)) {
+    fail(`src-tauri/Cargo.toml: repository must point to ${repository}`)
+  }
+
+  if (tauriConfig.productName !== 'Sidenib') {
+    fail('src-tauri/tauri.conf.json: expected productName Sidenib')
+  }
+
+  if (tauriConfig.identifier !== 'io.github.adiengelbrecht.sidenib') {
+    fail('src-tauri/tauri.conf.json: unexpected app identifier')
+  }
+
+  if (tauriConfig.app?.windows?.[0]?.title !== 'Sidenib') {
+    fail('src-tauri/tauri.conf.json: expected window title Sidenib')
+  }
+
+  const runtimeSources = [
+    'index.html',
+    'playwright.config.ts',
+    'src-tauri/tauri.conf.json',
+    'src-tauri/Cargo.toml',
+    ...listFiles('src', /\.(ts|tsx|css)$/),
+    ...listFiles('src-tauri/src', /\.rs$/),
+    ...listFiles('tests', /\.ts$/),
+  ]
+
+  for (const relativePath of runtimeSources) {
+    const lines = read(relativePath).split('\n')
+
+    lines.forEach((line, index) => {
+      // Credit lines and coexistence notes may name the upstream project.
+      if (/todobar/i.test(line) && !/Leonxlnx|baseline/i.test(line)) {
+        fail(`${relativePath}:${index + 1}: leftover Todobar identifier`)
+      }
+    })
+  }
+
+  for (const icon of [...(tauriConfig.bundle?.icon ?? []), 'icons/tray-template.png']) {
+    if (!existsSync(join(root, 'src-tauri', icon))) {
+      fail(`src-tauri/${icon}: missing icon asset`)
+    }
+  }
+
+  if (!read('LICENSE').includes('Copyright 2026 Leonxlnx')) {
+    fail('LICENSE: original Todobar copyright notice must be preserved')
+  }
+
+  if (!existsSync(join(root, 'NOTICE'))) {
+    fail('NOTICE: missing attribution notice')
+  } else if (!read('NOTICE').includes('https://github.com/Leonxlnx/todobar')) {
+    fail('NOTICE: must credit the upstream Todobar project')
+  }
+
+  for (const phrase of [
+    'https://github.com/Leonxlnx/todobar',
+    'v0.1.14',
+    '809b0d5',
+    'independent remake',
+  ]) {
+    if (!readme.includes(phrase)) {
+      fail(`README.md: missing upstream attribution "${phrase}"`)
+    }
+  }
+}
+
 verifyVersions()
+verifyIdentity()
 verifyMarkdownLinks()
 verifyScripts()
 verifyWorkflows()

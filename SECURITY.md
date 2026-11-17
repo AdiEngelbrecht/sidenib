@@ -1,6 +1,6 @@
 # Security Policy
 
-Todobar is an early desktop utility. Please report security issues privately
+Sidenib is an early desktop utility. Please report security issues privately
 instead of opening a public issue.
 
 ## Supported Versions

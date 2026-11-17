@@ -1,5 +1,15 @@
 # Documentation Index
 
+Sidenib:
+
+- [Sidenib identity](sidenib-identity.md)
+- [Brand direction](brand-direction.md)
+- [Release verification v0.2.0](release-verification-v0.2.0.md)
+
+The planning notes and `release-verification-v0.1.*` records below were
+written for upstream Todobar, which Sidenib starts from. They keep the original
+product name as a historical record.
+
 Start here:
 
 - [Decision map](decision-map.md)

@@ -1,8 +1,8 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "Todobar",
-  "version": "0.1.14",
-  "identifier": "dev.todobar.desktop",
+  "productName": "Sidenib",
+  "version": "0.2.0",
+  "identifier": "io.github.adiengelbrecht.sidenib",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://127.0.0.1:5173/?runtime=tauri",
@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "Todobar",
+        "title": "Sidenib",
         "width": 442,
         "height": 84,
         "resizable": false,
@@ -33,6 +33,12 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "publisher": "Adi Engelbrecht",
+    "copyright": "Copyright 2026 Adi Engelbrecht. Based on Todobar, Copyright 2026 Leonxlnx. Apache-2.0.",
+    "category": "Productivity",
+    "shortDescription": "A small task companion at the screen edge.",
+    "homepage": "https://github.com/AdiEngelbrecht/sidenib",
+    "license": "Apache-2.0",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",

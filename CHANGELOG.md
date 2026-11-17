@@ -1,5 +1,32 @@
 # Changelog
 
+Sidenib starts from Todobar `v0.1.14` by Leonxlnx. Entries for `0.1.14` and
+earlier are the upstream Todobar history and keep the original product name.
+
+## 0.2.0 - Sidenib Identity (unreleased)
+
+### Changed
+
+- Renamed the product to Sidenib across the app, tray/menu-bar menu, window
+  title, accessibility labels, package metadata, and workflows.
+- Replaced the app icon with the Sidenib Peek icon, including a macOS menu-bar
+  template mark that follows the system appearance.
+- Moved the app to its own identifier, `io.github.adiengelbrecht.sidenib`, with
+  separate local storage keys, Gmail credential service, launch-at-login entry,
+  and single-instance lock, so it runs beside an installed Todobar.
+- Changed the global shortcut to `Alt + Shift + S`, with
+  `Ctrl + Alt + Shift + S` as the fallback. The tray/menu-bar menu shows the
+  shortcut that is active.
+- Renamed the Gmail OAuth environment variables to `SIDENIB_GMAIL_CLIENT_ID`
+  and `SIDENIB_GMAIL_CLIENT_SECRET`.
+- Gave the Android companion the Sidenib label and its own application id. The
+  rolling Android prerelease now publishes only when started manually.
+
+### Notes
+
+- Sidenib starts with empty data. It does not read or migrate Todobar's tasks,
+  settings, or Gmail connection.
+
 ## 0.1.14 - Closed Tab Shadow Fix
 
 ### Fixed

@@ -1,12 +1,20 @@
 {
-  "name": "todobar",
+  "name": "sidenib",
   "private": false,
-  "version": "0.1.14",
-  "description": "A right-edge todo sidebar for macOS and Windows.",
+  "version": "0.2.0",
+  "description": "Sidenib, a small task companion at the screen edge for macOS and Windows.",
   "license": "Apache-2.0",
+  "author": "Adi Engelbrecht",
+  "contributors": [
+    "Leonxlnx (original Todobar author, https://github.com/Leonxlnx/todobar)"
+  ],
+  "homepage": "https://github.com/AdiEngelbrecht/sidenib#readme",
+  "bugs": {
+    "url": "https://github.com/AdiEngelbrecht/sidenib/issues"
+  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Leonxlnx/todobar.git"
+    "url": "git+https://github.com/AdiEngelbrecht/sidenib.git"
   },
   "type": "module",
   "scripts": {
@@ -16,6 +24,7 @@
     "test:native": "tauri build --ci --no-bundle",
     "test:smoke": "playwright test",
     "verify": "node scripts/verify-project.mjs",
+    "icons": "node scripts/sync-icons.mjs",
     "preview": "vite preview",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",

@@ -7,8 +7,13 @@ use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
 
 mod gmail;
 
-const TRAY_TOGGLE_EVENT: &str = "todobar-tray-toggle";
-const TRAY_SETTINGS_EVENT: &str = "todobar-tray-settings";
+const TRAY_TOGGLE_EVENT: &str = "sidenib-tray-toggle";
+const TRAY_SETTINGS_EVENT: &str = "sidenib-tray-settings";
+
+// Sidenib uses its own shortcut pair so it can run beside the upstream
+// baseline app (Alt+T / Alt+Shift+T) without both toggling at once. The
+// second entry is the fallback when another app already holds the first.
+const TOGGLE_SHORTCUTS: [&str; 2] = ["Alt+Shift+S", "Control+Alt+Shift+S"];
 
 fn focus_main_window(app: &tauri::AppHandle) {
     if let Some(window) = app.get_webview_window("main") {
@@ -23,21 +28,28 @@ fn emit_to_main(app: &tauri::AppHandle, event: &str) {
     let _ = app.emit_to("main", event, ());
 }
 
-fn setup_tray(app: &tauri::App) -> tauri::Result<()> {
+fn setup_tray(app: &tauri::App, active_shortcut: Option<&str>) -> tauri::Result<()> {
+    // The menu shows whichever shortcut actually registered, so an occupied
+    // primary shortcut surfaces the fallback instead of a dead hint.
     let toggle = MenuItem::with_id(
         app,
         "toggle",
-        "Open / Close Todobar",
+        "Open / Close Sidenib",
         true,
-        Some("Alt+T"),
+        active_shortcut,
     )?;
     let settings = MenuItem::with_id(app, "settings", "Settings", true, None::<&str>)?;
-    let quit = MenuItem::with_id(app, "quit", "Quit Todobar", true, None::<&str>)?;
+    let quit = MenuItem::with_id(app, "quit", "Quit Sidenib", true, None::<&str>)?;
     let menu = Menu::with_items(app, &[&toggle, &settings, &quit])?;
+    // macOS menu bars expect an alpha-only template image that follows the
+    // system appearance; other platforms keep the full-color app icon.
+    #[cfg(target_os = "macos")]
+    let icon = Some(tauri::include_image!("icons/tray-template.png"));
+    #[cfg(not(target_os = "macos"))]
     let icon = app.default_window_icon().cloned();
 
-    let mut tray = TrayIconBuilder::with_id("todobar")
-        .tooltip("Todobar")
+    let mut tray = TrayIconBuilder::with_id("sidenib")
+        .tooltip("Sidenib")
         .menu(&menu)
         .show_menu_on_left_click(false)
         .on_menu_event(|app, event| match event.id().as_ref() {
@@ -60,15 +72,18 @@ fn setup_tray(app: &tauri::App) -> tauri::Result<()> {
         });
 
     if let Some(icon) = icon {
-        tray = tray.icon(icon);
+        tray = tray.icon(icon).icon_as_template(cfg!(target_os = "macos"));
     }
 
     tray.build(app)?;
     Ok(())
 }
 
-fn setup_global_shortcuts(app: &tauri::App) {
-    for shortcut in ["Alt+T", "Alt+Shift+T"] {
+/// Registers the toggle shortcuts and returns the first one that is active.
+fn setup_global_shortcuts(app: &tauri::App) -> Option<&'static str> {
+    let mut active = None;
+
+    for shortcut in TOGGLE_SHORTCUTS {
         let result = app
             .global_shortcut()
             .on_shortcut(shortcut, move |app, _shortcut, event| {
@@ -77,10 +92,17 @@ fn setup_global_shortcuts(app: &tauri::App) {
                 }
             });
 
-        if let Err(error) = result {
-            eprintln!("failed to register global shortcut {shortcut}: {error}");
+        match result {
+            Ok(()) => {
+                active.get_or_insert(shortcut);
+            }
+            Err(error) => {
+                eprintln!("failed to register global shortcut {shortcut}: {error}");
+            }
         }
     }
+
+    active
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -102,8 +124,8 @@ pub fn run() {
             gmail::gmail_status,
         ])
         .setup(|app| {
-            setup_tray(app)?;
-            setup_global_shortcuts(app);
+            let active_shortcut = setup_global_shortcuts(app);
+            setup_tray(app, active_shortcut)?;
 
             if let Some(window) = app.get_webview_window("main") {
                 let _ = window.set_decorations(false);

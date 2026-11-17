@@ -22,12 +22,12 @@ test('sidebar opens and completed-task visibility is configurable', async ({
   })
 
   await page.goto('/')
-  await expect(page).toHaveTitle(/todobar/i)
-  await expect(page.getByText('Todobar').first()).toBeVisible()
+  await expect(page).toHaveTitle(/sidenib/i)
+  await expect(page.getByText('Sidenib').first()).toBeVisible()
   await expect(page.getByText('Today').first()).toBeVisible()
   await expect(page.locator('.section-meter')).toHaveCount(0)
 
-  const openButton = page.getByRole('button', { name: 'Open Todobar' })
+  const openButton = page.getByRole('button', { name: 'Open Sidenib' })
 
   if (await openButton.count()) {
     await openButton.click()
@@ -173,7 +173,7 @@ test('sidebar opens and completed-task visibility is configurable', async ({
   await expect(page.locator('.task-reminder').filter({ hasText: '09:30' })).toBeVisible()
 
   await page.evaluate(() => {
-    window.localStorage.setItem('todobar.notified-reminders.v1', '{}')
+    window.localStorage.setItem('sidenib.notified-reminders.v1', '{}')
   })
   await page.getByLabel('Add a task to Today').fill('Toast smoke')
   await page
@@ -360,9 +360,9 @@ test('due reminders badge the closed handle without opening the sidebar', async 
   page,
 }) => {
   await page.addInitScript(() => {
-    window.localStorage.setItem('todobar.notified-reminders.v1', '{}')
+    window.localStorage.setItem('sidenib.notified-reminders.v1', '{}')
     window.localStorage.setItem(
-      'todobar.today.v1',
+      'sidenib.today.v1',
       JSON.stringify([
         {
           id: 99001,
@@ -380,7 +380,7 @@ test('due reminders badge the closed handle without opening the sidebar', async 
   await expect(page.locator('.handle-badge')).toHaveText('1')
   await expect(page.locator('.reminder-toast-stack')).toHaveCSS('opacity', '0')
 
-  await page.getByRole('button', { name: 'Open Todobar' }).click()
+  await page.getByRole('button', { name: 'Open Sidenib' }).click()
   const reminderToast = page.getByRole('status').filter({
     hasText: 'Closed reminder',
   })
@@ -404,9 +404,9 @@ test('due reminders badge the closed handle without opening the sidebar', async 
 
 test('reminder toast snooze moves the reminder forward', async ({ page }) => {
   await page.addInitScript(() => {
-    window.localStorage.setItem('todobar.notified-reminders.v1', '{}')
+    window.localStorage.setItem('sidenib.notified-reminders.v1', '{}')
     window.localStorage.setItem(
-      'todobar.today.v1',
+      'sidenib.today.v1',
       JSON.stringify([
         {
           id: 99002,
@@ -433,7 +433,7 @@ test('reminder toast snooze moves the reminder forward', async ({ page }) => {
     .poll(async () =>
       page.evaluate(() => {
         const tasks = JSON.parse(
-          window.localStorage.getItem('todobar.today.v1') ?? '[]',
+          window.localStorage.getItem('sidenib.today.v1') ?? '[]',
         ) as Array<{ reminderAt?: string }>
         const reminderAt = tasks[0]?.reminderAt
 
@@ -450,7 +450,7 @@ test('Gmail connector UI stays hidden while the feature is held back', async ({
 }) => {
   await page.addInitScript(() => {
     window.localStorage.setItem(
-      'todobar.gmail.mock.v1',
+      'sidenib.gmail.mock.v1',
       JSON.stringify({
         accountEmail: 'alex@example.com',
         state: 'needs_reconnect',
@@ -540,7 +540,7 @@ test('native hover-only reveal zone stays inside the visible tab strip', async (
 }) => {
   await page.addInitScript(() => {
     window.localStorage.setItem(
-      'todobar.sidebar.settings.v27',
+      'sidenib.sidebar.settings.v27',
       JSON.stringify({
         dockEdge: 'right',
         handleHeight: 84,

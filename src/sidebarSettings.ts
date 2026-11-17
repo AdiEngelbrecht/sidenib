@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { scheduleLocalStorageWrite } from './storage'
 
-const STORAGE_KEY = 'todobar.sidebar.settings.v27'
+const STORAGE_KEY = 'sidenib.sidebar.settings.v27'
 
 export type DockEdge = 'right' | 'left' | 'top' | 'bottom'
 export type ThemeMode = 'light' | 'dark'

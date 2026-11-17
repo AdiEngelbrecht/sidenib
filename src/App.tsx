@@ -64,12 +64,12 @@ const DRAG_THRESHOLD = 5
 const NATIVE_HIT_TEST_EDGE_INTERVAL_MS = 72
 const NATIVE_HIT_TEST_IDLE_INTERVAL_MS = 128
 const TASK_STORAGE_KEYS = {
-  today: 'todobar.today.v1',
-  month: 'todobar.month.v1',
+  today: 'sidenib.today.v1',
+  month: 'sidenib.month.v1',
 } as const
-const CUSTOM_LISTS_STORAGE_KEY = 'todobar.custom-lists.v1'
-const NOTIFIED_REMINDERS_STORAGE_KEY = 'todobar.notified-reminders.v1'
-const SETTINGS_GROUPS_STORAGE_KEY = 'todobar.settings.groups.v1'
+const CUSTOM_LISTS_STORAGE_KEY = 'sidenib.custom-lists.v1'
+const NOTIFIED_REMINDERS_STORAGE_KEY = 'sidenib.notified-reminders.v1'
+const SETTINGS_GROUPS_STORAGE_KEY = 'sidenib.settings.groups.v1'
 const GMAIL_CONNECTOR_VISIBLE = false
 const TOP_DOCK_MIN_PANEL_WIDTH = 720
 const TOP_DOCK_MAX_PANEL_WIDTH = 1120
@@ -1083,15 +1083,15 @@ function App() {
     const onKeyDown = (event: globalThis.KeyboardEvent) => {
       const shortcut =
         event.altKey &&
-        event.key.toLowerCase() === 't' &&
+        event.shiftKey &&
+        event.code === 'KeyS' &&
         !event.ctrlKey &&
-        !event.metaKey &&
-        !event.shiftKey
+        !event.metaKey
       const fallbackShortcut =
         event.altKey &&
         event.shiftKey &&
-        event.key.toLowerCase() === 't' &&
-        !event.ctrlKey &&
+        event.ctrlKey &&
+        event.code === 'KeyS' &&
         !event.metaKey
 
       if (shortcut || fallbackShortcut || event.key === 'Escape') {
@@ -1200,10 +1200,10 @@ function App() {
       try {
         const { listen } = await import('@tauri-apps/api/event')
 
-        unlistenToggle = await listen('todobar-tray-toggle', () => {
+        unlistenToggle = await listen('sidenib-tray-toggle', () => {
           setIsOpen((current) => !current)
         })
-        unlistenSettings = await listen('todobar-tray-settings', () => {
+        unlistenSettings = await listen('sidenib-tray-settings', () => {
           setIsOpen(true)
           setIsSettingsOpen(true)
         })
@@ -2186,7 +2186,7 @@ function App() {
     >
       <section
         className="desktop-preview"
-        aria-label="Todobar desktop preview"
+        aria-label="Sidenib desktop preview"
         aria-hidden={isNative}
       >
         <nav className="system-bar" aria-label="Desktop menu">
@@ -2197,7 +2197,7 @@ function App() {
           </div>
           <div className="system-title">
             <ListTodo size={16} />
-            <span>Todobar</span>
+            <span>Sidenib</span>
           </div>
           <div className="system-actions">
             <button type="button" aria-label="Search">
@@ -2222,7 +2222,8 @@ function App() {
             </p>
             <div className="shortcut-row" aria-label="Keyboard shortcut">
               <kbd>Alt</kbd>
-              <kbd>T</kbd>
+              <kbd>Shift</kbd>
+              <kbd>S</kbd>
             </div>
           </div>
 
@@ -2251,7 +2252,7 @@ function App() {
           {settings.backdropImage ? (
             <defs>
               <pattern
-                id="todobar-dock-backdrop"
+                id="sidenib-dock-backdrop"
                 patternUnits="userSpaceOnUse"
                 width={dockSurface.width}
                 height={dockSurface.height}
@@ -2275,7 +2276,7 @@ function App() {
             d={dockSurface.path}
             style={
               settings.backdropImage
-                ? { fill: 'url(#todobar-dock-backdrop)' }
+                ? { fill: 'url(#sidenib-dock-backdrop)' }
                 : undefined
             }
           />
@@ -2287,7 +2288,7 @@ function App() {
       <button
         className={`edge-handle ${isOpen ? 'is-open' : ''}`}
         type="button"
-        aria-label={isOpen ? 'Close Todobar' : 'Open Todobar'}
+        aria-label={isOpen ? 'Close Sidenib' : 'Open Sidenib'}
         aria-expanded={isOpen}
         onPointerDown={onHandlePointerDown}
         onPointerMove={onHandlePointerMove}
@@ -2317,7 +2318,7 @@ function App() {
         className={`todo-sidebar ${isOpen ? 'is-open' : ''} ${
           isSettingsOpen ? 'is-settings-open' : ''
         }`}
-        aria-label="Todobar sidebar"
+        aria-label="Sidenib sidebar"
         aria-hidden={!isOpen}
       >
         {isSettingsOpen ? (
@@ -2338,7 +2339,7 @@ function App() {
                   <Check size={15} />
                 </span>
                 <div>
-                  <strong>Todobar</strong>
+                  <strong>Sidenib</strong>
                 </div>
               </div>
             </header>
@@ -3024,7 +3025,7 @@ function SidebarRail({
   onOpenSettings: () => void
 }) {
   return (
-    <nav className="sidebar-rail" aria-label="Todobar navigation">
+    <nav className="sidebar-rail" aria-label="Sidenib navigation">
       <div className="rail-stack">
         {sectionOrder.map((section) => (
           <button
@@ -3733,7 +3734,7 @@ function ConnectorSetting({ gmail }: { gmail: GmailConnectorController }) {
         </div>
         <div className="connector-copy">
           <strong>Gmail</strong>
-          <span>Read-only inbox suggestions for local Todobar tasks.</span>
+          <span>Read-only inbox suggestions for local Sidenib tasks.</span>
           <em>{statusLabel}</em>
         </div>
         <div className="connector-actions">
@@ -3773,7 +3774,7 @@ function ConnectorSetting({ gmail }: { gmail: GmailConnectorController }) {
       <div className="connector-permission-note">
         <strong>Permission boundary</strong>
         <span>
-          Todobar requests Gmail read-only access. It can read recent unread
+          Sidenib requests Gmail read-only access. It can read recent unread
           inbox threads for suggestions, but it cannot send, delete, label, or
           archive email in this version.
         </span>
@@ -3811,7 +3812,7 @@ function ConnectorSetting({ gmail }: { gmail: GmailConnectorController }) {
       </div>
 
       <p className="connector-advanced-note">
-        This build is missing Todobar's Google OAuth app credentials. Normal
+        This build is missing Sidenib's Google OAuth app credentials. Normal
         users should not create their own Google project; the public app build
         needs one verified app identity from the maintainer.
       </p>
