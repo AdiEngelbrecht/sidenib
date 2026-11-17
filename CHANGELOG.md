@@ -75,6 +75,11 @@ earlier are the upstream Todobar history and keep the original product name.
 
 - A pointer click that an input source reports without a click count no
   longer toggles the notch twice.
+- A profile first written by the full-height app no longer draws a grey
+  42 × 84 block at the screen edge in place of the notch, or a card whose
+  paper lets the desktop show through. Those two old defaults are carried
+  forward to the compact ones once; values chosen afterwards are kept. See
+  [docs/native-transparency-adien-171.md](docs/native-transparency-adien-171.md).
 
 ### Notes
 

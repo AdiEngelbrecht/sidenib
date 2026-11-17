@@ -703,7 +703,7 @@ test.describe('shell in the browser', () => {
     expect(drawn.x).toBeCloseTo(0, 0)
   })
 
-  test('stored v0.1.14 sizes and the hover-only notch still apply', async ({
+  test('chosen v0.1.14 sizes and the hover-only notch still apply', async ({
     page,
   }) => {
     await page.addInitScript((key) => {
@@ -712,6 +712,8 @@ test.describe('shell in the browser', () => {
         JSON.stringify({
           handleHeight: 84,
           panelWidth: 400,
+          // Saved under the current revision: these sizes are a choice.
+          settingsRevision: 2,
           tabVisibility: 'hover',
           tabWidth: 42,
         }),
@@ -731,6 +733,66 @@ test.describe('shell in the browser', () => {
     expect(drawn.height).toBeCloseTo(84, 0)
     await notch(page).click()
     expect((await openFrame(page)).width).toBeCloseTo(400, 0)
+  })
+
+  test('an untouched pre-compact profile draws the compact notch and opaque paper', async ({
+    page,
+  }) => {
+    // ADIEN-171. This is the profile the full-height app wrote on first run.
+    // Drawn as stored it made the closed notch a 42 x 84 slab that filled its
+    // whole native window, and the paper 96% opaque. A browser cannot show
+    // the native window; this pins what is drawn into it.
+    await page.addInitScript((key) => {
+      window.localStorage.setItem(
+        key,
+        JSON.stringify({
+          dockEdge: 'right',
+          handleHeight: 84,
+          handleY: 50,
+          motionMs: 230,
+          panelRadius: 18,
+          panelWidth: 400,
+          surfaceAlpha: 96,
+          tabVisibility: 'always',
+          tabWidth: 42,
+          taskGap: 7,
+          taskTextSize: 12.5,
+          theme: 'light',
+          visualStyle: 'codex',
+        }),
+      )
+    }, SETTINGS_KEY)
+    await page.goto('/')
+
+    const drawn = await box(page, '.sn-notch-pill')
+    const target = await box(page, '.sn-notch')
+
+    expect(drawn.width).toBeCloseTo(12, 0)
+    expect(drawn.height).toBeCloseTo(48, 0)
+    // The pointer target stays 28 x 72 and is itself invisible.
+    expect(target.width).toBeCloseTo(28, 0)
+    expect(target.height).toBeCloseTo(72, 0)
+    await expect(notch(page)).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)')
+
+    await notch(page).click()
+    // Choices that were not the old notch or paper are kept.
+    expect((await openFrame(page)).width).toBeCloseTo(400, 0)
+    await expect(card(page)).toHaveCSS('border-top-left-radius', '18px')
+
+    const paper = await page.evaluate(() => {
+      const panel = document.querySelector('.sn-panel')
+      const root = document.querySelector<HTMLElement>('.workspace')
+
+      return {
+        alpha: root?.style.getPropertyValue('--sn-surface-alpha'),
+        color: panel ? getComputedStyle(panel, '::after').backgroundColor : '',
+      }
+    })
+
+    expect(paper.alpha).toBe('100%')
+    // An opaque colour serialises without an alpha component.
+    expect(paper.color).not.toBe('')
+    expect(paper.color).not.toMatch(/\/|rgba\(/)
   })
 
   test('full-height mode is opt-in and keeps the rounded frame', async ({

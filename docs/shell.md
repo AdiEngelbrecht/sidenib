@@ -79,7 +79,11 @@ gap between the card and the screen edge go to whatever is underneath.
   take the pointer. During the 220 ms reveal the regions are the card's final
   rectangle, up to 16 px from where it is drawn.
 
-`SIDENIB_SHELL_DEBUG=1` logs every bounds change and pass-through flip.
+`SIDENIB_SHELL_DEBUG=1` logs every bounds change and pass-through flip. On
+macOS it also logs, after each bounds change, what the compositor is told
+about the window: `surface opaque=false shadow=false alpha=1
+background_alpha=0`. Any other values there would put a native rectangle
+behind the web view.
 
 ## Focus
 

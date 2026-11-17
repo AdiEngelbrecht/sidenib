@@ -279,6 +279,10 @@ pub fn shell_apply_layout(
         platform::show_without_activating(&window);
     }
 
+    if debug_enabled() {
+        platform::log_surface(&window);
+    }
+
     evaluate(window.app_handle());
     Ok(())
 }
@@ -501,6 +505,28 @@ mod platform {
         });
     }
 
+    /// Logs what the compositor is told about the window, for checking that
+    /// nothing native is drawn behind the web view: an opaque window, a
+    /// window shadow or a background colour would each show as a rectangle.
+    pub fn log_surface(window: &WebviewWindow) {
+        on_main_thread(window, |window| {
+            if let Some(ns_window) = ns_window(window) {
+                let frame = ns_window.frame();
+
+                eprintln!(
+                    "[sidenib-shell] surface opaque={} shadow={} alpha={} background_alpha={} frame={}x{} level={}",
+                    ns_window.isOpaque(),
+                    ns_window.hasShadow(),
+                    ns_window.alphaValue(),
+                    ns_window.backgroundColor().alphaComponent(),
+                    frame.size.width,
+                    frame.size.height,
+                    ns_window.level(),
+                );
+            }
+        });
+    }
+
     pub fn frontmost_other_pid() -> Option<i32> {
         let app = NSWorkspace::sharedWorkspace().frontmostApplication()?;
         let pid = app.processIdentifier();
@@ -584,6 +610,8 @@ mod platform {
     pub fn show_without_activating(window: &WebviewWindow) {
         let _ = window.show();
     }
+
+    pub fn log_surface(_window: &WebviewWindow) {}
 }
 
 #[cfg(test)]

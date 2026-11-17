@@ -95,12 +95,32 @@ export type SidebarSettings = {
   backdropOpacity: number
   backdropBlur: number
   backdropDim: number
+  /**
+   * Which set of defaults the stored values were last written under. See
+   * `migrateStoredSettings`. Missing on anything saved before revision 2.
+   */
+  settingsRevision: number
 }
+
+/** Revision 2: the compact notch and the opaque paper are the defaults. */
+export const SETTINGS_REVISION = 2
+
+/**
+ * Defaults of the full-height sidebar. That app wrote its whole settings
+ * object to storage on first run, so these values sit in the profile of
+ * anyone who started it once, whether or not they ever opened Settings.
+ */
+export const PRE_COMPACT_DEFAULTS = {
+  tabWidth: 42,
+  handleHeight: 84,
+  surfaceAlpha: 96,
+} as const
 
 export const defaultSidebarSettings: SidebarSettings = {
   // Compact right-middle defaults (docs/design/compact/README.md section 5).
-  // They apply to a fresh install and to Reset; stored values are only
-  // clamped, never converted.
+  // They apply to a fresh install and to Reset. Stored values are clamped
+  // and kept, except the old defaults that migrateStoredSettings carries
+  // forward once.
   dockEdge: 'right',
   panelWidth: 340,
   panelHeightMode: 'compact',
@@ -127,6 +147,52 @@ export const defaultSidebarSettings: SidebarSettings = {
   backdropOpacity: 76,
   backdropBlur: 0,
   backdropDim: 18,
+  settingsRevision: SETTINGS_REVISION,
+}
+
+/**
+ * Carries a profile saved before the compact shell forward, once.
+ *
+ * A stored value equal to the old default was never distinguishable from a
+ * choice, and two of those defaults are wrong for the compact shell: the
+ * 42 x 84 notch fills its whole window as a grey slab at the screen edge, and
+ * the 96% paper lets the desktop show through the card. Where the stored
+ * value is exactly the old default it becomes the current default. Anything
+ * else is a choice and is kept, as is everything saved under the current
+ * revision, so picking 96% or a 42 x 84 notch in Advanced afterwards holds.
+ *
+ * - The notch is converted only when both of its sizes are the old defaults.
+ * - The paper is converted only when no backdrop image is set; with an image
+ *   the translucent paper is what shows it.
+ */
+export function migrateStoredSettings(
+  value: Partial<SidebarSettings>,
+): Partial<SidebarSettings> {
+  const revision =
+    typeof value.settingsRevision === 'number' ? value.settingsRevision : 1
+
+  if (revision >= SETTINGS_REVISION) {
+    return value
+  }
+
+  const next = { ...value, settingsRevision: SETTINGS_REVISION }
+
+  if (
+    value.tabWidth === PRE_COMPACT_DEFAULTS.tabWidth &&
+    value.handleHeight === PRE_COMPACT_DEFAULTS.handleHeight
+  ) {
+    next.tabWidth = defaultSidebarSettings.tabWidth
+    next.handleHeight = defaultSidebarSettings.handleHeight
+  }
+
+  if (
+    value.surfaceAlpha === PRE_COMPACT_DEFAULTS.surfaceAlpha &&
+    !value.backdropImage
+  ) {
+    next.surfaceAlpha = defaultSidebarSettings.surfaceAlpha
+  }
+
+  return next
 }
 
 const isThemePreference = (value: unknown): value is ThemePreference =>
@@ -257,6 +323,9 @@ export function sanitizeSettings(value: Partial<SidebarSettings>): SidebarSettin
       0,
       70,
     ),
+    // Whatever passes through here is written back under the current
+    // revision; only `migrateStoredSettings` reads an older one.
+    settingsRevision: SETTINGS_REVISION,
   }
 }
 
@@ -269,7 +338,11 @@ export function useSidebarSettings() {
     try {
       const stored = window.localStorage.getItem(STORAGE_KEY)
       const base = stored
-        ? sanitizeSettings(JSON.parse(stored) as Partial<SidebarSettings>)
+        ? sanitizeSettings(
+            migrateStoredSettings(
+              JSON.parse(stored) as Partial<SidebarSettings>,
+            ),
+          )
         : defaultSidebarSettings
 
       return sanitizeSettings({

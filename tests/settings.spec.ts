@@ -7,7 +7,10 @@
 import { expect, test } from '@playwright/test'
 import type { Page } from '@playwright/test'
 import {
+  PRE_COMPACT_DEFAULTS,
+  SETTINGS_REVISION,
   defaultSidebarSettings,
+  migrateStoredSettings,
   resolveThemePreset,
   sanitizeSettings,
   themePresetsByMode,
@@ -17,7 +20,9 @@ import type { SidebarSettings } from '../src/sidebarSettings'
 const SETTINGS_KEY = 'sidenib.sidebar.settings.v27'
 
 // What a v0.1.14-era install has stored: explicit light, the `codex` preset,
-// the old sizes, and choices the compact defaults would not have made.
+// the old sizes, and choices the compact defaults would not have made. It has
+// no `settingsRevision`, so the old notch and paper defaults in it are
+// carried forward on load (ADIEN-171); everything else is kept.
 const LEGACY_SETTINGS = {
   dockEdge: 'top',
   panelWidth: 400,
@@ -43,6 +48,16 @@ const LEGACY_SETTINGS = {
   backdropOpacity: 60,
   backdropBlur: 4,
   backdropDim: 30,
+}
+
+// The same profile after the one-time carry-forward.
+const MIGRATED_LEGACY_SETTINGS = {
+  ...LEGACY_SETTINGS,
+  tabWidth: 12,
+  handleHeight: 48,
+  surfaceAlpha: 100,
+  panelHeightMode: 'compact',
+  settingsRevision: 2,
 }
 
 const workspace = (page: Page) => page.locator('.workspace')
@@ -121,12 +136,77 @@ test.describe('settings model', () => {
     )
   })
 
-  test('stored legacy values are kept as they are', () => {
+  test('the sanitiser keeps legacy values as they are', () => {
     const kept = sanitizeSettings(LEGACY_SETTINGS as Partial<SidebarSettings>)
 
-    expect(kept).toEqual({ ...LEGACY_SETTINGS, panelHeightMode: 'compact' })
+    expect(kept).toEqual({
+      ...LEGACY_SETTINGS,
+      panelHeightMode: 'compact',
+      settingsRevision: SETTINGS_REVISION,
+    })
     // Sanitising again changes nothing, so a rewrite on save is a no-op.
     expect(sanitizeSettings(kept)).toEqual(kept)
+  })
+
+  test('an unrevised profile loses only the old notch and paper defaults', () => {
+    const legacy = LEGACY_SETTINGS as Partial<SidebarSettings>
+
+    expect(PRE_COMPACT_DEFAULTS).toEqual({
+      handleHeight: 84,
+      surfaceAlpha: 96,
+      tabWidth: 42,
+    })
+    expect(sanitizeSettings(migrateStoredSettings(legacy))).toEqual(
+      MIGRATED_LEGACY_SETTINGS,
+    )
+    // The stored object itself is not touched.
+    expect(legacy.tabWidth).toBe(42)
+  })
+
+  test('the carry-forward leaves choices alone', () => {
+    // A notch that differs from the old default in either size is a choice.
+    expect(
+      migrateStoredSettings({ handleHeight: 84, tabWidth: 60 }),
+    ).toMatchObject({ handleHeight: 84, tabWidth: 60 })
+    expect(
+      migrateStoredSettings({ handleHeight: 120, tabWidth: 42 }),
+    ).toMatchObject({ handleHeight: 120, tabWidth: 42 })
+    // So is any other opacity, and the old one under a backdrop image.
+    expect(migrateStoredSettings({ surfaceAlpha: 80 }).surfaceAlpha).toBe(80)
+    expect(
+      migrateStoredSettings({
+        backdropImage: 'data:image/png;base64,AAAA',
+        surfaceAlpha: 96,
+      }).surfaceAlpha,
+    ).toBe(96)
+    // Nothing else moves: width, radius, spacing, theme and preset stay.
+    expect(
+      migrateStoredSettings(LEGACY_SETTINGS as Partial<SidebarSettings>),
+    ).toMatchObject({
+      panelRadius: 18,
+      panelWidth: 400,
+      taskGap: 7,
+      theme: 'light',
+      visualStyle: 'codex',
+    })
+  })
+
+  test('values saved under the current revision are never converted', () => {
+    const chosen = {
+      handleHeight: 84,
+      settingsRevision: SETTINGS_REVISION,
+      surfaceAlpha: 96,
+      tabWidth: 42,
+    }
+
+    expect(migrateStoredSettings(chosen)).toBe(chosen)
+    expect(sanitizeSettings(migrateStoredSettings(chosen))).toMatchObject(chosen)
+    // Running the carry-forward twice is the same as running it once.
+    const once = migrateStoredSettings(
+      LEGACY_SETTINGS as Partial<SidebarSettings>,
+    )
+
+    expect(migrateStoredSettings(once)).toBe(once)
   })
 
   test('theme and preset fall back only when the value is unknown', () => {
@@ -238,7 +318,7 @@ test.describe('settings in the compact card', () => {
     await expect.poll(async () => (await stored(page)).theme).toBe('system')
   })
 
-  test('legacy stored preferences reload unchanged', async ({ page }) => {
+  test('legacy stored preferences survive, without the old notch and paper', async ({ page }) => {
     await page.emulateMedia({ colorScheme: 'dark' })
     await seedSettings(page, LEGACY_SETTINGS)
     await openSettings(page)
@@ -269,9 +349,10 @@ test.describe('settings in the compact card', () => {
     await page.getByRole('button', { name: 'Advanced' }).click()
     await expect(page.getByLabel('Width')).toHaveValue('400')
     await expect(page.getByLabel('Corner radius')).toHaveValue('18')
-    await expect(page.getByLabel('Surface opacity')).toHaveValue('96')
-    await expect(page.getByLabel('Thickness')).toHaveValue('42')
-    await expect(page.getByLabel('Length')).toHaveValue('84')
+    // The three old defaults were carried forward to the compact ones.
+    await expect(page.getByLabel('Surface opacity')).toHaveValue('100')
+    await expect(page.getByLabel('Thickness')).toHaveValue('12')
+    await expect(page.getByLabel('Length')).toHaveValue('48')
     await expect(page.getByLabel('Position')).toHaveValue('20')
     await expect(page.getByLabel('Row height')).toHaveValue('50')
     await expect(page.getByLabel('Row spacing')).toHaveValue('7')
@@ -291,9 +372,8 @@ test.describe('settings in the compact card', () => {
       .poll(async () => (await stored(page)).launchAtLogin)
       .toBe(true)
     expect(await stored(page)).toEqual({
-      ...LEGACY_SETTINGS,
+      ...MIGRATED_LEGACY_SETTINGS,
       launchAtLogin: true,
-      panelHeightMode: 'compact',
     })
 
     await page.reload()
@@ -302,6 +382,38 @@ test.describe('settings in the compact card', () => {
     await expect(workspace(page)).toHaveClass(/dock-top/)
     await expect(page.getByLabel('Launch at login')).toBeChecked()
     expect((await stored(page)).visualStyle).toBe('codex')
+  })
+
+  test('the old notch and paper come back when chosen again', async ({
+    page,
+  }) => {
+    await seedSettings(page, LEGACY_SETTINGS)
+    await openSettings(page)
+    await page.getByRole('button', { name: 'Advanced' }).click()
+    await page.getByLabel('Surface opacity').fill('96')
+    await page.getByLabel('Thickness').fill('42')
+    await page.getByLabel('Length').fill('84')
+    await expect
+      .poll(async () => {
+        const { handleHeight, settingsRevision, surfaceAlpha, tabWidth } =
+          await stored(page)
+
+        return { handleHeight, settingsRevision, surfaceAlpha, tabWidth }
+      })
+      .toEqual({
+        handleHeight: 84,
+        settingsRevision: 2,
+        surfaceAlpha: 96,
+        tabWidth: 42,
+      })
+
+    // Saved under the current revision, so the reload keeps them.
+    await page.reload()
+    await expect(heading(page, 'Settings')).toBeVisible()
+    await page.getByRole('button', { name: 'Advanced' }).click()
+    await expect(page.getByLabel('Surface opacity')).toHaveValue('96')
+    await expect(page.getByLabel('Thickness')).toHaveValue('42')
+    await expect(page.getByLabel('Length')).toHaveValue('84')
   })
 
   test('a preset with no palette in the mode is parked, not replaced', async ({

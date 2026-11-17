@@ -46,8 +46,23 @@ Choosing a preset on the page is the only thing that writes `visualStyle`.
 ## Stored values and reset
 
 - The sanitiser clamps numbers and keeps every known value. A stored explicit
-  `light` or `dark`, a stored `codex`, and the old sizes all load as they were
-  and are written back unchanged.
+  `light` or `dark`, a stored `codex`, the old card width, radius, row spacing
+  and text size all load as they were and are written back unchanged.
+- Two old defaults are carried forward once, by `migrateStoredSettings`. The
+  full-height app wrote its whole settings object on first run, so its
+  defaults are in the profile of anyone who started it, chosen or not. Drawn
+  in the compact shell they were the faults reported against v0.2.0: a
+  42 × 84 notch is a grey block that fills its window at the screen edge, and
+  96% paper lets the desktop show through the card. On the first load of a
+  profile with no `settingsRevision`:
+  - `tabWidth: 42` together with `handleHeight: 84` becomes 12 and 48. If
+    either differs, both are kept.
+  - `surfaceAlpha: 96` becomes 100, unless a backdrop image is set.
+  - Every other value is kept, and `settingsRevision: 2` is written.
+- A profile that already has `settingsRevision: 2` is never converted, so a
+  96% surface or a 42 × 84 notch picked in Advanced afterwards stays. Someone
+  who had picked exactly those values on purpose before has to pick them once
+  more; the stored data cannot tell that case apart.
 - Only a missing or unknown `theme` becomes `system`, and only an unknown
   preset becomes `sidenib`.
 - New defaults (`theme: 'system'`, `visualStyle: 'sidenib'`,
@@ -84,8 +99,8 @@ npm run verify && npm run lint && npm run build
 npm run test:smoke          # includes tests/settings.spec.ts
 ```
 
-`tests/settings.spec.ts` covers the model (defaults, legacy values, preset
-resolution), the ten-row page, System following the device while running,
+`tests/settings.spec.ts` covers the model (defaults, legacy values, the
+one-time carry-forward, preset resolution), the ten-row page, System following the device while running,
 legacy preferences surviving a reload, a parked preset, reset by pointer and
 keyboard, Tab order, focus and Escape across pages, Advanced values
 persisting, reduced motion, every page on a 420-high work area, and contrast
