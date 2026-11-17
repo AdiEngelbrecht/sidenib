@@ -3,7 +3,7 @@
 Sidenib starts from Todobar `v0.1.14` by Leonxlnx. Entries for `0.1.14` and
 earlier are the upstream Todobar history and keep the original product name.
 
-## 0.2.0 - Sidenib Identity (unreleased)
+## 0.2.0 - Sidenib (unreleased)
 
 ### Changed
 
@@ -33,7 +33,8 @@ earlier are the upstream Todobar history and keep the original product name.
 - Closing the card hands focus back to the previously frontmost app on macOS.
   Escape closes Settings before the card.
 - Reminders show as a compact toast beside the closed notch and never open the
-  card.
+  card. With the card open, a due reminder is a gold banner above the view's
+  body with the same open, snooze and dismiss actions.
 - New installs default to the compact right-middle layout. Stored dock edge,
   sizes, presets, backdrop and hover-only notch are kept; the notch thickness
   and length sliders now go down to 10 and 44, and a full-height panel is an
@@ -56,11 +57,31 @@ earlier are the upstream Todobar history and keep the original product name.
 - New installs default to 14 px task text and hairline-separated rows. Stored
   text size and row gap are kept; the row gap slider now goes down to 0.
 - The macOS web view is now transparent through Tauri's `macOSPrivateApi`.
+- Polished the Calendar for the card: a cue besides colour for every day
+  state, only the weeks a month needs, one week at a time on short screens
+  with ISO week numbers, arrow-key, Home, End and Page navigation in the grid,
+  and a stable agenda order. See [docs/calendar.md](docs/calendar.md).
+- Settings is a ten-row page with Advanced behind it. Theme gained System,
+  which follows the device. The Sidenib palette is its own preset; a stored
+  Studio or Obsidian draws the same. See [docs/settings.md](docs/settings.md).
+- A pinned list's group on Today folds, and the fold is remembered.
+- A task's stored note is shown on its second line without repeating
+  "Today", "Calendar" or the list name. New tasks no longer store those
+  labels.
+- The Calendar's scroll separator is the line under the grid.
+- The macOS bundle is sealed with an ad-hoc signature.
+
+### Fixed
+
+- A pointer click that an input source reports without a click count no
+  longer toggles the notch twice.
 
 ### Notes
 
-- Sidenib starts with empty data. It does not read or migrate Todobar's tasks,
-  settings, or Gmail connection.
+- Sidenib starts with its own data. It does not read or migrate Todobar's
+  tasks, settings, or Gmail connection.
+- Release notes: [docs/release-notes-v0.2.0.md](docs/release-notes-v0.2.0.md).
+  Checks: [docs/release-verification-v0.2.0.md](docs/release-verification-v0.2.0.md).
 
 ## 0.1.14 - Closed Tab Shadow Fix
 

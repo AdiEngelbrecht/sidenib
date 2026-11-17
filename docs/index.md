@@ -3,10 +3,20 @@
 Sidenib:
 
 - [Sidenib identity](sidenib-identity.md)
-- [Compact shell](shell.md)
-- [Views and shared components](views.md)
 - [Brand direction](brand-direction.md)
+- [Compact design contract](design/compact/README.md)
+- [Compact shell](shell.md): notch, card frame, native window, pointer
+  pass-through
+- [Views and shared components](views.md): the view frame, Today, Lists, and
+  who owns which path
+- [Calendar view](calendar.md)
+- [Settings](settings.md)
+- [Release notes v0.2.0](release-notes-v0.2.0.md)
 - [Release verification v0.2.0](release-verification-v0.2.0.md)
+- Screenshots and the demo recording are in [media/](media/).
+
+The task ids in those pages (ADIEN-161 to ADIEN-165) are the work items each
+part was built under.
 
 The planning notes and `release-verification-v0.1.*` records below were
 written for upstream Todobar, which Sidenib starts from. They keep the original
@@ -42,6 +52,8 @@ Desktop/native:
 - [Native test matrix](native-test-matrix.md)
 - [Distribution plan](distribution-plan.md)
 - [Release checklist](release-checklist.md)
+- [Release verification v0.1.14](release-verification-v0.1.14.md)
+- [Release verification v0.1.13](release-verification-v0.1.13.md)
 - [Release verification v0.1.12](release-verification-v0.1.12.md)
 - [Release verification v0.1.11](release-verification-v0.1.11.md)
 - [Release verification v0.1.10](release-verification-v0.1.10.md)
@@ -49,6 +61,7 @@ Desktop/native:
 - [Release verification v0.1.8](release-verification-v0.1.8.md)
 - [Release verification v0.1.7](release-verification-v0.1.7.md)
 - [Release verification v0.1.6](release-verification-v0.1.6.md)
+- [Release verification v0.1.5](release-verification-v0.1.5.md)
 - [Release verification v0.1.4](release-verification-v0.1.4.md)
 - [Release verification v0.1.3](release-verification-v0.1.3.md)
 - [Release verification v0.1.2](release-verification-v0.1.2.md)

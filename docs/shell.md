@@ -13,7 +13,7 @@ not the shell's business.
 | --- | --- | --- |
 | Closed | A 12 × 48 notch, halfway down the right edge by default | 28 × 72, the notch's pointer target |
 | Reminder | The notch plus a 296 × 60 toast beside it | The two plus 28 of shadow room |
-| Open | A 340 × 480 card, radius 24, 10 from the screen edges, and a 6-wide gold notch in the gap | 378 × 536 at the default size |
+| Open | A 340 × 480 card, radius 24, 10 from the screen edges, and a 6-wide gold notch in the gap. A due reminder is a banner inside the card, not a toast. | 378 × 536 at the default size |
 
 The window is never as tall as the screen. Left and top dock edges, the stored
 notch size, panel width, corner radius, hover-only notch and the opt-in
@@ -84,7 +84,8 @@ gap between the card and the screen edge go to whatever is underneath.
 ## Focus
 
 - Opened by shortcut or by Enter or Space on the notch: focus goes to the
-  quick-add field. Opened by click, pull, tray or toast: focus goes to the
+  quick-add field. A click that follows a pointer press is never read as
+  Enter, whatever click count the input source reports. Opened by click, pull, tray or toast: focus goes to the
   card.
 - Closed: inside the web view focus returns to the notch. On macOS the app
   that was frontmost before the card opened becomes frontmost again, unless
@@ -101,9 +102,11 @@ npm run test:smoke          # tests/shell.spec.ts and tests/sidebar-smoke.spec.t
 cargo test --manifest-path src-tauri/Cargo.toml shell
 ```
 
-Checked on the real app on macOS 26 (3440 × 1440 at 1× with a second 1800 ×
-1169 display at 2× below it), using a probe window underneath and synthetic
-pointer and key events:
+Checked on the real app on macOS 26, twice: during the shell work (3440 ×
+1440 at 1× with a second 1800 × 1169 display at 2× below it), and on the
+integrated release build (one 1800 × 1169 display at 2×). Both used a probe
+window underneath and synthetic pointer and key events. The second pass is
+recorded in [Release verification v0.2.0](release-verification-v0.2.0.md).
 
 - Launch: one 28 × 72 window at the right-middle of the work area, transparent.
 - Click opens and closes; a 70 px pull opens; a 30 px pull closes back; a drag
@@ -111,14 +114,17 @@ pointer and key events:
 - Clicks in the shadow margin, in each rounded corner of the card's bounding
   box, in the edge gap, beside the closed notch and where the card had been
   all reached the probe window. Clicks on the notch and the card did not.
+- The reminder toast: the window grows to 344 × 116 for it, nothing takes
+  focus, and clicks in its shadow margin and corner reached the probe window.
 - The global shortcut opens and closes; Escape closes; the previously
-  frontmost app (Finder) is frontmost again after closing.
-- Shortcut with the pointer on the 2× display: the card opens there at the
-  right place and size.
-- The polling fallback (`SIDENIB_HIT_TEST=poll`) passes the same click checks.
+  frontmost app is frontmost again after closing.
+- The menu-bar item opens the card on Settings and quits the app.
+- Shortcut with the pointer on the 2× display (first pass): the card opens
+  there at the right place and size.
+- The polling fallback (`SIDENIB_HIT_TEST=poll`) passes the same click checks
+  (first pass).
 
-Not checked natively: Windows and Linux (compiled by CI only), the reminder
-toast, the left and top docks, the hover-only notch, the tray menu, Dock or
-menu-bar changes while running, unplugging a display, three or more displays,
-fractional Windows scales, and VoiceOver. Those have browser and geometry
-coverage only.
+Not checked natively: Windows and Linux (compiled by CI only), the left and
+top docks, the hover-only notch, Dock or menu-bar changes while running,
+unplugging a display, three or more displays, fractional Windows scales, and
+VoiceOver. Those have browser and geometry coverage only.

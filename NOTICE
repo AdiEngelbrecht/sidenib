@@ -11,8 +11,10 @@ release. The upstream Git history is preserved in this repository.
 
 Changes made for Sidenib, beginning in November 2026, include the product name,
 app icon, native app identifier, storage and credential namespaces, default
-global shortcuts, repository metadata, and documentation. Later changes are
-recorded in CHANGELOG.md and in the Git history.
+global shortcuts, repository metadata, and documentation; the compact notch
+and card shell with its native window and pointer handling; and the rewritten
+Today, Calendar, Lists and Settings views. Changes are recorded in
+CHANGELOG.md and in the Git history.
 
 Sidenib is not affiliated with or endorsed by the Todobar project. The Sidenib
 name and Peek icon identify this remake only; "Todobar" is used here solely to

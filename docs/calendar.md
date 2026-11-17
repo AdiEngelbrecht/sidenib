@@ -70,6 +70,9 @@ On today's gold disc the mark is ink in both themes.
   preference (priority, newest, oldest); then the order of creation. Quick
   capture puts entries at 09:00, so the tie rules matter. Completing an entry
   does not move it. `compareAgendaEntries` in `src/calendar/dates.ts`.
+- The line under the grid is the scroll boundary: at rest it is inset, and
+  once the agenda has scrolled it runs edge to edge. The header gets no
+  line in this view.
 - The body is the only scrolling region. Selecting another day returns it to
   the top, and an entry captured onto the selected day is scrolled into view.
 
@@ -98,7 +101,9 @@ month and week navigation across the year, the keyboard, leap day 2028,
 capture, complete, rename, reschedule and delete on a selected day, and a
 14-entry agenda scrolling inside the card.
 
-Not checked: the native window on macOS and Windows with this view, WebView2,
-and VoiceOver or Narrator output. In WebKit, Tab reaches buttons (the days
+Month view, selecting a day by pointer and by arrow keys, and capturing a
+task and an event were also run in the native macOS window. Not checked: the
+native window on Windows, the one-week layout natively, WebView2, and
+VoiceOver or Narrator output. In WebKit, Tab reaches buttons (the days
 included) only with Option held or with the system keyboard-navigation
 setting on; that is the platform's rule for every button in the card.

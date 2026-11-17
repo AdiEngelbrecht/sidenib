@@ -210,7 +210,7 @@ function todayView() {
 
   if (!openCount && !data.done.length) {
     body += `<div class="sn-empty"><strong>Nothing for today</strong>
-      <span>Add a task below, or press <kbd>⌥T</kbd> from any app to open Sidenib.</span></div>`
+      <span>Add a task below, or press <kbd>⌥⇧S</kbd> from any app to open Sidenib.</span></div>`
   } else {
     if (data.overdue?.length) {
       body += `<div class="sn-section-label is-danger">Overdue · ${data.overdue.length}</div>
@@ -409,7 +409,7 @@ function settingsView() {
       <ul class="sn-group">
         ${settingRow('Reminders', toggle('notifications', 'Reminders'))}
         ${settingRow('Launch at login', toggle('launch', 'Launch at login'))}
-        ${settingRow('Open or close', '<span class="sn-keys">⌥T</span>')}
+        ${settingRow('Open or close', '<span class="sn-keys">⌥⇧S</span>')}
       </ul>
       <div class="sn-section-label">More</div>
       <ul class="sn-group">

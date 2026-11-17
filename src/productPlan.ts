@@ -29,7 +29,7 @@ export const platformNotes: ProductNote[] = [
   {
     icon: Command,
     title: 'Global control',
-    text: 'Desktop builds register Alt + T natively, with Alt + Shift + T as a fallback for shortcut collisions.',
+    text: 'Desktop builds register Alt + Shift + S natively, with Ctrl + Alt + Shift + S as a fallback for shortcut collisions.',
   },
 ]
 

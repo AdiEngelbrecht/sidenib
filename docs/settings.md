@@ -92,7 +92,11 @@ persisting, reduced motion, every page on a 420-high work area, and contrast
 of the settings text on all twelve preset palettes. It passes in Chromium and
 WebKit.
 
-Not checked: the native window. That includes the web view following the
-macOS and Windows appearance while running, launch at login through the
-autostart plugin, the tray's Settings item, WebView2 rendering, and VoiceOver
-or Narrator output.
+In the native macOS window: System drew dark on a Mac set to dark, Light and
+Dark applied at once and survived a restart, and the menu-bar Settings item
+opened the card on this page. Not checked natively: the web view following
+an appearance change while running, the Advanced pages and Reset, WebView2
+rendering, and VoiceOver or Narrator output. Launch at login writes
+`~/Library/LaunchAgents/Sidenib.plist` for whichever copy of the app last
+ran; see the note in
+[Release verification v0.2.0](release-verification-v0.2.0.md).

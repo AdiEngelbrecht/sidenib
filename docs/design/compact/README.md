@@ -56,7 +56,8 @@ Other baseline screens: [closed](baseline/v0.1.14-laptop-closed.png),
 Local-first storage, the `Task` model, Today, Calendar with task and event
 entries, custom lists with "show on Today", inline reminders with snooze, the
 focus/normal/later priority, sort order, tab order, launch at login, the tray
-menu, `Alt+T` with `Alt+Shift+T` as fallback, dragging the handle along the
+menu, a global shortcut with a fallback (`Alt+Shift+S` and
+`Ctrl+Alt+Shift+S` in Sidenib; the baseline used `Alt+T`), dragging the handle along the
 edge, and reminders that never open the panel by themselves.
 
 Every supported preference also stays: the right, left and top dock edges, the
@@ -479,7 +480,7 @@ distance.
 | Click the notch (press and release within 6 px) | Toggles the card. |
 | Pull inward from the notch (downward on the top edge) | After 6 px of travel mostly away from the edge the card follows the pointer. Release at 48 px or more, or with an inward flick faster than 0.5 px/ms, and it opens. Release earlier and it closes back. |
 | Drag along the edge from the notch | After 6 px of travel mostly along the edge the notch moves with the pointer and the position is saved on release (`handleY`). Snaps to centre within ±3%. Only while the card is closed. |
-| `Alt+T`, or `⌥T` on macOS; fallback `Alt+Shift+T` | Toggles the card from any app. |
+| `Alt+Shift+S`, or `⌥⇧S` on macOS; fallback `Ctrl+Alt+Shift+S` | Toggles the card from any app. |
 | Tray icon click, tray "Open / Close" | Toggles the card. Tray "Settings" opens the card on Settings. |
 | `Escape` | Peels one layer at a time: an open menu, popover or inline rename; then a non-empty quick-add draft; then the card. |
 | Click the gold 6 px notch while open | Closes the card. |

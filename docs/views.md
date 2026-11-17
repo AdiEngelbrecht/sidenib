@@ -36,7 +36,7 @@ Captured from the running app at the real 340 × 480 card size.
 | `src/views/calendar/`, `src/calendar/` | Calendar (ADIEN-163) | `CalendarView.tsx`, `calendar.css`, `dates.ts`, `useNow.ts`. |
 | `src/views/settings/`, `src/sidebarSettings.ts`, `src/design/presets.css` | Settings (ADIEN-164) | `SettingsView.tsx`, `SettingsParts.tsx`, `ConnectorSetting.tsx`, `themePresets.ts`, `settings.css`, the settings type and defaults, and the presets. |
 | `src/data/taskStore.ts` | Views | Task and list state, every mutation, and storage. |
-| `src/reminders/` | Shell for `ReminderToast.tsx`; Views for `useReminders.ts` and `reminderTime.ts` | The due check and the reminder time helpers. |
+| `src/reminders/` | Shell for `ReminderToast.tsx`; Views for `ReminderBanner.tsx`, `useReminders.ts` and `reminderTime.ts` | The toast, the in-card banner, the due check and the reminder time helpers. |
 | `src/shell/`, `src-tauri/`, `src/design/tokens.css` | Shell | Unchanged by this task. |
 
 ## How a view is built
@@ -49,6 +49,7 @@ view is showing.
 
 ```ts
 // src/components/PanelView.tsx
+// PanelView also draws PanelChrome.banner (the reminder banner) above the body.
 interface PanelViewProps {
   id: string                 // data-view, for tests and scoped styles
   title: string
@@ -77,6 +78,7 @@ interface TaskRowProps {
   task: Task
   overdue?: boolean
   detail?: string            // extra words on the secondary line
+  listTitle?: string         // hides a stored note that only names the list
   now?: number
   onToggleDone(): void
   onRename(title: string): void
@@ -123,15 +125,15 @@ interface SettingsViewProps {
 - **Tasks and lists** live in `useTaskStore()` (`src/data/taskStore.ts`). A
   view receives the `TaskStore` and calls `addTask`, `toggleTask`,
   `cyclePriority`, `setReminder`, `renameTask`, `deleteTask`,
-  `addCalendarEntry`, `addList`, `renameList`, `deleteList` and
-  `toggleListOnToday`. A task is addressed by a `TaskRef`:
+  `addCalendarEntry`, `addList`, `renameList`, `deleteList`,
+  `toggleListOnToday` and `toggleListCollapsed`. A task is addressed by a `TaskRef`:
   `{ source: 'today' | 'month' }` or `{ source: 'custom', listId }`.
   `store.entries` is every task with its ref and list title.
 - **Storage** is unchanged: `sidenib.today.v1`, `sidenib.month.v1`,
   `sidenib.custom-lists.v1`, `sidenib.notified-reminders.v1`,
   `sidenib.settings.groups.v1` and the settings key. Shapes are the ones the
-  identity task set. The `collapsed` flag on a custom list is kept in storage
-  and no longer used. Views never read or write `localStorage`.
+  identity task set. The `collapsed` flag on a custom list folds that list's
+  group on Today. Views never read or write `localStorage`.
 - **Settings** stay in `useSidebarSettings()`. Only `SettingsView` receives
   the settings object. Other views get `sortMode` and `showCompleted`.
 - **Route** is state in `App.tsx`: the active tab, the calendar's selected
@@ -142,6 +144,10 @@ interface SettingsViewProps {
   render. It refreshes every 30 s and decides what is overdue.
 - **Reminders**: `useReminders(entries, enabled)` returns the alerts and
   `dismiss`. Snooze is `store.setReminder(ref, id, snoozedReminderValue(10))`.
+  With the card closed the shell draws the newest alert as the toast. With
+  the card open `App.tsx` passes a `ReminderBanner` through `PanelChrome`,
+  and `PanelView` places it above the scrolling body of whichever view is
+  showing.
 
 ## Tokens and styling
 
@@ -196,9 +202,14 @@ interface SettingsViewProps {
   shell's key handler already respects.
 - **Today** shows Overdue (oldest first, danger label), the open tasks, one
   labelled group per pinned list, and a Completed disclosure that opens by
-  itself once everything is done. The old `meta` text on a task ("Today",
-  "Today · 40 min") is still stored and no longer shown; a row's second line
-  is the reminder.
+  itself once everything is done. A pinned list's label folds its group; the
+  fold is the list's stored `collapsed` flag, and a folded label shows how
+  many tasks are open.
+- **Task notes.** A task's stored `meta` is shown on the row's second line
+  without the labels the view already gives: "Today · 40 min" shows
+  "40 min", and "Today", "16 Nov · Calendar" or the list's own name show
+  nothing (`taskNote` in `src/tasks.ts`). New tasks are stored with an empty
+  note. Stored text is never rewritten.
 - **Lists** is an index, then one list in detail. Rename, Show on Today and
   Delete are in the detail header's More menu.
 
@@ -217,10 +228,16 @@ needed a shell change.
 placeholder is "New task", the Settings button is named "Settings", and the
 scrolling body is `.sn-view-body`.
 
-A reminder that fires while the card is open is still drawn by the shell as
-a toast over the top of the card. It covers the view header for up to nine
-seconds. The contract's in-body banner (section 5) belongs to the reminders
-work and is not built here.
+A reminder that fires while the card is open is the in-body banner
+(`src/reminders/ReminderBanner.tsx`, styled in `components.css`). It sits
+between the header (or the calendar grid) and the scrolling body, so the view
+does not switch and the scroll position does not move. It lies inside the
+card, so the native pointer regions did not change. Like the toast, it goes
+away by itself after nine seconds; the task stays marked overdue.
+
+The scrolled hairline belongs to whatever sits directly above the body.
+`PanelView` wraps `fixed` in `.sn-view-fixed` and marks that instead of the
+header, and the calendar widens its own divider under the grid.
 
 ## For ADIEN-163 (Calendar)
 
@@ -279,5 +296,7 @@ confirmation, the reminder picker and rename; Lists index, detail and its
 menu; Calendar and Settings; the 400-high card on a 420-high work area; a
 stored v0.1.14 density with a preset; and the left edge.
 
-Not checked: the native window on macOS and Windows with these views, WebView2
-rendering, and VoiceOver or Narrator output.
+These views were later exercised in the native macOS window; see
+[Release verification v0.2.0](release-verification-v0.2.0.md). Not checked:
+the native window on Windows, WebView2 rendering, and VoiceOver or Narrator
+output.
