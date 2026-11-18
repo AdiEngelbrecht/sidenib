@@ -5,12 +5,12 @@
 <img src="docs/design/sidenib/exports/app-128.png" alt="Sidenib app icon" width="96" height="96">
 
 Sidenib (side-nib) is a small task list that lives at the edge of your screen.
-Closed, it is a 12 × 48 notch halfway down the right edge. Click it or pull it
-inward and a rounded card comes out with Today, Calendar and Lists. It is a
-desktop app for macOS and Windows, built with Tauri and React, and it keeps
-everything on your machine.
+Closed, it is a 12 × 48 golden tab halfway down the right edge. Click it or
+pull it inward and it brings a notebook page out with it: ruled yellow paper
+with Today, Calendar and Lists. It is a desktop app for macOS and Windows,
+built with Tauri and React, and it keeps everything on your machine.
 
-<img src="docs/media/sidenib-demo.gif" alt="The notch at the screen edge is pulled inward and opens the Sidenib card; a task is completed, the Calendar tab is shown, and the card is closed again" width="460">
+<img src="docs/media/sidenib-demo.gif" alt="The golden tab at the screen edge is pulled inward and brings out the Sidenib page; a task is typed on the entry line, another is completed, and the Calendar is shown" width="420">
 
 The recording is the real macOS app, not a mock-up. A sharper
 [MP4 of the same take](docs/media/sidenib-demo.mp4) is in the repository.
@@ -24,25 +24,45 @@ What was inherited and what is new is set out under
 
 ## Preview
 
-![Today in light, a due reminder as a banner, Calendar in dark and Settings in dark](docs/media/views.png)
+![Today and Calendar in light, a list and Settings in dark](docs/media/views.png)
 
-Today, a reminder that came due while the card was open, Calendar and
-Settings. All four are captures of the native macOS window.
+Today, Calendar, a list and Settings. All four are captures of the native
+macOS window with sample tasks.
 
-### Before and after
+### Where it started and where it is
 
-![Todobar v0.1.14 as a full-height sidebar beside Sidenib closed and open](docs/media/before-after.png)
+![Todobar, the first Sidenib redesign and the notebook page, side by side with the same five tasks](docs/media/before-after.png)
 
-Left: Todobar v0.1.14, the starting point, open on macOS. Middle and right:
-Sidenib closed and open at the same place on the same screen.
+The same five tasks at the same size in a browser. Left: Todobar, the
+starting point, from the upstream source. Middle: Sidenib's first compact
+redesign, which kept Todobar's structure of a title, a boxed input, tiled
+rows and a strip of three icon buttons, and was dropped for that reason.
+Right: the notebook page. What changed in structure, not only colour:
+
+- The three views are words in an index line at the head of the page. The
+  icon rail and the footer tab bar are gone.
+- You add a task on the next empty line after the open tasks. There is no
+  separate input box.
+- A task is one ruled line: a square check in a margin column, the title,
+  and the reminder time at the end of the same line. Rows are not tiles.
+- The header is a date block in a serif face. Priority is a highlighter
+  stroke on the title.
+- Rules run to the foot of the page, so a short list is an unused page.
+
+[The same comparison with names and icons hidden](docs/design/notebook/comparison-concealed.png)
+and the reasoning are in the
+[notebook design](docs/design/notebook/README.md). It records which choices
+were made for Sidenib; it does not claim the result is unlike every other
+task app.
 
 ## What it does
 
-- **Notch and card.** Click the notch, pull it inward, or press the shortcut.
-  A short pull springs back. Drag the notch along the edge to move it. The
-  card is 340 × 480 and never grows; long content scrolls inside it.
-- **Today.** Overdue tasks first, then open tasks, then one group for each
-  list you pinned (each can be folded), then Completed.
+- **Tab and page.** Click the tab, pull it inward, or press the shortcut.
+  A short pull springs back. Drag the tab along the edge to move it. The
+  page is 340 × 480 and never grows; long content scrolls inside it.
+- **Today.** Overdue tasks first, then open tasks, then the line you write
+  the next task on, then each list you pinned (each can be folded), then
+  Completed.
 - **Calendar.** A month grid (one week on short screens) with tasks and
   events on the selected day, capture onto that day, and arrow-key navigation.
 - **Lists.** Your own lists, one at a time in detail. Pin a list to show it on
@@ -129,9 +149,9 @@ trying a build from a folder you will delete.
 | Pull open | Drag the notch inward about 50 px |
 | Move the notch | Drag it along the edge; it snaps to the middle |
 | Close | `Esc`, the notch, the shortcut, or the menu-bar item |
-| Change tab | The tabs at the foot of the card; left and right arrows work there |
-| Add a task | Type in the field at the bottom and press `Enter` |
-| Settings | The sliders button in the header, or the menu-bar item |
+| Change view | The index line at the top of the page; left and right arrows work there |
+| Add a task | Type on the first empty line and press `Enter` |
+| Settings | The sliders button at the end of the index line, or the menu-bar item |
 
 `Esc` peels one layer at a time: a menu, a rename, an unsent draft, Settings,
 then the card.
@@ -154,20 +174,25 @@ its desktop plumbing and replaces the shell, the views and the identity.
 - Click, pull and drag-to-move on the notch, with focus going to the right
   place on open and back to the previous app on close.
 - The views, rewritten from a 3,656-line `App.tsx` into a small composition
-  root, shared components and one module per view, in a Notes-like style built
-  on design tokens ([views](docs/views.md)).
+  root, shared components and one module per view ([views](docs/views.md)).
+- The notebook page: the layout, navigation, row, entry line, typography and
+  tokens described in the [notebook design](docs/design/notebook/README.md),
+  written in CSS with no image assets.
 - The Calendar's day states, week mode and keyboard navigation
   ([calendar](docs/calendar.md)), and Settings as a short page with Advanced
   behind it and a System theme ([settings](docs/settings.md)).
 - The in-card reminder banner, foldable pinned lists, and the browser tests
   for all of the above.
-- The written [design contract](docs/design/compact/README.md) the work was
-  built against.
+- The written [design contract](docs/design/compact/README.md) for geometry
+  and behaviour, and the [notebook design](docs/design/notebook/README.md)
+  for the look.
 
 **Inherited from Todobar**
 
 - The Tauri v2 and React project, build scripts and CI and release workflows.
-- The task, list and reminder model and local storage.
+- The task, list and reminder model and local storage. The task engine was
+  not rewritten: what a task is, how lists, priorities, reminders and
+  snoozing work, and how they are stored are Todobar's.
 - Tray, global shortcut, autostart and single-instance wiring.
 - The theme presets and backdrop image options, now under Advanced.
 - The Android companion.
@@ -180,7 +205,7 @@ its desktop plumbing and replaces the shell, the views and the identity.
 src/
   App.tsx            composition: shell, data hooks, one view at a time
   shell/             notch, card frame, geometry, gestures, native window bridge
-  components/        PanelView, TaskRow, Group, QuickAdd, Popover, controls
+  components/        PanelView (page frame), ViewTabs (index), TaskRow, Group, QuickAdd (entry line), Popover, controls
   views/             today, lists, calendar, settings
   data/taskStore.ts  tasks and lists, every mutation, storage
   reminders/         the due check, the toast and the banner

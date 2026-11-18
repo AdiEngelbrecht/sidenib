@@ -166,6 +166,10 @@ the login item.
 
 ### Not checked natively
 
+The checks in the first three items below were completed on the installed
+copy during ADIEN-172; see
+[native verification of the notebook page](native-verification-adien-172.md).
+
 The Mac's screen locked repeatedly during this work, and a locked screen can
 be neither captured nor driven. The following were prepared and did not run
 on the corrected build:

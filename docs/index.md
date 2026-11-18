@@ -13,6 +13,10 @@ Sidenib:
 - [Settings](settings.md)
 - [Release notes v0.2.0](release-notes-v0.2.0.md)
 - [Release verification v0.2.0](release-verification-v0.2.0.md)
+- [Notebook design](design/notebook/README.md): the current layout and look
+  of the card, and why the grouped-card layout was dropped.
+- [Native verification of the notebook page](native-verification-adien-172.md):
+  what was run on the installed macOS app.
 - [Gray notch rectangle and see-through card](native-transparency-adien-171.md):
   cause, fix and native evidence for ADIEN-171
 - Screenshots and the demo recording are in [media/](media/).

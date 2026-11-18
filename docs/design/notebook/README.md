@@ -140,6 +140,38 @@ Gold on yellow paper has almost no contrast, so gold is never the only edge of
 anything: the done check and today's date carry an ink edge, and the notch has
 a dark amber hairline.
 
+## Comparison
+
+The same five tasks at 440 × 520 in a browser, from three sources: upstream
+at `809b0d5`, the compact redesign at `bc75b80`, and this design.
+
+![Todobar, the compact redesign and the notebook page](../../media/before-after.png)
+
+With Todobar's name and icon hidden; the two Sidenib versions carry neither:
+
+![The same three, unnamed](comparison-concealed.png)
+
+| | A, Todobar | B, compact (rejected) | C, notebook |
+| --- | --- | --- | --- |
+| Navigation | Icon rail at the side | Three icon pills at the foot | Three words in the head line |
+| Capture | Boxed field above the list | Boxed field below the list | The next ruled line after the open tasks |
+| Row | Bordered tile, two text lines, four icons | Tile in a white group, two text lines | One ruled line, time at the trailing end |
+| Check | Circle | Circle | Square, in a margin column |
+| Priority | Coloured dot and edge bar | Gold dot | Highlighter stroke on the title |
+| Header | Logo, name, progress bar, section title | Bold sans title, dotted meta line | Date block in a serif face |
+| Empty space | Blank | Blank | Ruled to the foot |
+| Chrome above and below the rows | about 200 px | about 165 px | about 73 px |
+
+B differs from A mostly in size, colour and where the strip of three sits. C
+differs from both in every row of the table. C shares ruled yellow paper and
+a trailing time with the original iPhone Notes, and nothing else in the
+table.
+
+Native captures: [four views](../../media/views.png),
+[the other theme](native-views.png), [the closed tab](native-closed.png),
+[a due reminder](native-banner.png). How they were made is in
+[native verification](../../native-verification-adien-172.md).
+
 ## Rules for later work
 
 - Do not bring back raised row groups, a boxed quick-add field, a footer tab

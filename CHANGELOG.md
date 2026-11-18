@@ -7,6 +7,28 @@ earlier are the upstream Todobar history and keep the original product name.
 
 ### Changed
 
+- Gave the card its own layout, a notebook page, after the first compact
+  redesign was judged too close to Todobar. The three views are an index
+  line in the header; the footer tab bar is gone. A task is added on the
+  next empty line after the open tasks instead of in a box at the foot. Rows
+  are single ruled lines with a square check in a margin column and the
+  reminder time at the trailing end. The header is a date block in a serif
+  face, focus priority is a highlighter stroke, and rules continue to the
+  foot of the page. See
+  [docs/design/notebook/README.md](docs/design/notebook/README.md).
+- The closed notch is the golden tab of the icon. Open, it is 10 wide and
+  touches the page, which has a narrow ink edge on that side.
+- Defaults: card radius 16, row height 36 (lower bound 32). "Row spacing"
+  adds to the line height instead of splitting rows into tiles.
+- Stored settings, once: card width, radius, row height, row spacing, text
+  size and motion that are still a previous default move to the notebook
+  defaults; chosen values are kept. The settings as they were are saved
+  under `sidenib.sidebar.settings.backup.rev2`. See
+  [docs/settings.md](docs/settings.md).
+- In the Calendar, an entry under its own day shows the time only.
+- Fixed: the off state of a switch was below 3:1 against the page in four
+  light presets.
+
 - Renamed the product to Sidenib across the app, tray/menu-bar menu, window
   title, accessibility labels, package metadata, and workflows.
 - Replaced the app icon with the Sidenib Peek icon, including a macOS menu-bar
