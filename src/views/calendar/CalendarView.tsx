@@ -392,7 +392,9 @@ export function CalendarView({
             <TaskRow
               key={entryKey(entry)}
               task={task}
-              now={now}
+              // Worded against the day on show: under its own day an entry
+              // gives the time only, not "Tomorrow 09:00".
+              now={selectedDate.getTime()}
               overdue={isOverdue(task, now)}
               detail={task.kind === 'event' ? undefined : listTitle}
               listTitle={listTitle}

@@ -711,7 +711,7 @@ button.sn-section-label:hover {
 }
 
 .sn-row-detail {
-  min-width: 0;
+  min-width: 4ch;
   overflow: hidden;
   text-overflow: ellipsis;
 }
