@@ -48,10 +48,10 @@ export interface GeometryOptions {
 }
 
 export const SN = {
-  notch: { width: 12, hoverGrow: 2, openWidth: 6, height: 48 },
+  notch: { width: 12, hoverGrow: 2, openWidth: 10, height: 48 },
   hit: { width: 28, height: 72 },
-  card: { width: 340, height: 480, minHeight: 320, radius: 24 },
-  toast: { width: 296, height: 60, gap: 8, radius: 16 },
+  card: { width: 340, height: 480, minHeight: 320, radius: 16 },
+  toast: { width: 296, height: 60, gap: 8, radius: 12 },
   clearance: 10,
   shadowMargin: 28,
   pull: { slop: 6, commit: 48, travel: 120, flick: 0.5 },

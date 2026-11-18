@@ -14,6 +14,11 @@ export interface PanelChrome {
   activeTab: ViewId | null
   selectTab(view: ViewId): void
   openSettings(): void
+  /** Called when a tab is chosen from the index, which the next view then
+   *  redraws: the new index takes the focus back. */
+  holdTabFocus(): void
+  /** True once after `holdTabFocus`. */
+  takeTabFocus(): boolean
   /** False while the card is closed; open popovers close with it. */
   isOpen: boolean
   /** Shown above the body of whichever view is up: the reminder banner. */
@@ -25,6 +30,8 @@ export const PanelChromeContext = createContext<PanelChrome>({
   activeTab: 'today',
   selectTab: () => {},
   openSettings: () => {},
+  holdTabFocus: () => {},
+  takeTabFocus: () => false,
   isOpen: true,
 })
 

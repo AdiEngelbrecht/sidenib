@@ -18,9 +18,9 @@
 // Block scope keeps these names out of the page's global lexical scope.
 {
 const SN = {
-  notch: { width: 12, hoverGrow: 2, openWidth: 6, height: 48 },
+  notch: { width: 12, hoverGrow: 2, openWidth: 10, height: 48 },
   hit: { width: 28, height: 72 },
-  card: { width: 340, height: 480, minHeight: 320, radius: 24 },
+  card: { width: 340, height: 480, minHeight: 320, radius: 16 },
   toast: { width: 296, height: 60, gap: 8 },
   clearance: 10,
   shadowMargin: 28,

@@ -28,8 +28,9 @@ import {
 } from '../../calendar/dates'
 import type { CalendarDay } from '../../calendar/dates'
 import { Group, GroupNote } from '../../components/Group'
-import { IconButton, TextButton } from '../../components/IconButton'
+import { IconButton } from '../../components/IconButton'
 import { PanelView } from '../../components/PanelView'
+import { QuickAdd } from '../../components/QuickAdd'
 import { TaskRow } from '../../components/TaskRow'
 import { sortTasks } from '../../data/taskStore'
 import type {
@@ -295,9 +296,15 @@ export function CalendarView({
           <IconButton label={`Next ${unit}`} onClick={() => step(1)}>
             <ChevronRight aria-hidden="true" />
           </IconButton>
-          <TextButton aria-label="Jump to today" onClick={jumpToToday}>
-            Today
-          </TextButton>
+          <button
+            type="button"
+            className="sn-today-jump"
+            aria-label="Jump to today"
+            title="Jump to today"
+            onClick={jumpToToday}
+          >
+            {new Date(now).getDate()}
+          </button>
         </>
       }
       fixed={
@@ -376,27 +383,8 @@ export function CalendarView({
           <div className="sn-cal-divider" />
         </div>
       }
-      quickAdd={{
-        ariaLabel: 'Add a task to selected calendar day',
-        draftKey: 'calendar',
-        entryMode: { value: entryMode, onChange: setEntryMode },
-        placeholder: `Add to ${dayLabel}`,
-        suggestedReminder: `${dateKey}T09:00`,
-        onSubmit: (title, reminderAt) =>
-          store.addCalendarEntry(
-            title,
-            selectedDate,
-            reminderAt || `${dateKey}T09:00`,
-            entryMode,
-          ),
-      }}
     >
       <Group label={agendaHeading}>
-        {dayEntries.length === 0 ? (
-          <GroupNote>
-            Nothing scheduled. Add below or pick another day.
-          </GroupNote>
-        ) : null}
         {dayEntries.map((entry) => {
           const { ref, listTitle, task } = entry
 
@@ -419,6 +407,25 @@ export function CalendarView({
           )
         })}
       </Group>
+      <QuickAdd
+        key="calendar"
+        ariaLabel="Add a task to selected calendar day"
+        draftKey="calendar"
+        entryMode={{ value: entryMode, onChange: setEntryMode }}
+        placeholder={`Add to ${dayLabel}`}
+        suggestedReminder={`${dateKey}T09:00`}
+        onSubmit={(title, reminderAt) =>
+          store.addCalendarEntry(
+            title,
+            selectedDate,
+            reminderAt || `${dateKey}T09:00`,
+            entryMode,
+          )
+        }
+      />
+      {dayEntries.length === 0 ? (
+        <GroupNote>Nothing scheduled. Add above or pick another day.</GroupNote>
+      ) : null}
       {backlog.length > 0 ? (
         <Group label={`Backlog · ${backlog.length}`}>
           <TaskRows

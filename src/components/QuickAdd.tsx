@@ -24,8 +24,10 @@ export interface QuickAddProps {
 const drafts = new Map<string, { title: string; reminder: string }>()
 
 /**
- * The quick-add field. Enter adds the task and keeps focus here; Escape
- * clears a draft before the shell is allowed to close the card.
+ * The entry line: the next empty line of the page, placed by the view after
+ * its open tasks. Enter adds the task and keeps focus here; Escape clears a
+ * draft before the shell is allowed to close the card. It sticks to the top
+ * or the foot of the scrolling body, so it is in view however long the list.
  *
  * The outer `quick-add` class is the hook the shell uses to focus the field
  * when the card is opened by shortcut (src/shell/useShell.ts).
@@ -76,7 +78,9 @@ export function QuickAdd({
   return (
     <div className="sn-quick quick-add">
       <div className={`sn-field ${reminder ? 'has-reminder' : ''}`}>
-        <Plus aria-hidden="true" />
+        <span className="sn-margin-cell" aria-hidden="true">
+          <Plus />
+        </span>
         <input
           ref={inputRef}
           type="text"

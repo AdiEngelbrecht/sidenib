@@ -46,8 +46,9 @@ Choosing a preset on the page is the only thing that writes `visualStyle`.
 ## Stored values and reset
 
 - The sanitiser clamps numbers and keeps every known value. A stored explicit
-  `light` or `dark`, a stored `codex`, the old card width, radius, row spacing
-  and text size all load as they were and are written back unchanged.
+  `light` or `dark` and a stored `codex` load as they were and are written
+  back unchanged. Sizes and densities do too, unless they are an earlier
+  default (see revision 3 below).
 - Two old defaults are carried forward once, by `migrateStoredSettings`. The
   full-height app wrote its whole settings object on first run, so its
   defaults are in the profile of anyone who started it, chosen or not. Drawn
@@ -63,6 +64,40 @@ Choosing a preset on the page is the only thing that writes `visualStyle`.
   96% surface or a 42 × 84 notch picked in Advanced afterwards stays. Someone
   who had picked exactly those values on purpose before has to pick them once
   more; the stored data cannot tell that case apart.
+- The notebook page (ADIEN-172) is revision 3 and carries the presentation
+  values forward the same way. The earlier layouts drew tiles on a tinted
+  ground, and their densities defeat a ruled page: the profile found on the
+  user's Mac held a 400-wide card, radius 18, 7 px row gaps and 12.5 px text,
+  all of them first-run defaults of the full-height app. On the first load of
+  a profile below revision 3, each of these that is still an earlier default
+  becomes the notebook default:
+
+  | Field | Earlier defaults | Notebook default |
+  | --- | --- | --- |
+  | `panelWidth` | 400, 340 | 340 |
+  | `panelRadius` | 18, 24 | 16 |
+  | `taskRowHeight` | 44 | 36 |
+  | `taskGap` | 7, 0 | 0 |
+  | `taskTextSize` | 12.5, 14 | 14 |
+  | `motionMs` | 230, 220 | 220 |
+
+  Any other value was chosen and is kept: a 480-wide card, radius 20 or 13 px
+  text load as they were. Theme, preset, dock edge, notch position and size,
+  surface opacity, backdrop, sort order, tab order, Show completed, Reminders
+  and Launch at login are not touched by this step.
+- Before a converted profile is written back, the settings exactly as they
+  were stored are saved under `sidenib.sidebar.settings.backup.rev2`. That
+  key is written once and never replaced. To go back, copy its values into
+  Advanced, or restore it over `sidenib.sidebar.settings.v27` with the app
+  closed.
+- The ambiguity is the same as before and cannot be removed: stored data
+  does not say whether 400 was picked or inherited. A value equal to an
+  earlier default is treated as inherited, including in a revision 2 profile,
+  because revision 2 was stamped on profiles that still held the full-height
+  defaults. Someone who chose exactly one of those values has to choose it
+  once more; under revision 3 it then holds.
+- "Row spacing" above zero now adds to the height of every ruled line. It no
+  longer turns rows into separate tiles.
 - Only a missing or unknown `theme` becomes `system`, and only an unknown
   preset becomes `sidenib`.
 - New defaults (`theme: 'system'`, `visualStyle: 'sidenib'`,

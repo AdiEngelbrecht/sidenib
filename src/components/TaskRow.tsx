@@ -36,9 +36,11 @@ export interface TaskRowProps {
 type Layer = 'none' | 'reminder' | 'menu' | 'confirm'
 
 /**
- * One task: 44 high with a single line, 52 with a reminder line. The title
- * wraps to two lines and then truncates; the full title is its tooltip and is
- * shown whole while renaming.
+ * One task on one ruled line. The check sits in the margin; the reminder
+ * time, an event mark, a note and the list name sit at the trailing end of
+ * the first line. The title wraps to two lines and then truncates; the full
+ * title is its tooltip and is shown whole while renaming. Focus priority is
+ * a highlighter stroke on the title.
  *
  * Reminder and More sit over the trailing edge on hover or keyboard focus, so
  * nothing shifts. More holds Rename, Priority and Delete. Double-clicking the
@@ -103,6 +105,7 @@ export function TaskRow({
         task.done ? 'is-done' : '',
         overdue ? 'is-overdue' : '',
         hasMeta ? 'has-meta' : '',
+        task.priority === 'focus' ? 'is-focus' : '',
         layer !== 'none' ? 'is-active' : '',
         isEditing ? 'is-editing' : '',
       ]
@@ -151,32 +154,31 @@ export function TaskRow({
             title={task.title}
             onDoubleClick={startRename}
           >
-            {task.title}
-          </span>
-        )}
-        {hasMeta ? (
-          <span className="sn-row-meta">
-            {reminderLabel ? (
-              <span className="task-reminder">
-                <Bell aria-hidden="true" />
-                {overdue ? <span className="sn-visually-hidden">Overdue, </span> : null}
-                {reminderLabel}
+            <span className="sn-row-title-text">{task.title}</span>
+            {task.priority === 'focus' ? (
+              <span className="sn-visually-hidden sn-flag">
+                , focus priority
               </span>
             ) : null}
-            {isEvent ? <span className="sn-pill task-kind-pill">Event</span> : null}
-            {note ? <span className="sn-row-detail sn-row-note">{note}</span> : null}
-            {detail ? <span className="sn-row-detail">{detail}</span> : null}
-            {gmailUrl ? (
-              <a href={gmailUrl} rel="noreferrer" target="_blank">
-                Gmail
-              </a>
-            ) : null}
           </span>
-        ) : null}
+        )}
       </div>
-      {task.priority === 'focus' ? (
-        <span className="sn-flag" title="Focus">
-          <span className="sn-visually-hidden">Focus priority</span>
+      {hasMeta && !isEditing ? (
+        <span className="sn-row-meta">
+          {isEvent ? <span className="sn-row-kind task-kind-pill">Event</span> : null}
+          {note ? <span className="sn-row-detail sn-row-note">{note}</span> : null}
+          {detail ? <span className="sn-row-detail">{detail}</span> : null}
+          {gmailUrl ? (
+            <a href={gmailUrl} rel="noreferrer" target="_blank">
+              Gmail
+            </a>
+          ) : null}
+          {reminderLabel ? (
+            <span className="task-reminder">
+              {overdue ? <span className="sn-visually-hidden">Overdue, </span> : null}
+              {reminderLabel}
+            </span>
+          ) : null}
         </span>
       ) : null}
       <div className="sn-row-actions">

@@ -5,8 +5,25 @@ compact Sidenib shell. Every later workspace (shell, Today and Lists, Calendar,
 Settings, reminders) builds to this document. Nothing here changes production
 code: `src/`, `src-tauri/` and the Sidenib brand assets are untouched.
 
-Sidenib is a task utility. Apple's iPhone Notes guides how it looks. It does
-not gain a rich-text notes feature.
+Sidenib is a task utility. It does not gain a rich-text notes feature.
+
+> **Partly superseded by ADIEN-172 (18 November 2026).** The layout and look
+> of the card described here were rejected by the user as too close to
+> Todobar. The [notebook design](../notebook/README.md) replaces section 2
+> (iPhone Notes reference), section 4 (card anatomy), the visual parts of
+> section 5 and section 6 (tokens). Do not build from those sections, from
+> [tokens.css](tokens.css), from the prototype or from the frames: they show
+> the rejected grouped-card layout with its boxed quick add and three-pill
+> tab bar, and are kept as a record only.
+>
+> Still in force: section 1 (audit of v0.1.14), section 3 (geometry, native
+> window and pointer pass-through), the behaviour in section 5 (what each
+> view and Settings contains, reminders), section 7 (interaction and focus),
+> and the interfaces in section 8 as amended in [views.md](../../views.md).
+>
+> Values changed by the notebook design: card radius 16 (was 24), open notch
+> 10 wide and touching the card (was 6), toast radius 12 (was 16), row
+> height 36 (was 44, lower bound now 32), the closed notch is gold.
 
 ## What is in this folder
 
@@ -66,7 +83,9 @@ controls, and the hover-only handle. This contract changes their defaults to
 the compact right-middle Sidenib look and moves the tuning controls to an
 Advanced page (section 5). No stored preference is deleted or converted.
 
-## 2. iPhone Notes reference
+## 2. iPhone Notes reference (superseded)
+
+Superseded by the [notebook design](../notebook/README.md). Kept as a record.
 
 The reference is the first-party Notes app on iPhone, together with Apple's
 published guidance on
@@ -99,13 +118,13 @@ on seventeen work-area and preference combinations.
 | --- | --- | --- | --- |
 | Notch, visible | 12 × 48, inner corners radius 6, flush with the screen edge | 10–14 × 44–52 | Mid-range. 12 is the narrowest width that still shows a rounded end at 1×. |
 | Notch, hover or pulling | 14 × 48 | within range | Confirms the pointer is on it without opening anything. |
-| Notch, card open | 6 × 48, gold | revised | It must fit inside the 10 clearance beside the card and still read as the close control. |
+| Notch, card open | 10 × 48, gold | revised | It spans the 10 clearance and touches the card, so the tab and the page are one object (ADIEN-172; was 6). |
 | Notch hit target | 28 × 72, centred on the notch, extends inward only | "practical hit target" | 28 wide is reachable when the pointer is thrown at the screen edge (the edge itself is infinitely deep). 72 high tolerates vertical error. It covers 28 × 72 of the desktop, which is less than the baseline's visible 42 × 84 handle. |
 | Default notch position | 50% of the work-area height | 50% | As briefed. Within ±3% of centre it snaps to 50%. |
 | Open card | 340 × 480 | about 340 × 480 | As briefed. |
-| Card radius | 24 | 22–26 | Mid-range. Groups inside use 12 and controls 10, so every nested radius is half or less of its parent. |
+| Card radius | 16 | 22–26 | A page corner (ADIEN-172; was 24). The stored preference still accepts 12–28. |
 | Edge clearance | 10 on every side | 8–12 | Mid-range. It is what makes the card a card: all four corners are visible. |
-| Reminder toast | 296 × 60, radius 16, 8 from the notch | not briefed | Wide enough for a 20-character title plus two actions. |
+| Reminder toast | 296 × 60, radius 12, 8 from the notch | not briefed | Wide enough for a 20-character title plus two actions. |
 
 ### Sizing inside the work area
 
@@ -166,7 +185,7 @@ outside the work area or shrink the notch below a usable target.
 | `tabWidth` | 12 | 10–112 | visible notch thickness; the hit target is at least 28 |
 | `handleHeight` | 48 | 44–176 | visible notch length; the hit target is at least 72 |
 | `handleY` | 50 | 0–100 | notch centre along the edge |
-| `panelRadius` | 24 | 12–28 | `--sn-radius-card` |
+| `panelRadius` | 16 | 12–28 | `--sn-radius-card` |
 
 Upper bounds equal v0.1.14's, so every stored value remains valid. Lower
 bounds for `tabWidth` and `handleHeight` are widened from 22 and 56 to admit
@@ -213,7 +232,10 @@ window, at a stated interval no shorter than the baseline's 72 ms, and stops
 when the pointer leaves. The browser checks in this folder cover layout only.
 They prove nothing about native pass-through.
 
-## 4. Card anatomy
+## 4. Card anatomy (superseded)
+
+Superseded by the [notebook design](../notebook/README.md). The header, quick
+add and tab regions below are the rejected layout.
 
 ![Open Today, annotated](frames/02-today-populated.png)
 
@@ -415,7 +437,11 @@ Rules for the Settings workspace:
 [toast](frames/17-dark-toast.png). On the left edge everything mirrors:
 [frame](frames/18-left-edge.png). The top edge is described in section 3.
 
-## 6. Tokens
+## 6. Tokens (superseded)
+
+Superseded by `src/design/tokens.css` and the
+[notebook design](../notebook/README.md). Motion and reduced motion below
+still apply.
 
 [tokens.css](tokens.css) is the complete system: 5 type styles, 5 spacing
 steps, 6 radii, 13 colours per theme, 2 shadows and 3 durations. Components use

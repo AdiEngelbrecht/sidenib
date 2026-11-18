@@ -102,8 +102,16 @@ export type SidebarSettings = {
   settingsRevision: number
 }
 
-/** Revision 2: the compact notch and the opaque paper are the defaults. */
-export const SETTINGS_REVISION = 2
+/**
+ * Revision 2: the compact notch and the opaque paper are the defaults.
+ * Revision 3: the notebook page (ADIEN-172). Card width, corner radius, row
+ * height, row spacing and text size that are still an earlier default move
+ * to the notebook defaults.
+ */
+export const SETTINGS_REVISION = 3
+
+/** Where the settings as they stood before revision 3 are kept, once. */
+export const SETTINGS_BACKUP_KEY = 'sidenib.sidebar.settings.backup.rev2'
 
 /**
  * Defaults of the full-height sidebar. That app wrote its whole settings
@@ -116,11 +124,26 @@ export const PRE_COMPACT_DEFAULTS = {
   surfaceAlpha: 96,
 } as const
 
+/**
+ * Every value each presentation field has had as a default: the full-height
+ * sidebar first, then the compact card. A stored value in one of these lists
+ * cannot be told apart from never having been changed.
+ */
+export const EARLIER_PRESENTATION_DEFAULTS = {
+  panelWidth: [400, 340],
+  panelRadius: [18, 24],
+  taskRowHeight: [44],
+  taskGap: [7, 0],
+  taskTextSize: [12.5, 14],
+  motionMs: [230, 220],
+} as const
+
 export const defaultSidebarSettings: SidebarSettings = {
-  // Compact right-middle defaults (docs/design/compact/README.md section 5).
-  // They apply to a fresh install and to Reset. Stored values are clamped
-  // and kept, except the old defaults that migrateStoredSettings carries
-  // forward once.
+  // Compact right-middle geometry (docs/design/compact/README.md section 5)
+  // with the notebook page's density (docs/design/notebook/README.md). They
+  // apply to a fresh install and to Reset. Stored values are clamped and
+  // kept, except the old defaults that migrateStoredSettings carries forward
+  // once.
   dockEdge: 'right',
   panelWidth: 340,
   panelHeightMode: 'compact',
@@ -129,10 +152,10 @@ export const defaultSidebarSettings: SidebarSettings = {
   handleHeight: 48,
   handleY: 50,
   motionMs: 220,
-  panelRadius: 24,
+  panelRadius: 16,
   surfaceAlpha: 100,
-  taskRowHeight: 44,
-  // 0 gives hairline-separated groups; above 0 each row is its own block.
+  taskRowHeight: 36,
+  // Extra space added to every ruled line.
   taskGap: 0,
   taskTextSize: 14,
   showCompleted: true,
@@ -177,19 +200,41 @@ export function migrateStoredSettings(
 
   const next = { ...value, settingsRevision: SETTINGS_REVISION }
 
-  if (
-    value.tabWidth === PRE_COMPACT_DEFAULTS.tabWidth &&
-    value.handleHeight === PRE_COMPACT_DEFAULTS.handleHeight
-  ) {
-    next.tabWidth = defaultSidebarSettings.tabWidth
-    next.handleHeight = defaultSidebarSettings.handleHeight
+  if (revision < 2) {
+    if (
+      value.tabWidth === PRE_COMPACT_DEFAULTS.tabWidth &&
+      value.handleHeight === PRE_COMPACT_DEFAULTS.handleHeight
+    ) {
+      next.tabWidth = defaultSidebarSettings.tabWidth
+      next.handleHeight = defaultSidebarSettings.handleHeight
+    }
+
+    if (
+      value.surfaceAlpha === PRE_COMPACT_DEFAULTS.surfaceAlpha &&
+      !value.backdropImage
+    ) {
+      next.surfaceAlpha = defaultSidebarSettings.surfaceAlpha
+    }
   }
 
-  if (
-    value.surfaceAlpha === PRE_COMPACT_DEFAULTS.surfaceAlpha &&
-    !value.backdropImage
-  ) {
-    next.surfaceAlpha = defaultSidebarSettings.surfaceAlpha
+  // Revision 3, the notebook page. The earlier layouts were tiles on a
+  // tinted ground and their densities were tuned for that; kept as they are,
+  // they defeat the ruled page (a 400-wide card of 12.5 px text with 7 px
+  // gaps). A presentation value that is still one of the earlier defaults
+  // moves to the notebook default. Any other value was chosen and is kept.
+  //
+  // This cannot tell "never changed" from "changed back to exactly an old
+  // default"; such a choice is treated as unchanged. What was stored is kept
+  // under SETTINGS_BACKUP_KEY by the caller.
+  for (const field of Object.keys(EARLIER_PRESENTATION_DEFAULTS) as Array<
+    keyof typeof EARLIER_PRESENTATION_DEFAULTS
+  >) {
+    const stored = value[field]
+    const earlier: readonly number[] = EARLIER_PRESENTATION_DEFAULTS[field]
+
+    if (typeof stored === 'number' && earlier.includes(stored)) {
+      next[field] = defaultSidebarSettings[field]
+    }
   }
 
   return next
@@ -286,7 +331,8 @@ export function sanitizeSettings(value: Partial<SidebarSettings>): SidebarSettin
     ),
     taskRowHeight: clamp(
       value.taskRowHeight ?? defaultSidebarSettings.taskRowHeight,
-      40,
+      // Lower bound widened from 40 to admit the notebook's 36 px line.
+      32,
       62,
     ),
     // Lower bound widened from v0.1.14's 4 to admit the grouped default.
@@ -337,13 +383,22 @@ export function useSidebarSettings() {
 
     try {
       const stored = window.localStorage.getItem(STORAGE_KEY)
-      const base = stored
-        ? sanitizeSettings(
-            migrateStoredSettings(
-              JSON.parse(stored) as Partial<SidebarSettings>,
-            ),
-          )
-        : defaultSidebarSettings
+      const parsed = stored
+        ? (JSON.parse(stored) as Partial<SidebarSettings>)
+        : null
+      const migrated = parsed ? migrateStoredSettings(parsed) : null
+
+      // Before a conversion is written back, keep what was stored. Written
+      // once and never replaced, so the first state is what survives.
+      if (
+        stored &&
+        migrated !== parsed &&
+        window.localStorage.getItem(SETTINGS_BACKUP_KEY) === null
+      ) {
+        window.localStorage.setItem(SETTINGS_BACKUP_KEY, stored)
+      }
+
+      const base = migrated ? sanitizeSettings(migrated) : defaultSidebarSettings
 
       return sanitizeSettings({
         ...base,

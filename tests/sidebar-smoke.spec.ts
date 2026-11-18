@@ -51,8 +51,9 @@ test('tasks, lists, reminders and settings work in the compact card', async ({
   await expect(page.locator('.sn-card')).toHaveClass(/is-open/)
   await expect(page.getByRole('heading', { name: 'Today' })).toBeVisible()
 
-  // Compact chrome: one segmented control, no side rail, no progress strip,
-  // and no group inside a group.
+  // Notebook chrome: the index in the header, no side rail, no progress
+  // strip, no footer bar, and no group inside a group.
+  await expect(page.locator('.sn-tabs')).toHaveCount(0)
   await expect(page.getByRole('tablist').getByRole('tab')).toHaveText([
     'Today',
     'Calendar',
@@ -84,7 +85,7 @@ test('tasks, lists, reminders and settings work in the compact card', async ({
 
   // Tuning controls live one level down, on the Advanced page.
   const backTo = (label: string) =>
-    page.locator('.sn-back').filter({ hasText: label }).click()
+    page.locator(`.sn-back[aria-label="${label}"]`).click()
 
   await page.getByRole('button', { name: 'Advanced' }).click()
   await expect(page.getByRole('heading', { name: 'Advanced' })).toBeVisible()
@@ -334,8 +335,9 @@ test('tasks, lists, reminders and settings work in the compact card', async ({
   await expect(taskRow(page, 'Pinned task')).toBeVisible()
   await page.getByRole('button', { name: 'Actions for Planner' }).click()
   await page.getByRole('menuitemcheckbox', { name: 'Show on Today' }).click()
-  await expect(page.getByText('1 open · shown on Today')).toBeVisible()
-  await page.getByRole('button', { name: 'Lists', exact: true }).click()
+  await expect(page.getByText('Shown on Today', { exact: true })).toBeVisible()
+  await expect(page.locator('.sn-aside')).toHaveText('1 open')
+  await page.getByRole('button', { name: 'All lists', exact: true }).click()
   await expect(
     page.getByRole('button', { name: 'Open Planner, 1 open' }),
   ).toBeVisible()
@@ -537,8 +539,11 @@ for (const viewport of viewports) {
       0,
     )
     await expect(page.getByRole('button', SETTINGS_BUTTON)).toBeVisible()
-    // Header, quick add and tabs all sit inside the card; only the body
-    // between them scrolls.
+    // The header with its index, the body and the entry line all sit inside
+    // the card; only the body scrolls, and there is no footer bar.
+    await expect(page.locator('.sn-tabs')).toHaveCount(0)
+    await expect(page.locator('.sn-header .sn-index')).toBeVisible()
+    await expect(page.locator('.sn-view-body .sn-quick')).toBeVisible()
     await expect
       .poll(async () =>
         page.evaluate(() => {
@@ -546,7 +551,7 @@ for (const viewport of viewports) {
             .querySelector('.sn-card')
             ?.getBoundingClientRect()
 
-          return ['.sn-header', '.sn-view-body', '.sn-quick', '.sn-tabs'].every(
+          return ['.sn-header', '.sn-view-body', '.sn-quick', '.sn-index'].every(
             (selector) => {
               const rect = document
                 .querySelector(selector)
@@ -958,7 +963,7 @@ test('a stored task note is shown without the labels the view already gives', as
   ).toBe('Today · 40 min')
 })
 
-test('the calendar separator is under the grid once the agenda scrolls', async ({
+test('the calendar rule spans the page and the entry line stays in view while the agenda scrolls', async ({
   page,
 }) => {
   await page.addInitScript(() => {
@@ -994,30 +999,42 @@ test('the calendar separator is under the grid once the agenda scrolls', async (
   await page.goto('/?open=1')
   await page.getByRole('tab', { name: 'Calendar' }).click()
 
-  const header = page.locator('[data-view="calendar"] .sn-header')
-  const fixed = page.locator('[data-view="calendar"] .sn-view-fixed')
   const divider = page.locator('.sn-cal-divider')
-
-  await expect(fixed).not.toHaveClass(/is-scrolled/)
-
-  const restingWidth = (await divider.boundingBox())!.width
-
-  await page.locator('.sn-view-body').evaluate((element) => {
-    element.scrollTop = 80
-  })
-  await expect(fixed).toHaveClass(/is-scrolled/)
-  await expect(header).not.toHaveClass(/is-scrolled/)
-
-  // The line under the grid now spans the card; it sits on the body's edge.
+  const body = page.locator('.sn-view-body')
+  const entry = page.locator('.sn-view-body .sn-quick')
   const cardBox = (await page.locator('.sn-card').boundingBox())!
-  const bodyBox = (await page.locator('.sn-view-body').boundingBox())!
+  const inside = async () => {
+    const bodyBox = (await body.boundingBox())!
+    const entryBox = (await entry.boundingBox())!
 
-  expect(restingWidth).toBeLessThan(cardBox.width - 20)
-  await expect
-    .poll(async () => (await divider.boundingBox())!.width)
-    .toBeGreaterThan(cardBox.width - 1.5)
+    return (
+      entryBox.y >= bodyBox.y - 0.5 &&
+      entryBox.y + entryBox.height <= bodyBox.y + bodyBox.height + 0.5
+    )
+  }
 
-  const dividerBox = (await divider.boundingBox())!
+  // The rule under the grid always runs the width of the page and is the
+  // edge the agenda scrolls under.
+  for (const scrollTop of [0, 80]) {
+    await body.evaluate((element, top) => {
+      element.scrollTop = top
+    }, scrollTop)
 
-  expect(Math.abs(dividerBox.y + dividerBox.height - bodyBox.y)).toBeLessThan(1.5)
+    const dividerBox = (await divider.boundingBox())!
+    const bodyBox = (await body.boundingBox())!
+
+    expect(dividerBox.width).toBeGreaterThan(cardBox.width - 1.5)
+    expect(Math.abs(dividerBox.y + dividerBox.height - bodyBox.y)).toBeLessThan(
+      1.5,
+    )
+    // The entry line stays in view: at the foot before its place is reached.
+    expect(await inside()).toBe(true)
+  }
+
+  // Scrolled past its place in the list, the entry line holds at the top.
+  await body.evaluate((element) => {
+    element.scrollTop = element.scrollHeight
+  })
+  expect(await inside()).toBe(true)
+  await expect(entry.getByRole('textbox')).toBeVisible()
 })

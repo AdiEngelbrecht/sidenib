@@ -10,8 +10,9 @@ export interface GroupProps {
 }
 
 /**
- * The one group: an optional small label and a raised, rounded block of rows
- * separated by inset hairlines. Groups are never nested.
+ * A run of rows on the page under an optional label. The label is its own
+ * ruled line; a collapsible label keeps its chevron in the margin. Nothing is
+ * raised or boxed, and groups are never nested.
  */
 export function Group({ label, tone, collapsible, children }: GroupProps) {
   const labelClass = `sn-section-label ${tone === 'danger' ? 'is-danger' : ''}`
@@ -26,15 +27,16 @@ export function Group({ label, tone, collapsible, children }: GroupProps) {
           aria-expanded={collapsible.open}
           onClick={collapsible.onToggle}
         >
-          {collapsible.open ? (
-            <ChevronDown aria-hidden="true" />
-          ) : (
-            <ChevronRight aria-hidden="true" />
-          )}
-          {label}
+          <span className="sn-margin-cell" aria-hidden="true">
+            {collapsible.open ? <ChevronDown /> : <ChevronRight />}
+          </span>
+          <span>{label}</span>
         </button>
       ) : label ? (
-        <h2 className={labelClass}>{label}</h2>
+        <h2 className={labelClass}>
+          <span className="sn-margin-cell" aria-hidden="true" />
+          <span>{label}</span>
+        </h2>
       ) : null}
       {isOpen ? <div className="sn-group">{children}</div> : null}
     </section>

@@ -11,9 +11,9 @@ not the shell's business.
 
 | State | Drawn | Native window |
 | --- | --- | --- |
-| Closed | A 12 × 48 notch, halfway down the right edge by default | 28 × 72, the notch's pointer target |
+| Closed | A 12 × 48 gold tab, halfway down the right edge by default | 28 × 72, the tab's pointer target |
 | Reminder | The notch plus a 296 × 60 toast beside it | The two plus 28 of shadow room |
-| Open | A 340 × 480 card, radius 24, 10 from the screen edges, and a 6-wide gold notch in the gap. A due reminder is a banner inside the card, not a toast. | 378 × 536 at the default size |
+| Open | A 340 × 480 page, radius 16, 10 from the screen edges, with a 2 px ink edge on the docked side, and the gold tab 10 wide across the gap so it touches the page. A due reminder is a banner inside the card, not a toast. | 378 × 536 at the default size |
 
 The window is never as tall as the screen. Left and top dock edges, the stored
 notch size, panel width, corner radius, hover-only notch and the opt-in

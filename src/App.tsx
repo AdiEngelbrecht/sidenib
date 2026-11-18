@@ -3,7 +3,7 @@
  * one view at a time inside the card. Views live in src/views, shared
  * primitives in src/components. See docs/views.md for the boundaries.
  */
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
 import './design/tokens.css'
 import './design/presets.css'
@@ -14,7 +14,6 @@ import { formatDateKey, parseReminderDate } from './calendar/dates'
 import { useNow } from './calendar/useNow'
 import { PanelChromeContext, VIEW_LABELS } from './components/panelChrome'
 import type { PanelChrome } from './components/panelChrome'
-import { ViewTabs } from './components/ViewTabs'
 import { useTaskStore } from './data/taskStore'
 import { useGmailConnector } from './gmail'
 import type { GmailThreadSuggestion } from './gmail'
@@ -193,20 +192,34 @@ function App() {
       />
     ) : null
 
+  const tabFocus = useRef(false)
+  const holdTabFocus = useCallback(() => {
+    tabFocus.current = true
+  }, [])
+  const takeTabFocus = useCallback(() => {
+    const held = tabFocus.current
+
+    tabFocus.current = false
+    return held
+  }, [])
   const baseChrome = useMemo(
     (): PanelChrome => ({
       tabs: settings.sectionOrder,
       activeTab: isSettingsOpen ? null : view,
       selectTab: (next) => navigate({ view: next }),
       openSettings,
+      holdTabFocus,
+      takeTabFocus,
       isOpen: shell.isOpen,
     }),
     [
+      holdTabFocus,
       isSettingsOpen,
       navigate,
       openSettings,
       settings.sectionOrder,
       shell.isOpen,
+      takeTabFocus,
       view,
     ],
   )
@@ -241,7 +254,6 @@ function App() {
     isNative ? 'is-native' : 'is-web-preview',
     shell.isOpen ? 'is-sidebar-open' : 'is-sidebar-closed',
     settings.backdropImage ? 'has-custom-backdrop' : '',
-    settings.taskGap > 0 ? 'sn-rows-spaced' : '',
     `dock-${settings.dockEdge}`,
     `tab-${settings.tabVisibility}`,
     `theme-${theme}`,
@@ -325,7 +337,6 @@ function App() {
             ) : (
               <ListsView {...viewProps} listId={listId} onOpenList={setListId} />
             )}
-            <ViewTabs />
           </div>
         </PanelChromeContext>
       </PanelCard>

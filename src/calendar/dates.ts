@@ -48,6 +48,11 @@ export function formatCalendarDay(date: Date) {
 }
 
 /** "Monday 16 November", for the Today subtitle. */
+/** "Wednesday". */
+export function formatWeekday(date: Date) {
+  return new Intl.DateTimeFormat(undefined, { weekday: 'long' }).format(date)
+}
+
 export function formatLongDay(date: Date) {
   return new Intl.DateTimeFormat(undefined, {
     day: 'numeric',

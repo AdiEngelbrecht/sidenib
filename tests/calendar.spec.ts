@@ -258,7 +258,8 @@ const subtitle = (page: Page) => view(page).locator('.sn-subtitle')
 const agendaLabel = (page: Page) =>
   view(page).locator('.sn-section-label').first()
 const agendaTitles = (page: Page) =>
-  view(page).locator('.sn-section').first().locator('.sn-row-title')
+  view(page).locator('.sn-section').first().locator('.sn-row-title-text')
+const entryLine = (page: Page) => view(page).locator('.sn-quick.quick-add')
 const quickAdd = (page: Page) =>
   page.getByLabel('Add a task to selected calendar day')
 const row = (page: Page, text: string) =>
@@ -321,7 +322,7 @@ test.describe('calendar in the card', () => {
       grid(page).getByRole('row').nth(1).getByRole('gridcell').first(),
     ).toHaveAttribute('data-date', '2026-10-26')
 
-    // Today: a filled disc, bold, and named as today.
+    // Today: a filled rounded square, bold, and named as today.
     const today = cell(page, '2026-11-16')
 
     await expect(today).toHaveClass(/is-today/)
@@ -343,15 +344,19 @@ test.describe('calendar in the card', () => {
             background: style.backgroundColor,
             fontSize: style.fontSize,
             fontWeight: style.fontWeight,
+            radius: style.borderRadius,
             ring: style.boxShadow,
           }
         })
     const plain = await styleOf('2026-11-18')
     const todayStyle = await styleOf('2026-11-16')
 
+    // Gold on the paper is never the only edge: today always has a hairline
+    // around the fill, and the heavier ink ring while it is the selected day.
     expect(todayStyle.fontWeight).toBe('700')
     expect(todayStyle.background).not.toBe(plain.background)
-    expect(todayStyle.ring).not.toBe('none')
+    expect(todayStyle.radius).toBe('7px')
+    expect(todayStyle.ring).toContain('1.5px inset')
     expect(plain.ring).toBe('none')
     expect(plain.fontWeight).toBe('400')
 
@@ -365,19 +370,22 @@ test.describe('calendar in the card', () => {
     await page.mouse.move(5, 5)
 
     // The ring and the hover tint fade over 120 ms; wait for them to settle.
+    // Today gives the ink ring up and keeps only the hairline of its fill.
     await expect
       .poll(async () => (await styleOf('2026-11-16')).ring)
-      .toBe('none')
+      .toMatch(/ 0\.5px inset$/)
     await expect
       .poll(async () => (await styleOf('2026-11-18')).background)
       .toBe(plain.background)
 
     const selected = await styleOf('2026-11-18')
 
-    expect(selected.ring).not.toBe('none')
+    expect(selected.ring).toContain('1.5px inset')
+    expect(selected.radius).toBe('7px')
     expect(selected.fontWeight).toBe('600')
     expect(selected.background).toBe(plain.background)
-    expect((await styleOf('2026-11-16')).ring).toBe('none')
+    expect((await styleOf('2026-11-16')).ring).not.toContain('1.5px')
+    expect((await styleOf('2026-11-16')).background).toBe(todayStyle.background)
 
     // Outside the month: a smaller number, not only a paler one.
     const outside = cell(page, '2026-10-28')
@@ -423,8 +431,44 @@ test.describe('calendar in the card', () => {
 
     expect(gridBox.x).toBeGreaterThanOrEqual(card.x)
     expect(gridBox.x + gridBox.width).toBeLessThanOrEqual(card.x + card.width)
-    expect(bodyBox.height).toBeGreaterThan(100)
-    expect(bodyBox.y + bodyBox.height).toBeLessThanOrEqual(card.y + card.height)
+    // With no footer bar and no boxed field, a six-week month leaves about
+    // 180 px of agenda (121 before), and the body runs to the foot of the card.
+    expect(bodyBox.height).toBeGreaterThan(175)
+    expect(bodyBox.y + bodyBox.height).toBeCloseTo(card.y + card.height, 0)
+
+    // The views are an index line at the head of the page, above the title.
+    const index = await frame(page.locator('.sn-header .sn-index'))
+    const titleLine = await frame(view(page).locator('.sn-title-line'))
+
+    await expect(page.locator('.sn-tabs')).toHaveCount(0)
+    expect(index.y).toBeGreaterThanOrEqual(card.y)
+    expect(index.y + index.height).toBeLessThanOrEqual(titleLine.y + 0.5)
+    expect(titleLine.y + titleLine.height).toBeLessThanOrEqual(gridBox.y + 0.5)
+
+    // Jump to today carries today's number and stays on the title line.
+    const jump = page.getByRole('button', { name: 'Jump to today' })
+    const jumpBox = await frame(jump)
+
+    await expect(jump).toHaveText('16')
+    await expect(jump).toHaveClass(/sn-today-jump/)
+    expect(jumpBox.y).toBeGreaterThanOrEqual(titleLine.y)
+    expect(jumpBox.y + jumpBox.height).toBeLessThanOrEqual(
+      titleLine.y + titleLine.height,
+    )
+    expect(jumpBox.x + jumpBox.width).toBeLessThanOrEqual(card.x + card.width)
+
+    // The entry line is the next line of the agenda, inside the body.
+    const entry = await frame(entryLine(page))
+
+    expect(entry.y).toBeGreaterThanOrEqual(bodyBox.y)
+    expect(entry.y + entry.height).toBeLessThanOrEqual(
+      bodyBox.y + bodyBox.height + 0.5,
+    )
+    expect(
+      await page
+        .locator('.sn-card')
+        .evaluate((node) => getComputedStyle(node).borderTopLeftRadius),
+    ).toBe('16px')
     expect(
       await view(page).evaluate((node) => node.scrollWidth <= node.clientWidth),
     ).toBe(true)
@@ -496,12 +540,22 @@ test.describe('calendar in the card', () => {
     await expect(grid(page).locator('[tabindex="0"]')).toHaveCount(1)
     await expect(cell(page, '2026-11-16')).toHaveAttribute('tabindex', '0')
 
-    await page.getByRole('button', { name: 'Jump to today' }).focus()
-    await page.keyboard.press(tab) // Settings
+    // Settings is on the index line now, before the title line's controls:
+    // Settings, previous, next, jump to today, then the grid.
+    await page.getByRole('button', { name: 'Settings' }).focus()
+    await page.keyboard.press(tab)
+    await expect(
+      page.getByRole('button', { name: 'Previous month' }),
+    ).toBeFocused()
+    await page.keyboard.press(tab)
+    await page.keyboard.press(tab)
+    await expect(
+      page.getByRole('button', { name: 'Jump to today' }),
+    ).toBeFocused()
     await page.keyboard.press(tab)
     await expect(cell(page, '2026-11-16')).toBeFocused()
 
-    // The focus ring is drawn around the disc.
+    // The focus ring is drawn around the day's square.
     expect(
       await cell(page, '2026-11-16')
         .locator('.sn-day-number')
@@ -562,7 +616,9 @@ test.describe('calendar in the card', () => {
 
     // Leaving and coming back lands on the same day.
     await page.keyboard.press(`Shift+${tab}`)
-    await expect(page.getByRole('button', { name: 'Settings' })).toBeFocused()
+    await expect(
+      page.getByRole('button', { name: 'Jump to today' }),
+    ).toBeFocused()
     await page.keyboard.press(tab)
     await expect(cell(page, '2027-01-03')).toBeFocused()
 
@@ -693,12 +749,22 @@ test.describe('calendar in the card', () => {
       'true',
     )
 
-    // The agenda, quick add and tabs all fit under the week.
+    // The agenda and its entry line fit under the week; the tabs are in the
+    // header above it.
     const body = await frame(view(page).locator('.sn-view-body'))
+    const entry = await frame(entryLine(page))
+    const tabs = await frame(page.getByRole('tablist'))
 
-    expect(body.height).toBeGreaterThan(150)
+    expect(body.height).toBeGreaterThan(240)
     await expect(quickAdd(page)).toBeVisible()
+    expect(entry.y).toBeGreaterThanOrEqual(body.y)
+    expect(entry.y + entry.height).toBeLessThanOrEqual(
+      body.y + body.height + 0.5,
+    )
     await expect(page.getByRole('tablist')).toBeVisible()
+    expect(tabs.y + tabs.height).toBeLessThanOrEqual(
+      (await frame(grid(page))).y,
+    )
     expect(errors).toEqual([])
   })
 
@@ -713,13 +779,53 @@ test.describe('calendar in the card', () => {
     await expect(row(page, 'Dentist').locator('.task-kind-pill')).toHaveText(
       'Event',
     )
+    // One line per entry: the time is at the trailing end of the row, and
+    // focus priority is said in words as well as drawn.
+    await expect(
+      row(page, 'Write report').locator('.sn-row-meta .task-reminder'),
+    ).toContainText('09:00')
+    await expect(row(page, 'Dentist')).toHaveClass(/is-focus/)
+    await expect(row(page, 'Dentist').locator('.sn-row-title')).toHaveText(
+      'Dentist, focus priority',
+    )
+
+    const reportTitle = await frame(
+      row(page, 'Write report').locator('.sn-row-title-text'),
+    )
+    const reportTime = await frame(
+      row(page, 'Write report').locator('.task-reminder'),
+    )
+
+    expect(reportTime.x).toBeGreaterThan(reportTitle.x + reportTitle.width)
+    expect(
+      Math.abs(
+        reportTime.y +
+          reportTime.height / 2 -
+          (reportTitle.y + reportTitle.height / 2),
+      ),
+    ).toBeLessThan(6)
     await expect(page.getByText('Backlog · 1')).toBeVisible()
     await expect(row(page, 'Unscheduled idea')).toBeVisible()
 
     // Another day: empty, then a task and an event captured onto it.
     await cell(page, '2026-11-25').click()
     await expect(agendaLabel(page)).toHaveText('Wed 25 Nov')
-    await expect(page.getByText('Nothing scheduled.')).toBeVisible()
+
+    // An empty day: the entry line first, then one quiet line under it.
+    const emptyNote = view(page).locator('.sn-note')
+
+    await expect(emptyNote).toHaveText(
+      'Nothing scheduled. Add above or pick another day.',
+    )
+    await expect(view(page).locator('.sn-group .sn-note')).toHaveCount(0)
+    expect((await frame(emptyNote)).y).toBeGreaterThanOrEqual(
+      (await frame(entryLine(page))).y + (await frame(entryLine(page))).height,
+    )
+    expect((await frame(entryLine(page))).y).toBeGreaterThanOrEqual(
+      (await frame(agendaLabel(page))).y +
+        (await frame(agendaLabel(page))).height -
+        0.5,
+    )
     await expect(quickAdd(page)).toHaveAttribute('placeholder', 'Add to 25 Nov')
     await expect(cell(page, '2026-11-25').locator('.sn-day-mark')).toHaveCount(
       0,
@@ -801,7 +907,9 @@ test.describe('calendar in the card', () => {
     await expect(cell(page, '2026-11-27').locator('.sn-day-mark')).toHaveCount(
       0,
     )
-    await expect(page.getByText('Nothing scheduled.')).toBeVisible()
+    await expect(
+      page.getByText('Nothing scheduled. Add above or pick another day.'),
+    ).toBeVisible()
 
     // The selected day and what was added outlive a visit to another tab.
     await page.getByRole('tab', { name: 'Today' }).click()
@@ -871,6 +979,13 @@ test.describe('calendar in the card', () => {
 
       expect(before.scroll).toBeGreaterThan(before.client * 2)
       expect(before.top).toBe(0)
+      // At the top the entry line is below the fold, so it sits on the foot
+      // of the page, over the rows that pass under it.
+      await expect(quickAdd(page)).toBeInViewport({ ratio: 1 })
+      expect(
+        (await frame(entryLine(page))).y +
+          (await frame(entryLine(page))).height,
+      ).toBeCloseTo(card.y + card.height, 0)
       await body.hover()
       await page.mouse.wheel(0, 5000)
       await expect.poll(async () => (await metrics()).top).toBeGreaterThan(300)
@@ -880,8 +995,41 @@ test.describe('calendar in the card', () => {
         cardHeight,
         0,
       )
-      await expect(quickAdd(page)).toBeInViewport()
-      await expect(page.getByRole('tablist')).toBeInViewport()
+      // The entry line belongs to the scrolling page but sticks to its foot
+      // or its top, so it is whole and inside the body wherever the page is.
+      const entryInsideBody = async () => {
+        const bodyBox = await frame(body)
+        const entry = await frame(entryLine(page))
+
+        expect(entry.height).toBeGreaterThanOrEqual(36)
+        expect(entry.y).toBeGreaterThanOrEqual(bodyBox.y - 0.5)
+        expect(entry.y + entry.height).toBeLessThanOrEqual(
+          bodyBox.y + bodyBox.height + 0.5,
+        )
+        expect(entry.y + entry.height).toBeLessThanOrEqual(
+          card.y + card.height + 0.5,
+        )
+        expect(entry.x).toBeGreaterThanOrEqual(card.x)
+        expect(entry.x + entry.width).toBeLessThanOrEqual(
+          card.x + card.width + 0.5,
+        )
+      }
+
+      await expect(quickAdd(page)).toBeInViewport({ ratio: 1 })
+      await entryInsideBody()
+      // Scrolled to the end it is back in its own place on the page: under
+      // the last entry of the day and above the backlog.
+      const entryAtEnd = await frame(entryLine(page))
+
+      expect(entryAtEnd.y).toBeCloseTo(
+        (await frame(row(page, 'Entry 12'))).y +
+          (await frame(row(page, 'Entry 12'))).height,
+        0,
+      )
+      expect((await frame(row(page, 'Loose end'))).y).toBeGreaterThan(
+        entryAtEnd.y + entryAtEnd.height,
+      )
+      await expect(page.getByRole('tablist')).toBeInViewport({ ratio: 1 })
       expect(await page.evaluate(() => window.scrollY)).toBe(0)
 
       // Ticking an entry leaves every row where it was.
@@ -933,18 +1081,21 @@ test.describe('calendar in the card', () => {
     // The ring fades in over 120 ms.
     await expect
       .poll(async () => (await read('2026-11-18')).ring)
-      .toContain('rgb(244, 239, 226)')
+      .toContain('rgb(243, 236, 216) 0px 0px 0px 1.5px inset')
 
     const plain = await read('2026-11-19')
     const today = await read('2026-11-16')
     const selected = await read('2026-11-18')
     const outside = await read('2026-10-28')
 
-    // Light ink on the dark card.
-    expect(plain.color).toBe('rgb(244, 239, 226)')
+    // Light ink on the dark paper.
+    expect(plain.color).toBe('rgb(243, 236, 216)')
+    expect(plain.ring).toBe('none')
     expect(today.background).toBe('rgb(246, 196, 69)')
     expect(today.fontWeight).toBe('700')
-    expect(selected.ring).toContain('rgb(244, 239, 226)')
+    // Today, not selected: only the hairline that bounds its gold fill.
+    expect(today.ring).toMatch(/ 0\.5px inset$/)
+    expect(selected.ring).toContain('rgb(243, 236, 216)')
     expect(selected.fontWeight).toBe('600')
     expect(outside.fontSize).toBe('12px')
     expect(outside.color).not.toBe(plain.color)
@@ -954,7 +1105,7 @@ test.describe('calendar in the card', () => {
     await expect(cell(page, '2026-11-10').locator('.sn-day-mark')).toHaveClass(
       /is-done/,
     )
-    // On the gold disc the mark is ink, not gold on gold.
+    // On the gold square the mark is ink, not gold on gold.
     expect(
       await cell(page, '2026-11-16')
         .locator('.sn-day-mark')

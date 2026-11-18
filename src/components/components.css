@@ -1,8 +1,8 @@
 /*
- * The card's content surface and the shared primitives (design contract
- * sections 4 and 6). Everything here reads --sn-* tokens only; a raw colour
- * or pixel radius in a view is a defect. The card frame itself (position,
- * size, radius, shadow, reveal) belongs to src/shell/shell.css.
+ * The notebook page and the shared primitives
+ * (docs/design/notebook/README.md). Everything here reads --sn-* tokens; a
+ * raw colour in a view is a defect. The card frame itself (position, size,
+ * radius, shadow, reveal) belongs to src/shell/shell.css.
  *
  * Views do not restyle these. A missing variant is added here.
  */
@@ -21,6 +21,8 @@
   font: var(--sn-text-body);
   isolation: isolate;
   -webkit-font-smoothing: antialiased;
+  /* One ruled line: the row height plus any extra row spacing. */
+  --sn-row-pitch: calc(var(--sn-row-min-height) + var(--sn-row-gap, 0px));
 }
 
 /* The paper. Surface opacity below 100% lets the desktop, or the backdrop
@@ -108,17 +110,87 @@
 
 .sn-header {
   flex: none;
-  display: flex;
-  align-items: flex-end;
-  gap: var(--sn-space-2);
-  min-height: 56px;
-  padding: 14px var(--sn-space-3) var(--sn-space-2) var(--sn-space-4);
-  border-bottom: 0.5px solid transparent;
-  transition: border-color var(--sn-motion-quick) linear;
+  padding: 4px var(--sn-space-2) 0 var(--sn-space-3);
 }
 
-.sn-header.is-scrolled {
-  border-bottom-color: var(--sn-separator);
+/* The head rule: a double hairline under the header, always drawn. */
+.sn-header::after {
+  content: '';
+  display: block;
+  height: 3px;
+  margin: 4px calc(-1 * var(--sn-space-2)) 0 calc(-1 * var(--sn-space-3));
+  border-top: 0.5px solid var(--sn-rule);
+  border-bottom: 0.5px solid var(--sn-rule);
+}
+
+/* Index line: the three views as words, Settings at the end. */
+.sn-index-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: var(--sn-icon-button);
+}
+
+.sn-index {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: -6px;
+}
+
+.sn-tab {
+  position: relative;
+  height: 24px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  cursor: pointer;
+  transition: background-color var(--sn-motion-quick) linear;
+}
+
+.sn-panel .sn-tab {
+  color: var(--sn-ink-secondary);
+  font: var(--sn-text-micro);
+  font-size: 12px;
+  letter-spacing: 0.01em;
+}
+
+.sn-tab:hover {
+  background: var(--sn-surface-hover);
+}
+
+.sn-panel .sn-tab[aria-selected='true'] {
+  color: var(--sn-ink);
+}
+
+/* The current view: ink, with an ink stroke under the word. */
+.sn-tab[aria-selected='true']::after {
+  content: '';
+  position: absolute;
+  right: 6px;
+  bottom: 1px;
+  left: 6px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--sn-ink);
+}
+
+/* Title line: an optional back button and day number, the title over its
+   secondary line, a quiet note and the view's actions. */
+.sn-title-line {
+  display: flex;
+  align-items: center;
+  gap: var(--sn-space-2);
+  min-height: 36px;
+}
+
+.sn-lead {
+  flex: none;
+  min-width: 30px;
+  font: var(--sn-text-lead);
+  font-variant-numeric: lining-nums;
+  letter-spacing: -0.02em;
 }
 
 .sn-header-text {
@@ -135,18 +207,29 @@
   white-space: nowrap;
 }
 
+/* Beside the day number the weekday is the smaller of the two. */
+.sn-lead + .sn-header-text > .sn-title {
+  font-size: 17px;
+  line-height: 20px;
+}
+
 input.sn-title-edit {
   display: block;
   width: 100%;
   padding: 0;
   border: 0;
-  border-radius: 4px;
+  border-radius: 2px;
   background: transparent;
-  box-shadow: 0 1.5px 0 var(--sn-accent);
+  box-shadow: 0 2px 0 var(--sn-focus);
   outline: none;
 }
 
-.sn-subtitle {
+.sn-panel input.sn-title-edit {
+  font: var(--sn-text-title);
+}
+
+.sn-subtitle,
+.sn-aside {
   margin: 0;
   overflow: hidden;
   color: var(--sn-ink-secondary);
@@ -155,41 +238,45 @@ input.sn-title-edit {
   white-space: nowrap;
 }
 
+.sn-aside {
+  flex: none;
+  align-self: flex-end;
+  padding: 0 var(--sn-space-1) 3px 0;
+  font: var(--sn-text-label);
+}
+
 .sn-header-actions {
   flex: none;
   display: flex;
   align-items: center;
   gap: 2px;
-  padding-bottom: 1px;
 }
 
 .sn-back {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  height: 22px;
-  margin: 0 0 var(--sn-space-1) -5px;
-  padding: 0 6px 0 0;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: var(--sn-icon-button);
+  height: var(--sn-icon-button);
+  margin-left: -6px;
+  padding: 0;
   border: 0;
   border-radius: var(--sn-radius-control);
-  color: var(--sn-accent-text);
-  font: var(--sn-text-body);
-  font-size: 14px;
-  font-weight: 600;
   background: transparent;
   cursor: pointer;
+}
+
+.sn-panel .sn-back {
+  color: var(--sn-accent-text);
 }
 
 .sn-back:hover {
   background: var(--sn-surface-hover);
 }
 
-.sn-panel .sn-back {
-  color: var(--sn-accent-text);
-  font-weight: 600;
-}
-
-/* The only scrolling region. The card itself never grows. */
+/* The only scrolling region. The card itself never grows. With a margin,
+   the vertical rule is painted on the body itself, so it stays put while the
+   rows scroll past it. */
 .sn-view-body {
   flex: 1;
   min-height: 0;
@@ -198,9 +285,37 @@ input.sn-title-edit {
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: var(--sn-space-1) var(--sn-space-3) var(--sn-space-3);
   scrollbar-width: thin;
   scrollbar-color: var(--sn-border) transparent;
+}
+
+.sn-view-body.has-margin,
+.sn-view-body.has-margin .sn-quick {
+  background-image: linear-gradient(var(--sn-margin-rule), var(--sn-margin-rule));
+  background-position: var(--sn-margin-width) 0;
+  background-size: 1px 100%;
+  background-repeat: no-repeat;
+}
+
+/* Empty rules to the foot of the page, at the row pitch. */
+.sn-rules {
+  flex: 1 0 0;
+  min-height: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent calc(var(--sn-row-pitch) - 0.5px),
+    var(--sn-rule) calc(var(--sn-row-pitch) - 0.5px),
+    var(--sn-rule) var(--sn-row-pitch)
+  );
+}
+
+/* What sits in the margin: a check, a fold chevron, a plus, a count. */
+.sn-margin-cell {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: var(--sn-margin-width);
 }
 
 /* The fixed area (the calendar grid). Views style what is inside it. */
@@ -214,7 +329,7 @@ input.sn-title-edit {
    so the body keeps its scroll position. Gold fill, ink text in both themes. */
 .sn-banner {
   flex: none;
-  padding: var(--sn-space-1) var(--sn-space-3);
+  border-bottom: 0.5px solid var(--sn-rule);
   animation: sn-banner-in var(--sn-motion-reveal) var(--sn-ease-out);
 }
 
@@ -230,10 +345,9 @@ input.sn-title-edit {
   grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: center;
   gap: 2px;
-  min-height: 52px;
+  min-height: 46px;
   padding: 0 var(--sn-space-1) 0 var(--sn-space-3);
   color: var(--sn-accent-ink);
-  border-radius: var(--sn-radius-group);
   background: var(--sn-accent);
 }
 
@@ -345,8 +459,7 @@ input.sn-title-edit {
 }
 
 .sn-icon-button:active:not(:disabled),
-.sn-text-button:active:not(:disabled),
-.sn-tab:active {
+.sn-text-button:active:not(:disabled) {
   transform: scale(0.96);
 }
 
@@ -366,11 +479,15 @@ input.sn-title-edit {
   height: 24px;
   padding: 0 var(--sn-space-2);
   border: 0;
-  border-radius: var(--sn-radius-pill);
+  border-radius: 5px;
   font: var(--sn-text-micro);
-  background: var(--sn-surface-raised);
-  box-shadow: 0 0 0 0.5px var(--sn-border);
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--sn-border);
   cursor: pointer;
+}
+
+.sn-chip:hover:not(:disabled) {
+  background: var(--sn-surface-hover);
 }
 
 .sn-panel .sn-chip {
@@ -398,28 +515,27 @@ input.sn-title-edit {
   flex: none;
 }
 
-.sn-section + .sn-section {
-  margin-top: var(--sn-space-3);
-}
-
+/* A section label is its own ruled line, in the italic title face. */
 .sn-section-label {
   display: flex;
   align-items: center;
-  gap: 2px;
-  min-height: 20px;
-  margin: 0 var(--sn-space-1) 6px;
-  padding: 0;
+  width: 100%;
+  min-height: var(--sn-row-pitch);
+  margin: 0;
+  padding: 0 var(--sn-space-3) 0 0;
   border: 0;
-  border-radius: 4px;
-  font: var(--sn-text-caption);
-  font-weight: 600;
+  border-bottom: 0.5px solid var(--sn-rule);
+  text-align: left;
   background: transparent;
+}
+
+.sn-section-label > span:last-child {
+  padding-left: var(--sn-space-2);
 }
 
 .sn-panel .sn-section-label {
   color: var(--sn-ink-secondary);
-  font: var(--sn-text-caption);
-  font-weight: 600;
+  font: var(--sn-text-label);
 }
 
 .sn-panel .sn-section-label.is-danger {
@@ -427,71 +543,51 @@ input.sn-title-edit {
 }
 
 button.sn-section-label {
-  margin-left: 0;
   cursor: pointer;
 }
 
-.sn-section-label > svg {
+button.sn-section-label:hover {
+  background: var(--sn-surface-hover);
+}
+
+.sn-panel button.sn-section-label:focus-visible {
+  outline-offset: -2px;
+}
+
+.sn-section-label svg {
   width: 14px;
   height: 14px;
 }
 
+/* Without a margin (Settings) the label starts at the page edge. */
+.sn-view-body:not(.has-margin) .sn-section-label > .sn-margin-cell {
+  width: var(--sn-space-2);
+}
+
+/* Rows lie straight on the paper; nothing is raised. */
 .sn-group {
-  overflow: hidden;
-  border-radius: var(--sn-radius-group);
-  background: var(--sn-surface-raised);
+  display: block;
 }
 
 .sn-row {
   position: relative;
   display: flex;
   align-items: flex-start;
-  gap: 10px;
-  min-height: var(--sn-row-min-height);
-  padding: 0 var(--sn-space-2) 0 var(--sn-space-3);
+  min-height: var(--sn-row-pitch);
+  padding: calc(var(--sn-row-gap, 0px) / 2) var(--sn-space-2)
+    calc(var(--sn-row-gap, 0px) / 2) 0;
+  border-bottom: 0.5px solid var(--sn-rule);
 }
 
-/* Quiet separator, inset to the text edge like Notes. */
-.sn-row + .sn-row::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: 0;
-  left: 42px;
-  height: 0.5px;
-  background: var(--sn-separator);
-}
-
-.sn-row-nav + .sn-row-nav::before {
-  left: var(--sn-space-3);
-}
-
-/* "Row spacing" above zero (Advanced): each row becomes its own block. */
-.sn-rows-spaced .sn-group {
-  display: grid;
-  gap: var(--sn-row-gap);
-  overflow: visible;
-  background: transparent;
-}
-
-.sn-rows-spaced .sn-group > * {
-  border-radius: var(--sn-radius-control);
-  background: var(--sn-surface-raised);
-}
-
-.sn-rows-spaced .sn-row + .sn-row::before {
-  content: none;
-}
-
+/* The check is the row's margin cell: a 16 px square box. */
 .sn-check {
   flex: none;
   display: grid;
   place-items: center;
-  width: 20px;
+  width: var(--sn-margin-width);
   height: var(--sn-row-min-height);
   padding: 0;
   border: 0;
-  border-radius: 50%;
   background: transparent;
   cursor: pointer;
 }
@@ -499,17 +595,17 @@ button.sn-section-label {
 .sn-check > span {
   display: grid;
   place-items: center;
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
   border: 1.5px solid var(--sn-ink-tertiary);
-  border-radius: 50%;
+  border-radius: 4px;
   transition:
     background-color var(--sn-motion-quick) linear,
     border-color var(--sn-motion-quick) linear;
 }
 
 .sn-check:hover > span {
-  border-color: var(--sn-ink-secondary);
+  border-color: var(--sn-ink);
 }
 
 .sn-check:focus-visible {
@@ -524,11 +620,13 @@ button.sn-section-label {
 .sn-check > span > svg {
   width: 12px;
   height: 12px;
-  stroke-width: 2.5;
+  stroke-width: 2.75;
 }
 
+/* Gold alone does not show on yellow paper, so the done box keeps an ink
+   edge. */
 .sn-row.is-done .sn-check > span {
-  border-color: var(--sn-accent);
+  border-color: var(--sn-ink);
   color: var(--sn-accent-ink);
   background: var(--sn-accent);
 }
@@ -539,12 +637,7 @@ button.sn-section-label {
   display: grid;
   align-content: center;
   min-height: var(--sn-row-min-height);
-  padding: var(--sn-space-2) 0;
-}
-
-/* A row with a secondary line: the check tracks the first line. */
-.sn-row.has-meta > .sn-check {
-  height: 36px;
+  padding: 6px 0 6px var(--sn-space-2);
 }
 
 .sn-row-title {
@@ -560,6 +653,16 @@ button.sn-section-label {
   color: var(--sn-ink-secondary);
 }
 
+/* Focus priority: a highlighter stroke over the title. */
+.sn-row.is-focus:not(.is-done) .sn-row-title-text {
+  padding: 1px 3px;
+  margin: 0 -3px;
+  border-radius: 3px;
+  background: var(--sn-highlight);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
 .sn-row-edit {
   display: block;
   width: 100%;
@@ -571,32 +674,31 @@ button.sn-section-label {
   overflow-wrap: anywhere;
   resize: none;
   background: transparent;
-  box-shadow: 0 1.5px 0 var(--sn-accent);
+  box-shadow: 0 2px 0 var(--sn-focus);
 }
 
 .sn-panel .sn-row-edit:focus-visible {
   outline: none;
 }
 
+/* The trailing end of the first line: note, list name, event mark, time. */
 .sn-row-meta {
+  flex: none;
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 0 6px;
-  margin-top: 1px;
+  justify-content: flex-end;
+  gap: 0 var(--sn-space-2);
+  max-width: 48%;
+  height: var(--sn-row-min-height);
+  padding-left: var(--sn-space-2);
   color: var(--sn-ink-secondary);
   font: var(--sn-text-caption);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .sn-row-meta > .task-reminder {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.sn-row-meta svg {
-  width: 12px;
-  height: 12px;
+  flex: none;
 }
 
 .sn-row-meta a {
@@ -605,24 +707,19 @@ button.sn-section-label {
 
 .sn-row.is-overdue .task-reminder {
   color: var(--sn-danger);
+  font-weight: 600;
 }
 
 .sn-row-detail {
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
-/* Focus priority: a 7 px gold dot at the trailing edge. */
-.sn-flag {
+.sn-row-kind {
   flex: none;
-  align-self: center;
-  width: 7px;
-  height: 7px;
-  margin: 0 var(--sn-space-2) 0 0;
-  border-radius: 50%;
-  background: var(--sn-accent);
-  box-shadow: 0 0 0 0.5px color-mix(in srgb, var(--sn-ink) 35%, transparent);
+  font: var(--sn-text-label);
+  font-size: 12.5px;
 }
 
 /* Row actions lie over the trailing edge on hover and on keyboard focus, so
@@ -638,7 +735,7 @@ button.sn-section-label {
   background: linear-gradient(
     90deg,
     transparent,
-    var(--sn-surface-raised) var(--sn-space-2)
+    var(--sn-surface) var(--sn-space-2)
   );
   opacity: 0;
   pointer-events: none;
@@ -654,8 +751,7 @@ button.sn-section-label {
 }
 
 /* While renaming, the whole width belongs to the title. */
-.sn-row.is-editing > .sn-row-actions,
-.sn-row.is-editing > .sn-flag {
+.sn-row.is-editing > .sn-row-actions {
   display: none;
 }
 
@@ -672,7 +768,9 @@ button.sn-section-label {
 button.sn-row-nav {
   align-items: center;
   width: 100%;
-  border: 0;
+  border-width: 0 0 0.5px;
+  border-style: solid;
+  border-color: var(--sn-rule);
   text-align: left;
   background: transparent;
   cursor: pointer;
@@ -682,9 +780,14 @@ button.sn-row-nav:hover {
   background: var(--sn-surface-hover);
 }
 
+.sn-panel button.sn-row-nav:focus-visible {
+  outline-offset: -2px;
+}
+
 .sn-row-nav > .sn-row-title {
   flex: 1;
   min-width: 0;
+  padding-left: var(--sn-space-2);
 }
 
 .sn-row-nav > svg {
@@ -694,31 +797,46 @@ button.sn-row-nav:hover {
 .sn-panel .sn-row-pin {
   width: 12px;
   height: 12px;
+  margin-right: var(--sn-space-2);
   color: var(--sn-accent-text);
 }
 
 .sn-row-value {
   color: var(--sn-ink-secondary);
+  font: var(--sn-text-caption);
   font-variant-numeric: tabular-nums;
 }
 
+/* A quiet line written on the page: an empty list, an empty day. */
 .sn-note {
+  display: flex;
+  align-items: center;
+  min-height: var(--sn-row-pitch);
   margin: 0;
-  padding: var(--sn-space-3);
+  padding: 6px var(--sn-space-3) 6px
+    calc(var(--sn-margin-width) + var(--sn-space-2));
+  border-bottom: 0.5px solid var(--sn-rule);
   color: var(--sn-ink-secondary);
+  font: var(--sn-text-label);
+}
+
+.sn-note kbd {
+  margin: 0 0.25em;
   font: var(--sn-text-caption);
+  font-weight: 600;
+}
+
+.sn-view-body:not(.has-margin) .sn-note {
+  padding-left: var(--sn-space-3);
 }
 
 .sn-empty {
-  flex: 1;
+  flex: none;
   display: grid;
-  place-content: center;
-  justify-items: center;
-  gap: 6px;
-  min-height: 120px;
-  padding: var(--sn-space-4);
+  gap: 2px;
+  padding: var(--sn-space-3);
+  border-bottom: 0.5px solid var(--sn-rule);
   color: var(--sn-ink-secondary);
-  text-align: center;
 }
 
 .sn-empty strong {
@@ -727,46 +845,54 @@ button.sn-row-nav:hover {
 }
 
 .sn-empty span {
-  max-width: 230px;
   font: var(--sn-text-caption);
 }
 
 .sn-empty kbd {
-  padding: 0 4px;
-  border-radius: 4px;
   font: inherit;
-  background: var(--sn-surface-sunken);
+  font-weight: 600;
 }
 
-/* ---- Fields and quick add ---------------------------------------------- */
+/* ---- Entry line and fields --------------------------------------------- */
 
+/* The entry line is the next empty line of the page. It is part of the
+   scrolling body and sticks to its top or foot, so it stays in view when the
+   list is longer than the page. Its paper is opaque for that reason. */
 .sn-quick {
+  position: sticky;
+  z-index: 2;
+  top: 0;
+  bottom: 0;
   flex: none;
-  padding: 6px var(--sn-space-3);
+  background-color: var(--sn-surface);
+  /* The rule of the line above, for when rows scroll under the stuck line. */
+  box-shadow: 0 -0.5px 0 var(--sn-rule);
 }
 
 .sn-field {
   display: flex;
   align-items: center;
-  gap: var(--sn-space-2);
   min-width: 0;
-  height: var(--sn-control-height);
-  padding: 0 4px 0 10px;
-  border-radius: var(--sn-radius-control);
+  height: var(--sn-row-pitch);
+  padding: 0 var(--sn-space-1) 0 0;
+  border-bottom: 0.5px solid var(--sn-rule);
   color: var(--sn-ink-secondary);
-  background: var(--sn-surface-sunken);
 }
 
+/* Writing on the line: its rule thickens in the focus colour. */
 .sn-field:focus-within {
-  outline: 2px solid var(--sn-focus);
-  outline-offset: 1px;
+  box-shadow: inset 0 -2px 0 var(--sn-focus);
+}
+
+.sn-field:focus-within > .sn-margin-cell {
+  color: var(--sn-accent-text);
 }
 
 .sn-field input {
   flex: 1;
   min-width: 0;
   height: 100%;
-  padding: 0;
+  padding: 0 0 0 var(--sn-space-2);
   border: 0;
   background: transparent;
 }
@@ -774,7 +900,6 @@ button.sn-row-nav:hover {
 .sn-panel .sn-field input {
   color: var(--sn-ink);
   font: var(--sn-text-body);
-  font-size: 14px;
   outline: 0;
 }
 
@@ -791,13 +916,14 @@ button.sn-row-nav:hover {
   flex: none;
   display: grid;
   place-items: center;
-  width: 26px;
-  height: 26px;
-  margin-right: 1px;
+  width: 22px;
+  height: 22px;
+  margin: 0 2px;
   padding: 0;
   border: 0;
-  border-radius: 50%;
+  border-radius: 5px;
   background: var(--sn-accent);
+  box-shadow: 0 0 0 0.5px var(--sn-accent-edge);
   cursor: pointer;
 }
 
@@ -811,54 +937,6 @@ button.sn-row-nav:hover {
 
 .sn-inline-field {
   flex: none;
-  margin-bottom: var(--sn-space-2);
-  padding-right: 6px;
-}
-
-/* ---- Tabs -------------------------------------------------------------- */
-
-.sn-tabs {
-  flex: none;
-  display: grid;
-  grid-auto-columns: 1fr;
-  grid-auto-flow: column;
-  gap: 2px;
-  margin: 2px var(--sn-space-3) var(--sn-space-3);
-  padding: 2px;
-  border-radius: var(--sn-radius-control);
-  background: var(--sn-surface-sunken);
-}
-
-.sn-tab {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  height: 32px;
-  padding: 0;
-  border: 0;
-  border-radius: 8px;
-  background: transparent;
-  cursor: pointer;
-  transition: background-color var(--sn-motion-quick) linear;
-}
-
-.sn-panel .sn-tab {
-  color: var(--sn-ink-secondary);
-  font: var(--sn-text-micro);
-  font-size: 12px;
-}
-
-.sn-panel .sn-tab[aria-selected='true'] {
-  color: var(--sn-ink);
-  background: var(--sn-surface-raised);
-  box-shadow:
-    0 0 0 0.5px var(--sn-border),
-    0 1px 2px rgba(40, 39, 34, 0.1);
-}
-
-.sn-tab[aria-selected='true'] svg {
-  color: var(--sn-accent-text);
 }
 
 /* ---- Popover, menu, reminder picker ------------------------------------ */
@@ -888,7 +966,7 @@ button.sn-row-nav:hover {
   height: 32px;
   padding: 0 var(--sn-space-2);
   border: 0;
-  border-radius: 8px;
+  border-radius: 6px;
   text-align: left;
   background: transparent;
   cursor: pointer;
@@ -1051,8 +1129,9 @@ button.sn-row-nav:hover {
   align-items: center;
   flex-wrap: wrap;
   gap: 0 var(--sn-space-2);
-  min-height: var(--sn-row-min-height);
-  padding: 6px var(--sn-space-3);
+  min-height: var(--sn-row-pitch);
+  padding: 5px var(--sn-space-3);
+  border-bottom: 0.5px solid var(--sn-rule);
   cursor: pointer;
 }
 
@@ -1087,7 +1166,8 @@ button.sn-row-nav:hover {
   margin: 0;
   border-radius: var(--sn-radius-pill);
   appearance: none;
-  background: var(--sn-ink-tertiary);
+  /* Secondary ink: the off track keeps 3:1 against every preset's page. */
+  background: var(--sn-ink-secondary);
   cursor: pointer;
   transition: background-color var(--sn-motion-quick) linear;
 }
@@ -1107,6 +1187,7 @@ button.sn-row-nav:hover {
 
 .sn-switch:checked {
   background: var(--sn-accent);
+  box-shadow: inset 0 0 0 0.5px var(--sn-accent-edge);
 }
 
 .sn-switch:checked::after {
@@ -1129,15 +1210,15 @@ button.sn-row-nav:hover {
   grid-auto-flow: column;
   gap: 2px;
   padding: 2px;
-  border-radius: 8px;
-  background: var(--sn-surface-sunken);
+  border-radius: 7px;
+  box-shadow: inset 0 0 0 1px var(--sn-border);
 }
 
 .sn-segmented button {
-  height: 26px;
+  height: 24px;
   padding: 0 var(--sn-space-2);
   border: 0;
-  border-radius: 6px;
+  border-radius: 5px;
   background: transparent;
   cursor: pointer;
 }
@@ -1148,10 +1229,9 @@ button.sn-row-nav:hover {
 }
 
 .sn-panel .sn-segmented button[aria-pressed='true'] {
-  color: var(--sn-ink);
+  color: var(--sn-surface);
   font-weight: 600;
-  background: var(--sn-surface-raised);
-  box-shadow: 0 0 0 0.5px var(--sn-border);
+  background: var(--sn-ink);
 }
 
 /* ---- Reduced motion ---------------------------------------------------- */

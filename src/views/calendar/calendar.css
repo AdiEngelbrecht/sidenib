@@ -12,7 +12,7 @@
 
 .sn-cal {
   flex: none;
-  padding: 0 var(--sn-space-3);
+  padding: var(--sn-space-1) var(--sn-space-2) 0;
 }
 
 .sn-cal-weekdays,
@@ -51,7 +51,7 @@
   place-items: center;
   width: 26px;
   height: 26px;
-  border-radius: 50%;
+  border-radius: var(--sn-radius-control);
   transition:
     background-color var(--sn-motion-quick) linear,
     box-shadow var(--sn-motion-quick) linear;
@@ -89,6 +89,38 @@
   color: var(--sn-accent-ink);
   font-weight: 700;
   background: var(--sn-accent);
+  box-shadow: inset 0 0 0 0.5px var(--sn-accent-edge);
+}
+
+.sn-day.is-today.is-selected > .sn-day-number {
+  box-shadow: inset 0 0 0 1.5px var(--sn-ink);
+}
+
+/* Jump to today: a small gold leaf that carries today's number. */
+.sn-today-jump {
+  flex: none;
+  display: grid;
+  place-items: center;
+  min-width: 24px;
+  height: 22px;
+  margin: 0 2px 0 4px;
+  padding: 0 4px;
+  border: 0;
+  border-radius: 5px;
+  font-variant-numeric: tabular-nums;
+  background: var(--sn-accent);
+  box-shadow: inset 0 0 0 0.5px var(--sn-accent-edge);
+  cursor: pointer;
+}
+
+.sn-panel .sn-today-jump {
+  color: var(--sn-accent-ink);
+  font: var(--sn-text-micro);
+  font-size: 12px;
+}
+
+.sn-today-jump:active {
+  transform: scale(0.94);
 }
 
 .sn-day-mark {
@@ -126,15 +158,9 @@
   box-shadow: inset 0 0 0 1px var(--sn-accent-ink);
 }
 
+/* The grid ends on a rule that runs the width of the page. */
 .sn-cal-divider {
   height: 0.5px;
-  margin: var(--sn-space-2) var(--sn-space-1) 0;
-  background: var(--sn-separator);
-  transition: margin var(--sn-motion-quick) linear;
-}
-
-/* Once the agenda has scrolled, the line under the grid runs edge to edge:
-   the boundary the entries pass under is here, not under the header. */
-.sn-view-fixed.is-scrolled .sn-cal-divider {
-  margin-inline: calc(-1 * var(--sn-space-3));
+  margin: 6px calc(-1 * var(--sn-space-2)) 0;
+  background: var(--sn-rule);
 }

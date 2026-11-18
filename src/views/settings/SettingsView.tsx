@@ -464,7 +464,7 @@ export function SettingsView({
         <Slider
           label="Row height"
           value={settings.taskRowHeight}
-          min={40}
+          min={32}
           max={62}
           step={1}
           suffix="px"
@@ -616,6 +616,7 @@ export function SettingsView({
           : undefined
       }
       settingsAction={false}
+      margin={false}
       actions={<TextButton onClick={onClose}>Done</TextButton>}
     >
       <div className="sn-settings" data-page={page} ref={bodyRef}>

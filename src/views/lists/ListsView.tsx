@@ -7,11 +7,11 @@ import {
   Trash2,
 } from 'lucide-react'
 import { useMemo, useRef, useState } from 'react'
-import { EmptyState } from '../../components/EmptyState'
-import { Group } from '../../components/Group'
+import { Group, GroupNote } from '../../components/Group'
 import { IconButton } from '../../components/IconButton'
 import { PanelView } from '../../components/PanelView'
 import { ConfirmDelete, MenuItem, Popover } from '../../components/Popover'
+import { QuickAdd } from '../../components/QuickAdd'
 import { sortTasks } from '../../data/taskStore'
 import type {
   CustomTaskList,
@@ -59,8 +59,8 @@ function ListIndex({ store, onOpenList }: ListsViewProps) {
   return (
     <PanelView
       id="lists"
-      title="Lists"
-      subtitle={`${count} ${count === 1 ? 'list' : 'lists'}`}
+      title="All lists"
+      aside={`${count} ${count === 1 ? 'list' : 'lists'}`}
       actions={
         <IconButton
           label="New list"
@@ -73,6 +73,9 @@ function ListIndex({ store, onOpenList }: ListsViewProps) {
     >
       {isCreating ? (
         <div className="sn-field sn-inline-field">
+          <span className="sn-margin-cell" aria-hidden="true">
+            <Plus />
+          </span>
           <input
             type="text"
             aria-label="Create a custom list"
@@ -117,22 +120,20 @@ function ListIndex({ store, onOpenList }: ListsViewProps) {
                 aria-label={`Open ${list.title}, ${openCount} open`}
                 onClick={() => onOpenList(list.id)}
               >
+                <span className="sn-margin-cell sn-row-value">{openCount}</span>
                 <span className="sn-row-title" title={list.title}>
                   {list.title}
                 </span>
                 {list.showOnToday ? (
                   <Pin className="sn-row-pin" aria-label="Shown on Today" />
                 ) : null}
-                <span className="sn-row-value">{openCount}</span>
                 <ChevronRight aria-hidden="true" />
               </button>
             )
           })}
         </Group>
       ) : !isCreating ? (
-        <EmptyState title="No lists yet">
-          Make one with the plus above.
-        </EmptyState>
+        <GroupNote>No lists yet. Make one with the plus above.</GroupNote>
       ) : null}
     </PanelView>
   )
@@ -178,8 +179,9 @@ function ListDetail({
     <PanelView
       id="list-detail"
       title={list.title}
-      subtitle={`${open.length} open${list.showOnToday ? ' · shown on Today' : ''}`}
-      back={{ label: 'Lists', onBack: () => onOpenList(undefined) }}
+      subtitle={list.showOnToday ? 'Shown on Today' : undefined}
+      aside={`${open.length} open`}
+      back={{ label: 'All lists', onBack: () => onOpenList(undefined) }}
       titleEditor={
         isRenaming ? (
           <input
@@ -276,25 +278,28 @@ function ListDetail({
           </Popover>
         </>
       }
-      quickAdd={{
-        ariaLabel: `Add a task to ${list.title}`,
-        draftKey: `list:${list.id}`,
-        placeholder: `New task in ${list.title}`,
-        onSubmit: (title, reminderAt) =>
-          store.addTask(taskRef, title, reminderAt),
-      }}
     >
       {open.length > 0 ? (
         <Group>
           <TaskRows store={store} taskRef={taskRef} tasks={open} now={now} />
         </Group>
-      ) : (
-        <EmptyState title={done.length > 0 ? 'All done' : 'No tasks yet'}>
+      ) : null}
+      <QuickAdd
+        key={`list:${list.id}`}
+        ariaLabel={`Add a task to ${list.title}`}
+        draftKey={`list:${list.id}`}
+        placeholder={`New task in ${list.title}`}
+        onSubmit={(title, reminderAt) =>
+          store.addTask(taskRef, title, reminderAt)
+        }
+      />
+      {open.length === 0 ? (
+        <GroupNote>
           {done.length > 0
             ? 'Everything in this list is complete.'
-            : 'Add the first one below.'}
-        </EmptyState>
-      )}
+            : 'No tasks yet. Write the first one above.'}
+        </GroupNote>
+      ) : null}
       {showDone ? (
         <Group
           label={`Completed · ${done.length}`}

@@ -11,15 +11,19 @@
   --sn-reveal-x: 16px;
   --sn-reveal-y: 0px;
   --sn-notch-grow: 0px;
+  /* The narrow ink edge of the page, on the docked side (the Peek icon). */
+  --sn-page-edge-shadow: 2px 0 0 var(--sn-page-edge);
 }
 
 .sn-shell.sn-edge-left {
   --sn-reveal-x: -16px;
+  --sn-page-edge-shadow: -2px 0 0 var(--sn-page-edge);
 }
 
 .sn-shell.sn-edge-top {
   --sn-reveal-x: 0px;
   --sn-reveal-y: -16px;
+  --sn-page-edge-shadow: 0 -2px 0 var(--sn-page-edge);
 }
 
 /* Inside the native window the shadow has 28 px of room. These fall to
@@ -27,10 +31,10 @@
    line through them. */
 .sn-shell.is-native {
   --sn-shadow-card:
-    0 0 0 0.5px rgba(40, 39, 34, 0.18), 0 8px 20px rgba(40, 32, 12, 0.2),
+    0 0 0 0.5px rgba(70, 56, 8, 0.3), 0 8px 20px rgba(40, 32, 12, 0.2),
     0 1px 4px rgba(40, 32, 12, 0.12);
   --sn-shadow-toast:
-    0 0 0 0.5px rgba(40, 39, 34, 0.18), 0 6px 16px rgba(40, 32, 12, 0.18);
+    0 0 0 0.5px rgba(70, 56, 8, 0.3), 0 6px 16px rgba(40, 32, 12, 0.18);
 }
 
 .sn-shell.is-native.theme-dark {
@@ -79,9 +83,9 @@
   height: var(--sn-notch-length);
   border-radius: var(--sn-radius-notch) 0 0 var(--sn-radius-notch);
   background: var(--sn-notch);
-  /* The notch sits on whatever is on the desktop; a faint light edge keeps it
-     readable over dark content as well as light. */
-  box-shadow: 0 0 0 0.5px rgba(255, 255, 255, 0.4);
+  /* The golden tab sits on whatever is on the desktop; a dark amber hairline
+     bounds it over light content, and the gold carries it over dark. */
+  box-shadow: 0 0 0 0.5px var(--sn-accent-edge);
   transform: translateY(-50%);
   transition:
     width var(--sn-motion-quick) var(--sn-ease-out),
@@ -118,12 +122,27 @@
 .sn-notch.is-hovered .sn-notch-pill,
 .sn-notch.is-pulling .sn-notch-pill,
 .sn-notch.is-dragging .sn-notch-pill {
-  background: color-mix(in srgb, var(--sn-ink) 64%, transparent);
+  background: var(--sn-notch-hover);
 }
 
 .sn-notch.is-open .sn-notch-pill,
 .sn-notch.has-reminder .sn-notch-pill {
   background: var(--sn-notch-active);
+}
+
+/* Open, the tab spans the clearance and is attached to the page: square
+   where it meets the page, so the two read as one object. */
+.sn-notch.is-open .sn-notch-pill {
+  border-radius: 0;
+  box-shadow:
+    0 -0.5px 0 var(--sn-accent-edge),
+    0 0.5px 0 var(--sn-accent-edge);
+}
+
+.sn-edge-top .sn-notch.is-open .sn-notch-pill {
+  box-shadow:
+    -0.5px 0 0 var(--sn-accent-edge),
+    0.5px 0 0 var(--sn-accent-edge);
 }
 
 .sn-notch:focus-visible .sn-notch-pill {
@@ -154,13 +173,13 @@
   height: 16px;
   padding: 0 4px;
   border-radius: var(--sn-radius-pill);
-  color: var(--sn-accent-ink);
+  color: #fffbea;
   font: var(--sn-text-micro);
   font-size: 10px;
   line-height: 16px;
   text-align: center;
-  background: var(--sn-accent);
-  box-shadow: 0 0 0 1px rgba(40, 39, 34, 0.28);
+  background: #282722;
+  box-shadow: 0 0 0 1px rgba(255, 251, 234, 0.7);
 }
 
 .sn-edge-left .sn-notch-badge {
@@ -184,7 +203,7 @@
   height: var(--sn-card-h);
   overflow: hidden;
   border-radius: var(--sn-radius-card);
-  box-shadow: var(--sn-shadow-card);
+  box-shadow: var(--sn-page-edge-shadow), var(--sn-shadow-card);
   outline: none;
   opacity: 0;
   visibility: hidden;
@@ -260,7 +279,7 @@
   font: var(--sn-text-body);
   border-radius: var(--sn-radius-toast);
   background: var(--sn-surface-raised);
-  box-shadow: var(--sn-shadow-toast);
+  box-shadow: var(--sn-page-edge-shadow), var(--sn-shadow-toast);
 }
 
 .sn-toast-item button {

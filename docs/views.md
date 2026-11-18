@@ -7,6 +7,29 @@ from the old `App.tsx`. It implements sections 4, 5 (Today, Lists) and 6 of the
 the toast and the native window are the [shell](shell.md) and are not touched
 here.
 
+> **Layout changed by ADIEN-172.** The notebook page replaced the grouped
+> card. What is different from the text below:
+>
+> - `PanelView` draws the index line (`ViewTabs`, then Settings) and the title
+>   line in its header. `App.tsx` no longer draws tabs, and there is no
+>   footer.
+> - `PanelView` no longer takes `quickAdd`. Each view places `<QuickAdd>` in
+>   its body after its open tasks; it is sticky to the top and foot of the
+>   body. New `PanelView` props: `titleLabel`, `lead`, `aside`, `margin`.
+>   `back.label` is the accessible name of an icon button.
+> - `TaskRow` is one line: `.sn-row-meta` is the trailing end of the first
+>   line, and focus priority is the class `is-focus` with a highlighter
+>   stroke. `Group` rows have no background; each row draws its own rule.
+> - `EmptyState` is no longer used by the views; an empty page is the entry
+>   line and a `GroupNote`.
+> - `taskGap` no longer sets `.sn-rows-spaced`; it adds to `--sn-row-pitch`.
+> - The index is redrawn with each view, so `ViewTabs` returns focus to the
+>   selected tab after a change made from the index.
+>
+> The specification is the [notebook design](design/notebook/README.md), and
+> `tests/notebook.spec.ts` pins the structure. The frames under
+> `design/views/` show the rejected layout.
+
 `src/App.tsx` went from 3,656 lines to composition only, and `src/App.css` from
 4,769 lines to the shell root and the browser preview.
 

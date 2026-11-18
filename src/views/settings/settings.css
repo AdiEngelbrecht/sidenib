@@ -3,35 +3,15 @@
  * rows; tokens only, apart from the preset swatch colours.
  */
 
+/* Settings is written on the same page: each group is a label line and a
+   run of ruled rows. The page has no margin column here. */
 .sn-settings {
-  display: grid;
-  gap: var(--sn-space-4);
+  display: block;
 }
 
-.sn-settings .sn-section + .sn-section {
-  margin-top: 0;
-}
-
-/* Rows in a settings group are separated like task rows: an inset hairline. */
 .sn-settings .sn-group > *,
 .sn-preset-list > * {
-  position: relative;
-}
-
-.sn-settings .sn-group > * + *::before,
-.sn-preset-list > * + *::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: 0;
-  left: var(--sn-space-3);
-  height: 0.5px;
-  background: var(--sn-separator);
-}
-
-/* With Row spacing above zero every row is its own block; no hairlines. */
-.sn-rows-spaced .sn-settings .sn-group > * + *::before {
-  content: none;
+  border-bottom: 0.5px solid var(--sn-rule);
 }
 
 /* ---- Rows --------------------------------------------------------------- */
@@ -41,8 +21,8 @@
   align-items: center;
   gap: var(--sn-space-2);
   width: 100%;
-  min-height: var(--sn-row-min-height);
-  padding: 6px var(--sn-space-3);
+  min-height: var(--sn-row-pitch);
+  padding: 4px var(--sn-space-3);
   border: 0;
   text-align: left;
   background: transparent;
@@ -65,12 +45,11 @@ button.sn-setting-row:hover {
   background: var(--sn-surface-hover);
 }
 
-/* The group clips its corners, so the ring is drawn inside the row. */
+/* The ring is drawn inside the row, which runs the width of the page. */
 .sn-panel button.sn-setting-row:focus-visible,
 .sn-preset-row:has(input:focus-visible) {
   outline: 2px solid var(--sn-focus);
   outline-offset: -2px;
-  border-radius: var(--sn-radius-group);
 }
 
 .sn-setting-row.is-nav > em {
@@ -99,17 +78,19 @@ button.sn-setting-row:hover {
 
 .sn-settings kbd {
   padding: 2px 6px;
-  border-radius: 6px;
+  border-radius: 5px;
   color: var(--sn-ink);
   font: var(--sn-text-caption);
   font-weight: 600;
   white-space: nowrap;
-  background: var(--sn-surface-sunken);
+  box-shadow: inset 0 0 0 1px var(--sn-border);
 }
 
-/* A footnote under a group, as in Notes settings. */
+/* A footnote under a group, on its own ruled lines. */
 .sn-settings-note {
-  margin: calc(var(--sn-space-2) - var(--sn-space-4)) var(--sn-space-1) 0;
+  margin: 0;
+  padding: 7px var(--sn-space-3);
+  border-bottom: 0.5px solid var(--sn-rule);
   color: var(--sn-ink-secondary);
   font: var(--sn-text-caption);
 }
@@ -120,7 +101,8 @@ button.sn-setting-row:hover {
 
 .sn-settings-note kbd {
   padding: 0 4px;
-  font-weight: 400;
+  font-weight: 600;
+  box-shadow: none;
 }
 
 .sn-reset-confirm {
@@ -160,13 +142,13 @@ button.sn-setting-row:hover {
 
 /* A two-tone chip: the preset's paper with a dot of its accent. */
 .theme-swatch {
-  --swatch-surface: #f6f2e9;
+  --swatch-surface: #faf2cc;
   --swatch-accent: #f6c445;
 
   flex: none;
   width: 22px;
   height: 22px;
-  border-radius: 50%;
+  border-radius: 5px;
   background: radial-gradient(
     circle at 50% 50%,
     var(--swatch-accent) 0 4px,
@@ -176,7 +158,7 @@ button.sn-setting-row:hover {
 }
 
 .theme-swatch.is-dark {
-  --swatch-surface: #1f1e1b;
+  --swatch-surface: #25221b;
 }
 
 .theme-preview-porcelain {
@@ -235,12 +217,8 @@ button.sn-setting-row:hover {
   display: flex;
   align-items: center;
   gap: var(--sn-space-2);
-  min-height: var(--sn-row-min-height);
+  min-height: var(--sn-row-pitch);
   padding: 0 var(--sn-space-2) 0 var(--sn-space-1);
-}
-
-.section-order-row + .section-order-row {
-  border-top: 0.5px solid var(--sn-separator);
 }
 
 .section-order-row.is-dragging {

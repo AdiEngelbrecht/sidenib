@@ -107,7 +107,7 @@ test.describe('shell geometry', () => {
     expect(g.hit).toEqual({ x: 1412, y: 391.5, width: 28, height: 72 })
     expect(g.windows.collapsed).toEqual(g.hit)
     expect(g.card).toEqual({ x: 1090, y: 187.5, width: 340, height: 480 })
-    expect(g.cardRadius).toBe(24)
+    expect(g.cardRadius).toBe(16)
     expect(g.windows.open).toEqual({ x: 1062, y: 159.5, width: 378, height: 536 })
     // Nothing is as tall as the work area.
     expect(g.windows.open.height).toBeLessThan(mac.height)
@@ -349,7 +349,7 @@ test.describe('shell gestures and state', () => {
       handleHeight: 48,
       handleY: 50,
       panelHeightMode: 'compact',
-      panelRadius: 24,
+      panelRadius: 16,
       panelWidth: 340,
       tabVisibility: 'always',
       tabWidth: 12,
@@ -481,14 +481,18 @@ test.describe('shell in the browser', () => {
       'border-bottom-left-radius',
       'border-bottom-right-radius',
     ]) {
-      await expect(card(page)).toHaveCSS(corner, '24px')
+      await expect(card(page)).toHaveCSS(corner, '16px')
     }
 
     // Opened by pointer: focus goes to the card, not into a text field.
     await expect(card(page)).toBeFocused()
     await expect(notch(page)).toHaveAttribute('aria-expanded', 'true')
-    expect((await box(page, '.sn-notch-pill')).width).toBeCloseTo(6, 0)
-    // The open notch keeps to the clearance strip and never covers the card.
+    // Open, the golden tab spans the clearance and touches the page, so the
+    // two read as one object; it still never covers the card.
+    const tab = await box(page, '.sn-notch-pill')
+
+    expect(tab.width).toBeCloseTo(10, 0)
+    expect(tab.x).toBeCloseTo(frame.x + frame.width, 0)
     expect((await box(page, '.sn-notch')).x).toBeGreaterThanOrEqual(
       frame.x + frame.width - 0.5,
     )
@@ -713,7 +717,7 @@ test.describe('shell in the browser', () => {
           handleHeight: 84,
           panelWidth: 400,
           // Saved under the current revision: these sizes are a choice.
-          settingsRevision: 2,
+          settingsRevision: 3,
           tabVisibility: 'hover',
           tabWidth: 42,
         }),
@@ -735,13 +739,15 @@ test.describe('shell in the browser', () => {
     expect((await openFrame(page)).width).toBeCloseTo(400, 0)
   })
 
-  test('an untouched pre-compact profile draws the compact notch and opaque paper', async ({
+  test('an untouched pre-compact profile draws the compact notch, opaque paper and the notebook page', async ({
     page,
   }) => {
     // ADIEN-171. This is the profile the full-height app wrote on first run.
     // Drawn as stored it made the closed notch a 42 x 84 slab that filled its
     // whole native window, and the paper 96% opaque. A browser cannot show
     // the native window; this pins what is drawn into it.
+    // ADIEN-172. Its width, radius, spacing and text size are the old
+    // defaults too, and move to the notebook page's.
     await page.addInitScript((key) => {
       window.localStorage.setItem(
         key,
@@ -775,9 +781,13 @@ test.describe('shell in the browser', () => {
     await expect(notch(page)).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)')
 
     await notch(page).click()
-    // Choices that were not the old notch or paper are kept.
-    expect((await openFrame(page)).width).toBeCloseTo(400, 0)
-    await expect(card(page)).toHaveCSS('border-top-left-radius', '18px')
+    expect((await openFrame(page)).width).toBeCloseTo(340, 0)
+    await expect(card(page)).toHaveCSS('border-top-left-radius', '16px')
+    // One ruled line is 36 high and task text is 14 px again.
+    expect((await box(page, '.sn-quick')).height).toBeCloseTo(36, 0)
+    await expect(page.locator('.sn-field input')).toHaveCSS('font-size', '14px')
+    // What was chosen is untouched.
+    await expect(page.locator('.workspace')).toHaveClass(/theme-light/)
 
     const paper = await page.evaluate(() => {
       const panel = document.querySelector('.sn-panel')
@@ -807,7 +817,7 @@ test.describe('shell in the browser', () => {
 
     expect(frame.height).toBeCloseTo(780, 0)
     expect(frame.y).toBeCloseTo(10, 0)
-    await expect(card(page)).toHaveCSS('border-bottom-right-radius', '24px')
+    await expect(card(page)).toHaveCSS('border-bottom-right-radius', '16px')
   })
 
   test('reduced motion removes travel and scale', async ({ page }) => {
@@ -836,6 +846,6 @@ test.describe('shell in the browser', () => {
     )
     await expect(page.locator('.desktop-preview')).toBeHidden()
     await expect(page.locator('.native-dock-surface')).toHaveCount(0)
-    await expect(card(page)).toHaveCSS('border-top-right-radius', '24px')
+    await expect(card(page)).toHaveCSS('border-top-right-radius', '16px')
   })
 })

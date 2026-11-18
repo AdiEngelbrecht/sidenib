@@ -1,11 +1,11 @@
 /*
- * Sidenib compact design tokens (ADIEN-159).
+ * Sidenib design tokens: the notebook page (ADIEN-172), on the compact shell
+ * geometry (ADIEN-159).
  * SPDX-License-Identifier: Apache-2.0
  *
- * Source of truth for the compact shell. Production code copies this file to
- * src/design/tokens.css unchanged; change values here first, then re-copy.
- * Every token is prefixed --sn- so it cannot collide with the v0.1.14
- * baseline variables in src/App.css while both exist.
+ * This file is the source of truth. docs/design/notebook/README.md explains
+ * the choices. docs/design/compact/tokens.css is the earlier palette, kept
+ * for the old prototype only.
  *
  * Theme selection: [data-theme='light' | 'dark'] on the root element wins;
  * without it the system appearance decides.
@@ -14,11 +14,18 @@
 :root {
   color-scheme: light dark;
 
-  /* Type: platform system font only. No bundled web font. */
+  /* Type: platform fonts only, nothing bundled. The system sans carries
+     everything that is read at length or typed. The title face is a bookish
+     serif that ships with macOS (Charter) or Windows (Sitka, Cambria); it is
+     used for the date block, view titles and section labels only. */
   --sn-font: -apple-system, BlinkMacSystemFont, 'Segoe UI Variable Text',
     'Segoe UI', system-ui, sans-serif;
-  --sn-text-title: 700 22px/26px var(--sn-font); /* view title */
-  --sn-text-headline: 600 15px/20px var(--sn-font); /* section, list name */
+  --sn-font-title: Charter, 'Bitstream Charter', 'Sitka Text', Cambria,
+    Georgia, serif;
+  --sn-text-title: 700 21px/24px var(--sn-font-title); /* view title */
+  --sn-text-lead: 700 31px/34px var(--sn-font-title); /* the day number */
+  --sn-text-label: italic 400 13.5px/18px var(--sn-font-title); /* section */
+  --sn-text-headline: 600 15px/20px var(--sn-font); /* list name */
   --sn-text-body: 400 14px/19px var(--sn-font); /* task title, row label */
   --sn-text-caption: 400 12px/16px var(--sn-font); /* meta, due time */
   --sn-text-micro: 600 11px/14px var(--sn-font); /* weekday, badge, tab label */
@@ -32,17 +39,17 @@
   --sn-space-5: 20px;
 
   /* Radius. */
-  --sn-radius-card: 24px; /* open card */
-  --sn-radius-toast: 16px; /* reminder toast */
-  --sn-radius-group: 12px; /* grouped rows */
-  --sn-radius-control: 10px; /* fields, segmented track, buttons */
+  --sn-radius-card: 16px; /* the open page */
+  --sn-radius-toast: 12px; /* reminder toast */
+  --sn-radius-group: 10px; /* slips: menus, banner */
+  --sn-radius-control: 7px; /* buttons, day marks */
   --sn-radius-notch: 6px; /* inner corners of the notch */
   --sn-radius-pill: 999px;
 
   /* Geometry, logical pixels. Mirrors geometry.js. */
   --sn-notch-width: 12px;
   --sn-notch-hover-grow: 2px;
-  --sn-notch-width-open: 6px;
+  --sn-notch-width-open: 10px;
   --sn-notch-height: 48px;
   --sn-notch-hit-width: 28px;
   --sn-notch-hit-height: 72px;
@@ -50,9 +57,10 @@
   --sn-card-height: 480px;
   --sn-card-min-height: 320px;
   --sn-edge-clearance: 10px;
-  --sn-row-min-height: 44px;
-  --sn-control-height: 36px;
-  --sn-icon-button: 28px;
+  --sn-row-min-height: 36px;
+  --sn-margin-width: 36px; /* the column left of the margin rule */
+  --sn-control-height: 32px;
+  --sn-icon-button: 26px;
 
   /* Icons: lucide-react, already a dependency. */
   --sn-icon-size: 16px;
@@ -67,75 +75,91 @@
   --sn-reveal-offset: 16px;
   --sn-reveal-scale: 0.96;
 
-  /* Light colour. Brand anchors: paper #FFF8E8, gold #F6C445, ink #282722. */
-  --sn-surface: #f6f2e9; /* card */
-  --sn-surface-raised: #fffdf7; /* grouped rows, toast */
-  --sn-surface-sunken: #ebe6da; /* fields, segmented track */
-  --sn-surface-hover: rgba(40, 39, 34, 0.05);
+  /* Light colour. Brand anchors: gold #F6C445, ink #282722. The paper is the
+     pale yellow of the notebook page (docs/design/notebook/README.md). */
+  --sn-surface: #faf2cc; /* the page */
+  --sn-surface-raised: #fffbea; /* a slip of paper: menus, toast */
+  --sn-surface-sunken: #f0e6b6; /* a tint on the page: pressed, tracks */
+  --sn-surface-hover: rgba(70, 56, 8, 0.07);
   --sn-ink: #282722;
-  --sn-ink-secondary: #666154;
-  --sn-ink-tertiary: #8b8576; /* placeholders, disabled, decorative icons */
-  --sn-separator: rgba(40, 39, 34, 0.1);
-  --sn-border: rgba(40, 39, 34, 0.14);
-  --sn-accent: #f6c445; /* fills only: today, checked, badge, active notch */
+  --sn-ink-secondary: #5f5843;
+  --sn-ink-tertiary: #8a8263; /* disabled, decorative, the unchecked box */
+  --sn-separator: rgba(70, 60, 20, 0.14);
+  --sn-border: rgba(70, 60, 20, 0.22);
+  --sn-rule: rgba(84, 108, 140, 0.3); /* the ruled lines */
+  --sn-margin-rule: rgba(196, 78, 58, 0.4); /* the vertical margin line */
+  --sn-accent: #f6c445; /* fills only: today, checked, badge, the tab */
   --sn-accent-ink: #282722; /* text and icons on gold */
-  --sn-accent-text: #805a00; /* gold used as text or icon on paper */
-  --sn-danger: #a8391f; /* overdue, destructive */
-  --sn-focus: #805a00;
-  --sn-notch: rgba(40, 39, 34, 0.42);
+  --sn-accent-text: #765000; /* gold used as text or icon on paper */
+  --sn-accent-edge: rgba(92, 62, 0, 0.6); /* hairline that bounds a gold fill */
+  --sn-highlight: rgba(246, 196, 69, 0.62); /* highlighter stroke */
+  --sn-danger: #a3301a; /* overdue, destructive */
+  --sn-focus: #765000;
+  --sn-notch: #f6c445;
+  --sn-notch-hover: #e7b22c;
   --sn-notch-active: #f6c445;
-  --sn-shadow-card: 0 1px 0 rgba(255, 255, 255, 0.6) inset,
-    0 0 0 0.5px rgba(40, 39, 34, 0.16), 0 14px 36px rgba(60, 48, 20, 0.2),
-    0 2px 6px rgba(60, 48, 20, 0.1);
-  --sn-shadow-toast: 0 0 0 0.5px rgba(40, 39, 34, 0.16),
+  --sn-page-edge: #282722; /* the narrow ink edge of the Peek note */
+  --sn-shadow-card: 0 0 0 0.5px rgba(70, 56, 8, 0.28),
+    0 14px 36px rgba(60, 48, 20, 0.2), 0 2px 6px rgba(60, 48, 20, 0.1);
+  --sn-shadow-toast: 0 0 0 0.5px rgba(70, 56, 8, 0.28),
     0 8px 22px rgba(60, 48, 20, 0.18);
 }
 
 :root[data-theme='dark'] {
-  --sn-surface: #1f1e1b;
-  --sn-surface-raised: #2b2a26;
-  --sn-surface-sunken: #161513;
-  --sn-surface-hover: rgba(244, 239, 226, 0.07);
-  --sn-ink: #f4efe2;
-  --sn-ink-secondary: #aca698;
-  --sn-ink-tertiary: #7f7a6d;
-  --sn-separator: rgba(244, 239, 226, 0.1);
-  --sn-border: rgba(244, 239, 226, 0.16);
+  --sn-surface: #25221b;
+  --sn-surface-raised: #322e25;
+  --sn-surface-sunken: #1a1813;
+  --sn-surface-hover: rgba(243, 236, 216, 0.07);
+  --sn-ink: #f3ecd8;
+  --sn-ink-secondary: #b5ad97;
+  --sn-ink-tertiary: #857e6b;
+  --sn-separator: rgba(243, 236, 216, 0.11);
+  --sn-border: rgba(243, 236, 216, 0.18);
+  --sn-rule: rgba(206, 218, 236, 0.13);
+  --sn-margin-rule: rgba(232, 118, 96, 0.34);
   --sn-accent: #f6c445;
   --sn-accent-ink: #282722;
   --sn-accent-text: #f6c445;
+  --sn-accent-edge: rgba(0, 0, 0, 0.55);
+  --sn-highlight: rgba(246, 196, 69, 0.3);
   --sn-danger: #f0907a;
   --sn-focus: #f6c445;
-  --sn-notch: rgba(244, 239, 226, 0.5);
+  --sn-notch: #f6c445;
+  --sn-notch-hover: #ffd465;
   --sn-notch-active: #f6c445;
-  --sn-shadow-card: 0 1px 0 rgba(255, 255, 255, 0.06) inset,
-    0 0 0 0.5px rgba(0, 0, 0, 0.7), 0 14px 36px rgba(0, 0, 0, 0.5),
-    0 2px 6px rgba(0, 0, 0, 0.3);
+  --sn-page-edge: #0c0b09;
+  --sn-shadow-card: 0 0 0 0.5px rgba(0, 0, 0, 0.7),
+    0 14px 36px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.3);
   --sn-shadow-toast: 0 0 0 0.5px rgba(0, 0, 0, 0.7),
     0 8px 22px rgba(0, 0, 0, 0.45);
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
-    --sn-surface: #1f1e1b;
-    --sn-surface-raised: #2b2a26;
-    --sn-surface-sunken: #161513;
-    --sn-surface-hover: rgba(244, 239, 226, 0.07);
-    --sn-ink: #f4efe2;
-    --sn-ink-secondary: #aca698;
-    --sn-ink-tertiary: #7f7a6d;
-    --sn-separator: rgba(244, 239, 226, 0.1);
-    --sn-border: rgba(244, 239, 226, 0.16);
+    --sn-surface: #25221b;
+    --sn-surface-raised: #322e25;
+    --sn-surface-sunken: #1a1813;
+    --sn-surface-hover: rgba(243, 236, 216, 0.07);
+    --sn-ink: #f3ecd8;
+    --sn-ink-secondary: #b5ad97;
+    --sn-ink-tertiary: #857e6b;
+    --sn-separator: rgba(243, 236, 216, 0.11);
+    --sn-border: rgba(243, 236, 216, 0.18);
+    --sn-rule: rgba(206, 218, 236, 0.13);
+    --sn-margin-rule: rgba(232, 118, 96, 0.34);
     --sn-accent: #f6c445;
     --sn-accent-ink: #282722;
     --sn-accent-text: #f6c445;
+    --sn-accent-edge: rgba(0, 0, 0, 0.55);
+    --sn-highlight: rgba(246, 196, 69, 0.3);
     --sn-danger: #f0907a;
     --sn-focus: #f6c445;
-    --sn-notch: rgba(244, 239, 226, 0.5);
+    --sn-notch: #f6c445;
+    --sn-notch-hover: #ffd465;
     --sn-notch-active: #f6c445;
-    --sn-shadow-card: 0 1px 0 rgba(255, 255, 255, 0.06) inset,
-      0 0 0 0.5px rgba(0, 0, 0, 0.7), 0 14px 36px rgba(0, 0, 0, 0.5),
-      0 2px 6px rgba(0, 0, 0, 0.3);
+    --sn-page-edge: #0c0b09;
+    --sn-shadow-card: 0 0 0 0.5px rgba(0, 0, 0, 0.7),
+      0 14px 36px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.3);
     --sn-shadow-toast: 0 0 0 0.5px rgba(0, 0, 0, 0.7),
       0 8px 22px rgba(0, 0, 0, 0.45);
   }
