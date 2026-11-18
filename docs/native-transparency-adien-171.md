@@ -109,10 +109,80 @@ into it; the native result is in the next section.
 
 ## Evidence on the corrected build
 
-See [Native checks](#native-checks) below.
+Built from `38e0acf` (the source is unchanged in later commits, which only add
+documentation). Executable SHA-256
+`7be1cd885f238c85c35c265b6a04538ebd82d8f5d80d3c2150d38800471483b7`, ad-hoc
+signature, `codesign --verify --deep --strict` passes.
 
-## Native checks
+Two copies were run. A verification copy, the same source built with the
+identifier `io.github.adiengelbrecht.sidenib.verify`, has its own web view
+storage, so profiles could be written into it without touching real data.
+The installed copy in `/Applications` ran on the real profile.
 
-Not yet recorded. The Mac's screen locked while the corrected build was being
-checked, and a locked screen cannot be captured. The one reading taken before
-that is the `NSWindow` state quoted under "What was ruled out".
+Captures were either one window (`screencapture -l`) or a screen region that
+lay wholly inside a plain backdrop window placed under Sidenib. Pointer and
+key input was synthetic (`CGEvent`); nobody used a physical mouse. The
+backdrop logged every click that reached it.
+
+### Verification copy
+
+| Profile and state | Result |
+| --- | --- |
+| Default profile, closed | Window 28 × 72 pt. The only pixels with any alpha are a 24 × 97 px box, the 12 × 48 pt pill and its 0.5 px outline. `opaque=false shadow=false background_alpha=0`. ![closed window](media/adien-171/new-closed-window.png) |
+| Default profile, closed, over a dark backdrop | Only the pill is visible. ![closed on dark](media/adien-171/new-closed-on-dark.png) |
+| Default profile, open | Window 378 × 536 pt. Every pixel of the card between its rounded corners has alpha 255, header included. ![open on dark](media/adien-171/new-open-on-dark.png) |
+| Open, show-through | The same region was captured over a dark backdrop covered in white text and over a light one covered in black text. Inside the card, away from the corner arcs, the two captures are identical: 0 of 577,920 pixels differ in the body and 0 of 26,680 in the strip along the header's top edge. |
+| Open, pass-through | Clicks in the shadow margin left of the card, in the top-left and bottom-right corner boxes outside the arc, and in the margin above the card all reached the backdrop. A click on the card body did not. |
+| Open and close by click | Eight times each way, every one changed the window between 28 × 72 and 378 × 536. Three captures taken after a close each show the pill and nothing else; while the pointer rests on the notch the pill is 2 pt thicker, as designed. |
+| The reported profile, written into storage as it was found | Window 28 × 72 on launch. The profile was saved back with `tabWidth: 12`, `handleHeight: 48`, `surfaceAlpha: 100`, `settingsRevision: 2`; width 400, radius 18, spacing 7, text 12.5, `light` and `codex` were unchanged. |
+| The old sizes and 80% surface saved under `settingsRevision: 2` | Window 42 × 84 on launch, and all four values were still stored afterwards. |
+
+In an earlier scripted run several synthetic clicks sent straight after a
+window capture did not toggle the notch. The run of eight above waited half a
+second before each click and had no misses. The cause of the earlier misses
+was not investigated; the click path is not changed by this work.
+
+### Installed copy
+
+Installed with `ditto` to `/Applications/Sidenib.app` after removing the
+v0.2.0 copy.
+
+| Checked | Result |
+| --- | --- |
+| Signature and hash | `codesign --verify --deep --strict` passes; the executable hash equals the built one, `7be1cd88…471483b7`. |
+| Real profile after first launch | `tabWidth: 12`, `handleHeight: 48`, `surfaceAlpha: 100`, `settingsRevision: 2`. Every other setting as it was. |
+| Tasks and lists | `sidenib.today.v1`, `sidenib.month.v1` and `sidenib.custom-lists.v1` are byte-identical to the copy taken before the work. |
+| Closed window | 28 × 72 pt at the right edge, centred. Alpha only in the 24 × 97 px pill box. ![installed closed window](media/adien-171/installed-closed-window.png) |
+| Login item | `~/Library/LaunchAgents/Sidenib.plist` points at `/Applications/Sidenib.app` and is byte-identical to before. |
+| Todobar | `/Applications/Todobar.app` was not started or modified; its executable hash is unchanged. |
+
+For comparison, the old build's closed window, every pixel painted:
+![old closed window](media/adien-171/old-closed-window.png)
+
+Kept outside the repository, in
+`~/Library/Application Support/Sidenib-backups/ADIEN-171-20261117/`: the
+previous app (`e05d72d9…`, signature valid), the web view data as it was, and
+the login item.
+
+### Not checked natively
+
+The Mac's screen locked repeatedly during this work, and a locked screen can
+be neither captured nor driven. The following were prepared and did not run
+on the corrected build:
+
+- The open card on the installed copy with the real profile: its alpha, the
+  show-through comparison and pass-through. The same checks passed on the
+  verification copy, and the installed profile now stores 100%.
+- Closed-state captures after a cancelled pull, a pull that opens, Escape, a
+  drag along the edge and back, a switch to another app, and a restart of the
+  installed copy.
+- Closed pass-through beside and above the notch.
+- The closed notch over a light backdrop, and the dark theme.
+- The left and top docks, the hover-only notch, the reminder toast and the
+  full-height option. Nothing in this change touches them.
+- Windows, on any machine. Developer ID signing and notarization.
+
+While the screen is locked, `CGWindowListCopyWindowInfo` reports the closed
+window as 26 × 66 at a different position, although the app's own log gives
+28 × 72. After unlocking it reported 28 × 72 at the right edge again. Window
+sizes above were all read while unlocked or from the app's log.

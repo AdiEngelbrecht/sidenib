@@ -97,6 +97,11 @@ another working folder; the installation below replaced it.
 
 ### Installed copy, 2026-11-17 (coordinator)
 
+This copy was later replaced. On a profile first written by the full-height
+app it drew a gray 42 × 84 block for the notch and a 96% card; see
+[Gray notch rectangle and see-through card](native-transparency-adien-171.md)
+for the cause and for the evidence on the build installed in its place.
+
 After the pass above, the project coordinator copied the same build (source
 commit `cd35077`) to `/Applications/Sidenib.app` with `ditto`. This was a
 direct copy of the `.app`, not a drag-install from the `.dmg`.
