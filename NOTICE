@@ -1,0 +1,23 @@
+Sidenib
+Copyright 2026 Adi Engelbrecht
+
+Sidenib is an independent remake that starts from Todobar.
+
+This product includes software developed by Leonxlnx as Todobar
+(https://github.com/Leonxlnx/todobar), Copyright 2026 Leonxlnx, licensed under
+the Apache License, Version 2.0. Sidenib starts from upstream commit
+809b0d5857b03b3fec946f227ddaffb70cbe2789, which follows the Todobar v0.1.14
+release. The upstream Git history is preserved in this repository.
+
+Changes made for Sidenib, beginning in November 2026, include the product name,
+app icon, native app identifier, storage and credential namespaces, default
+global shortcuts, repository metadata, and documentation; the compact notch
+and card shell with its native window and pointer handling; the rewritten
+Today, Calendar, Lists and Settings views; and the notebook page layout and
+visual design of the card. The task, list and reminder model and its storage
+are Todobar's and were not rewritten. Changes are recorded in
+CHANGELOG.md and in the Git history.
+
+Sidenib is not affiliated with or endorsed by the Todobar project. The Sidenib
+name and Peek icon identify this remake only; "Todobar" is used here solely to
+describe the origin of the source code.

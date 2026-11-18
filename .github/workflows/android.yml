@@ -52,10 +52,10 @@ jobs:
         working-directory: android
         run: |
           set -euo pipefail
-          KEYSTORE_PATH="$RUNNER_TEMP/todobar-release.keystore"
-          KEYSTORE_PASSWORD="todobar"
-          KEY_ALIAS="todobar"
-          KEY_PASSWORD="todobar"
+          KEYSTORE_PATH="$RUNNER_TEMP/sidenib-release.keystore"
+          KEYSTORE_PASSWORD="sidenib"
+          KEY_ALIAS="sidenib"
+          KEY_PASSWORD="sidenib"
           keytool -genkeypair \
             -keystore "$KEYSTORE_PATH" \
             -storepass "$KEYSTORE_PASSWORD" \
@@ -64,12 +64,12 @@ jobs:
             -keyalg RSA \
             -keysize 2048 \
             -validity 10000 \
-            -dname "CN=Todobar, OU=Mobile, O=Todobar, L=Berlin, S=Berlin, C=DE"
+            -dname "CN=Sidenib, OU=Mobile, O=Sidenib"
           {
-            echo "TODOBAR_KEYSTORE_PATH=$KEYSTORE_PATH"
-            echo "TODOBAR_KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD"
-            echo "TODOBAR_KEY_ALIAS=$KEY_ALIAS"
-            echo "TODOBAR_KEY_PASSWORD=$KEY_PASSWORD"
+            echo "SIDENIB_KEYSTORE_PATH=$KEYSTORE_PATH"
+            echo "SIDENIB_KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD"
+            echo "SIDENIB_KEY_ALIAS=$KEY_ALIAS"
+            echo "SIDENIB_KEY_PASSWORD=$KEY_PASSWORD"
           } >> "$GITHUB_ENV"
 
       - name: Build release APK
@@ -87,10 +87,10 @@ jobs:
             exit 1
           fi
           TAG="${GITHUB_REF_NAME//\//-}"
-          OUT="$GITHUB_WORKSPACE/artifacts/todobar-android-${TAG}.apk"
+          OUT="$GITHUB_WORKSPACE/artifacts/sidenib-android-${TAG}.apk"
           cp "$APK" "$OUT"
           echo "apk_path=$OUT" >> "$GITHUB_OUTPUT"
-          echo "apk_name=todobar-android-${TAG}.apk" >> "$GITHUB_OUTPUT"
+          echo "apk_name=sidenib-android-${TAG}.apk" >> "$GITHUB_OUTPUT"
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
@@ -110,16 +110,17 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      # Manual only: merging to main must not publish a release tag by itself.
       - name: Publish rolling Android prerelease
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: android-latest
-          name: Todobar Android (latest)
+          name: Sidenib Android (latest)
           body: |
             Rolling Android APK build from `main`.
             Install on your device, then enable "Display over other apps" inside
-            the Todobar settings screen to start the floating bubble.
+            the Sidenib settings screen to start the floating bubble.
           files: ${{ steps.rename.outputs.apk_path }}
           prerelease: true
           make_latest: false

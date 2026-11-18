@@ -1,6 +1,12 @@
-# Todobar Android
+# Sidenib Android
 
-A floating-bubble companion to the [Todobar](../README.md) desktop sidebar.
+> Identity note: the app label and application id are Sidenib
+> (`io.github.adiengelbrecht.sidenib.mobile`), so it installs beside the
+> original Todobar APK. The Kotlin source package keeps its inherited
+> `dev.todobar.mobile` name, and the Android UI is outside the Sidenib desktop
+> redesign.
+
+A floating-bubble companion to the [Sidenib](../README.md) desktop sidebar.
 
 This Android app brings the same right-edge handle and pop-out task panel to
 Android phones. A small handle floats over every screen, drag it up or down
@@ -60,8 +66,8 @@ cd android
 .\gradlew.bat assembleRelease
 ```
 
-Setting `TODOBAR_KEYSTORE_PATH`, `TODOBAR_KEYSTORE_PASSWORD`, `TODOBAR_KEY_ALIAS`
-and `TODOBAR_KEY_PASSWORD` switches the release build to your own keystore;
+Setting `SIDENIB_KEYSTORE_PATH`, `SIDENIB_KEYSTORE_PASSWORD`, `SIDENIB_KEY_ALIAS`
+and `SIDENIB_KEY_PASSWORD` switches the release build to your own keystore;
 otherwise the build falls back to the Android debug keystore so the APK stays
 installable.
 

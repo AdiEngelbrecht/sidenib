@@ -1,0 +1,1246 @@
+/*
+ * The notebook page and the shared primitives
+ * (docs/design/notebook/README.md). Everything here reads --sn-* tokens; a
+ * raw colour in a view is a defect. The card frame itself (position, size,
+ * radius, shadow, reveal) belongs to src/shell/shell.css.
+ *
+ * Views do not restyle these. A missing variant is added here.
+ */
+
+/* ---- Surface ----------------------------------------------------------- */
+
+.sn-panel {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: inherit;
+  color: var(--sn-ink);
+  font: var(--sn-text-body);
+  isolation: isolate;
+  -webkit-font-smoothing: antialiased;
+  /* One ruled line: the row height plus any extra row spacing. */
+  --sn-row-pitch: calc(var(--sn-row-min-height) + var(--sn-row-gap, 0px));
+}
+
+/* The paper. Surface opacity below 100% lets the desktop, or the backdrop
+   image under it, show through. Text always sits on this or on a group. */
+.sn-panel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: color-mix(
+    in srgb,
+    var(--sn-surface) var(--sn-surface-alpha, 100%),
+    transparent
+  );
+  pointer-events: none;
+}
+
+/* Optional backdrop image, behind the paper and clipped to the card. */
+.sn-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background:
+    linear-gradient(
+      rgb(0 0 0 / var(--sn-backdrop-dim, 0)),
+      rgb(0 0 0 / var(--sn-backdrop-dim, 0))
+    ),
+    var(--sn-backdrop-image, none) center / cover no-repeat;
+  filter: blur(var(--sn-backdrop-blur, 0px));
+  opacity: var(--sn-backdrop-opacity, 0);
+  pointer-events: none;
+}
+
+.sn-panel *,
+.sn-panel *::before,
+.sn-panel *::after {
+  box-sizing: border-box;
+}
+
+.sn-panel button,
+.sn-panel input,
+.sn-panel textarea {
+  color: inherit;
+  font: inherit;
+}
+
+.sn-panel :focus-visible {
+  outline: 2px solid var(--sn-focus);
+  outline-offset: 2px;
+}
+
+.sn-panel svg {
+  flex: none;
+  width: var(--sn-icon-size);
+  height: var(--sn-icon-size);
+  stroke-width: var(--sn-icon-stroke);
+}
+
+.sn-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ---- View frame -------------------------------------------------------- */
+
+.sn-view {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  animation: sn-view-in var(--sn-motion-quick) linear;
+}
+
+/* Changing tab is an opacity cross-fade. No slide. */
+@keyframes sn-view-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.sn-header {
+  flex: none;
+  padding: 4px var(--sn-space-2) 0 var(--sn-space-3);
+}
+
+/* The head rule: a double hairline under the header, always drawn. */
+.sn-header::after {
+  content: '';
+  display: block;
+  height: 3px;
+  margin: 4px calc(-1 * var(--sn-space-2)) 0 calc(-1 * var(--sn-space-3));
+  border-top: 0.5px solid var(--sn-rule);
+  border-bottom: 0.5px solid var(--sn-rule);
+}
+
+/* Index line: the three views as words, Settings at the end. */
+.sn-index-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: var(--sn-icon-button);
+}
+
+.sn-index {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: -6px;
+}
+
+.sn-tab {
+  position: relative;
+  height: 24px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  cursor: pointer;
+  transition: background-color var(--sn-motion-quick) linear;
+}
+
+.sn-panel .sn-tab {
+  color: var(--sn-ink-secondary);
+  font: var(--sn-text-micro);
+  font-size: 12px;
+  letter-spacing: 0.01em;
+}
+
+.sn-tab:hover {
+  background: var(--sn-surface-hover);
+}
+
+.sn-panel .sn-tab[aria-selected='true'] {
+  color: var(--sn-ink);
+}
+
+/* The current view: ink, with an ink stroke under the word. */
+.sn-tab[aria-selected='true']::after {
+  content: '';
+  position: absolute;
+  right: 6px;
+  bottom: 1px;
+  left: 6px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--sn-ink);
+}
+
+/* Title line: an optional back button and day number, the title over its
+   secondary line, a quiet note and the view's actions. */
+.sn-title-line {
+  display: flex;
+  align-items: center;
+  gap: var(--sn-space-2);
+  min-height: 36px;
+}
+
+.sn-lead {
+  flex: none;
+  min-width: 30px;
+  font: var(--sn-text-lead);
+  font-variant-numeric: lining-nums;
+  letter-spacing: -0.02em;
+}
+
+.sn-header-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.sn-title {
+  margin: 0;
+  overflow: hidden;
+  font: var(--sn-text-title);
+  letter-spacing: var(--sn-tracking-title);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Beside the day number the weekday is the smaller of the two. */
+.sn-lead + .sn-header-text > .sn-title {
+  font-size: 17px;
+  line-height: 20px;
+}
+
+input.sn-title-edit {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 2px;
+  background: transparent;
+  box-shadow: 0 2px 0 var(--sn-focus);
+  outline: none;
+}
+
+.sn-panel input.sn-title-edit {
+  font: var(--sn-text-title);
+}
+
+.sn-subtitle,
+.sn-aside {
+  margin: 0;
+  overflow: hidden;
+  color: var(--sn-ink-secondary);
+  font: var(--sn-text-caption);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sn-aside {
+  flex: none;
+  align-self: flex-end;
+  padding: 0 var(--sn-space-1) 3px 0;
+  font: var(--sn-text-label);
+}
+
+.sn-header-actions {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.sn-back {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: var(--sn-icon-button);
+  height: var(--sn-icon-button);
+  margin-left: -6px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--sn-radius-control);
+  background: transparent;
+  cursor: pointer;
+}
+
+.sn-panel .sn-back {
+  color: var(--sn-accent-text);
+}
+
+.sn-back:hover {
+  background: var(--sn-surface-hover);
+}
+
+/* The only scrolling region. The card itself never grows. With a margin,
+   the vertical rule is painted on the body itself, so it stays put while the
+   rows scroll past it. */
+.sn-view-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--sn-border) transparent;
+}
+
+.sn-view-body.has-margin,
+.sn-view-body.has-margin .sn-quick {
+  background-image: linear-gradient(var(--sn-margin-rule), var(--sn-margin-rule));
+  background-position: var(--sn-margin-width) 0;
+  background-size: 1px 100%;
+  background-repeat: no-repeat;
+}
+
+/* Empty rules to the foot of the page, at the row pitch. */
+.sn-rules {
+  flex: 1 0 0;
+  min-height: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent calc(var(--sn-row-pitch) - 0.5px),
+    var(--sn-rule) calc(var(--sn-row-pitch) - 0.5px),
+    var(--sn-rule) var(--sn-row-pitch)
+  );
+}
+
+/* What sits in the margin: a check, a fold chevron, a plus, a count. */
+.sn-margin-cell {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: var(--sn-margin-width);
+}
+
+/* The fixed area (the calendar grid). Views style what is inside it. */
+.sn-view-fixed {
+  flex: none;
+}
+
+/* ---- Reminder banner ---------------------------------------------------- */
+
+/* A due reminder while the card is open. It sits above the scrolling body,
+   so the body keeps its scroll position. Gold fill, ink text in both themes. */
+.sn-banner {
+  flex: none;
+  border-bottom: 0.5px solid var(--sn-rule);
+  animation: sn-banner-in var(--sn-motion-reveal) var(--sn-ease-out);
+}
+
+@keyframes sn-banner-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+.sn-banner-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 2px;
+  min-height: 46px;
+  padding: 0 var(--sn-space-1) 0 var(--sn-space-3);
+  color: var(--sn-accent-ink);
+  background: var(--sn-accent);
+}
+
+.sn-banner-item button {
+  margin: 0;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  background: transparent;
+  cursor: pointer;
+}
+
+.sn-banner-item button:focus-visible {
+  outline: 2px solid var(--sn-accent-ink);
+  outline-offset: -2px;
+}
+
+.sn-banner-main {
+  min-width: 0;
+  display: grid;
+  padding: var(--sn-space-2) 0;
+  text-align: left;
+  border-radius: var(--sn-radius-control);
+}
+
+.sn-banner-main strong,
+.sn-banner-main span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sn-banner-main strong {
+  font: var(--sn-text-body);
+  font-weight: 600;
+}
+
+.sn-banner-main span {
+  font: var(--sn-text-caption);
+}
+
+.sn-banner-action {
+  height: var(--sn-icon-button);
+  padding: 0 var(--sn-space-2);
+  font: var(--sn-text-micro) !important;
+  font-size: 12px !important;
+  white-space: nowrap;
+  border-radius: var(--sn-radius-control);
+  transition: background-color var(--sn-motion-quick) linear;
+}
+
+.sn-banner-action.is-icon {
+  width: var(--sn-icon-button);
+  display: grid;
+  place-items: center;
+  padding: 0;
+}
+
+.sn-banner-action:hover {
+  background: color-mix(in srgb, var(--sn-accent-ink) 10%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sn-banner {
+    animation: none;
+  }
+}
+
+/* ---- Buttons ----------------------------------------------------------- */
+
+.sn-icon-button,
+.sn-text-button {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--sn-icon-button);
+  margin: 0;
+  border: 0;
+  border-radius: var(--sn-radius-control);
+  text-decoration: none;
+  background: transparent;
+  cursor: pointer;
+  transition: background-color var(--sn-motion-quick) linear;
+}
+
+.sn-icon-button {
+  width: var(--sn-icon-button);
+  padding: 0;
+}
+
+.sn-panel .sn-icon-button {
+  color: var(--sn-ink-secondary);
+}
+
+.sn-text-button {
+  padding: 0 6px;
+}
+
+.sn-panel .sn-text-button {
+  color: var(--sn-accent-text);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.sn-icon-button:hover:not(:disabled),
+.sn-text-button:hover:not(:disabled) {
+  background: var(--sn-surface-hover);
+}
+
+.sn-icon-button:active:not(:disabled),
+.sn-text-button:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.sn-icon-button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.sn-panel .sn-icon-button.is-set {
+  color: var(--sn-accent-text);
+}
+
+.sn-chip {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 var(--sn-space-2);
+  border: 0;
+  border-radius: 5px;
+  font: var(--sn-text-micro);
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--sn-border);
+  cursor: pointer;
+}
+
+.sn-chip:hover:not(:disabled) {
+  background: var(--sn-surface-hover);
+}
+
+.sn-panel .sn-chip {
+  color: var(--sn-ink);
+  font: var(--sn-text-micro);
+}
+
+.sn-chip:disabled {
+  color: var(--sn-ink-tertiary);
+  cursor: default;
+}
+
+.sn-pill {
+  padding: 0 6px;
+  border-radius: var(--sn-radius-pill);
+  color: var(--sn-ink-secondary);
+  font: var(--sn-text-micro);
+  line-height: 16px;
+  background: var(--sn-surface-sunken);
+}
+
+/* ---- Groups and rows --------------------------------------------------- */
+
+.sn-section {
+  flex: none;
+}
+
+/* A section label is its own ruled line, in the italic title face. */
+.sn-section-label {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: var(--sn-row-pitch);
+  margin: 0;
+  padding: 0 var(--sn-space-3) 0 0;
+  border: 0;
+  border-bottom: 0.5px solid var(--sn-rule);
+  text-align: left;
+  background: transparent;
+}
+
+.sn-section-label > span:last-child {
+  padding-left: var(--sn-space-2);
+}
+
+.sn-panel .sn-section-label {
+  color: var(--sn-ink-secondary);
+  font: var(--sn-text-label);
+}
+
+.sn-panel .sn-section-label.is-danger {
+  color: var(--sn-danger);
+}
+
+button.sn-section-label {
+  cursor: pointer;
+}
+
+button.sn-section-label:hover {
+  background: var(--sn-surface-hover);
+}
+
+.sn-panel button.sn-section-label:focus-visible {
+  outline-offset: -2px;
+}
+
+.sn-section-label svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Without a margin (Settings) the label starts at the page edge. */
+.sn-view-body:not(.has-margin) .sn-section-label > .sn-margin-cell {
+  width: var(--sn-space-2);
+}
+
+/* Rows lie straight on the paper; nothing is raised. */
+.sn-group {
+  display: block;
+}
+
+.sn-row {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  min-height: var(--sn-row-pitch);
+  padding: calc(var(--sn-row-gap, 0px) / 2) var(--sn-space-2)
+    calc(var(--sn-row-gap, 0px) / 2) 0;
+  border-bottom: 0.5px solid var(--sn-rule);
+}
+
+/* The check is the row's margin cell: a 16 px square box. */
+.sn-check {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: var(--sn-margin-width);
+  height: var(--sn-row-min-height);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.sn-check > span {
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid var(--sn-ink-tertiary);
+  border-radius: 4px;
+  transition:
+    background-color var(--sn-motion-quick) linear,
+    border-color var(--sn-motion-quick) linear;
+}
+
+.sn-check:hover > span {
+  border-color: var(--sn-ink);
+}
+
+.sn-check:focus-visible {
+  outline: none;
+}
+
+.sn-check:focus-visible > span {
+  outline: 2px solid var(--sn-focus);
+  outline-offset: 2px;
+}
+
+.sn-check > span > svg {
+  width: 12px;
+  height: 12px;
+  stroke-width: 2.75;
+}
+
+/* Gold alone does not show on yellow paper, so the done box keeps an ink
+   edge. */
+.sn-row.is-done .sn-check > span {
+  border-color: var(--sn-ink);
+  color: var(--sn-accent-ink);
+  background: var(--sn-accent);
+}
+
+.sn-row-text {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  align-content: center;
+  min-height: var(--sn-row-min-height);
+  padding: 6px 0 6px var(--sn-space-2);
+}
+
+.sn-row-title {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow-wrap: anywhere;
+}
+
+.sn-row.is-done .sn-row-title {
+  color: var(--sn-ink-secondary);
+}
+
+/* Focus priority: a highlighter stroke over the title. */
+.sn-row.is-focus:not(.is-done) .sn-row-title-text {
+  padding: 1px 3px;
+  margin: 0 -3px;
+  border-radius: 3px;
+  background: var(--sn-highlight);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+.sn-row-edit {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 2px;
+  overflow-wrap: anywhere;
+  resize: none;
+  background: transparent;
+  box-shadow: 0 2px 0 var(--sn-focus);
+}
+
+.sn-panel .sn-row-edit:focus-visible {
+  outline: none;
+}
+
+/* The trailing end of the first line: note, list name, event mark, time. */
+.sn-row-meta {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0 var(--sn-space-2);
+  max-width: 48%;
+  height: var(--sn-row-min-height);
+  padding-left: var(--sn-space-2);
+  color: var(--sn-ink-secondary);
+  font: var(--sn-text-caption);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.sn-row-meta > .task-reminder {
+  flex: none;
+}
+
+.sn-row-meta a {
+  color: var(--sn-accent-text);
+}
+
+.sn-row.is-overdue .task-reminder {
+  color: var(--sn-danger);
+  font-weight: 600;
+}
+
+.sn-row-detail {
+  min-width: 4ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sn-row-kind {
+  flex: none;
+  font: var(--sn-text-label);
+  font-size: 12.5px;
+}
+
+/* Row actions lie over the trailing edge on hover and on keyboard focus, so
+   nothing shifts. They stay in the tab order while hidden. */
+.sn-row-actions {
+  position: absolute;
+  top: 50%;
+  right: var(--sn-space-1);
+  display: flex;
+  gap: 2px;
+  padding-left: var(--sn-space-2);
+  border-radius: var(--sn-radius-control);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--sn-surface) var(--sn-space-2)
+  );
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-50%);
+  transition: opacity var(--sn-motion-quick) linear;
+}
+
+.sn-row:hover > .sn-row-actions,
+.sn-row:focus-within > .sn-row-actions,
+.sn-row.is-active > .sn-row-actions {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* While renaming, the whole width belongs to the title. */
+.sn-row.is-editing > .sn-row-actions {
+  display: none;
+}
+
+@media (hover: none) {
+  .sn-row-actions {
+    position: static;
+    align-self: center;
+    opacity: 1;
+    pointer-events: auto;
+    transform: none;
+  }
+}
+
+button.sn-row-nav {
+  align-items: center;
+  width: 100%;
+  border-width: 0 0 0.5px;
+  border-style: solid;
+  border-color: var(--sn-rule);
+  text-align: left;
+  background: transparent;
+  cursor: pointer;
+}
+
+button.sn-row-nav:hover {
+  background: var(--sn-surface-hover);
+}
+
+.sn-panel button.sn-row-nav:focus-visible {
+  outline-offset: -2px;
+}
+
+.sn-row-nav > .sn-row-title {
+  flex: 1;
+  min-width: 0;
+  padding-left: var(--sn-space-2);
+}
+
+.sn-row-nav > svg {
+  color: var(--sn-ink-secondary);
+}
+
+.sn-panel .sn-row-pin {
+  width: 12px;
+  height: 12px;
+  margin-right: var(--sn-space-2);
+  color: var(--sn-accent-text);
+}
+
+.sn-row-value {
+  color: var(--sn-ink-secondary);
+  font: var(--sn-text-caption);
+  font-variant-numeric: tabular-nums;
+}
+
+/* A quiet line written on the page: an empty list, an empty day. */
+.sn-note {
+  display: flex;
+  align-items: center;
+  min-height: var(--sn-row-pitch);
+  margin: 0;
+  padding: 6px var(--sn-space-3) 6px
+    calc(var(--sn-margin-width) + var(--sn-space-2));
+  border-bottom: 0.5px solid var(--sn-rule);
+  color: var(--sn-ink-secondary);
+  font: var(--sn-text-label);
+}
+
+.sn-note kbd {
+  margin: 0 0.25em;
+  font: var(--sn-text-caption);
+  font-weight: 600;
+}
+
+.sn-view-body:not(.has-margin) .sn-note {
+  padding-left: var(--sn-space-3);
+}
+
+.sn-empty {
+  flex: none;
+  display: grid;
+  gap: 2px;
+  padding: var(--sn-space-3);
+  border-bottom: 0.5px solid var(--sn-rule);
+  color: var(--sn-ink-secondary);
+}
+
+.sn-empty strong {
+  color: var(--sn-ink);
+  font: var(--sn-text-headline);
+}
+
+.sn-empty span {
+  font: var(--sn-text-caption);
+}
+
+.sn-empty kbd {
+  font: inherit;
+  font-weight: 600;
+}
+
+/* ---- Entry line and fields --------------------------------------------- */
+
+/* The entry line is the next empty line of the page. It is part of the
+   scrolling body and sticks to its top or foot, so it stays in view when the
+   list is longer than the page. Its paper is opaque for that reason. */
+.sn-quick {
+  position: sticky;
+  z-index: 2;
+  top: 0;
+  bottom: 0;
+  flex: none;
+  background-color: var(--sn-surface);
+  /* The rule of the line above, for when rows scroll under the stuck line. */
+  box-shadow: 0 -0.5px 0 var(--sn-rule);
+}
+
+.sn-field {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  height: var(--sn-row-pitch);
+  padding: 0 var(--sn-space-1) 0 0;
+  border-bottom: 0.5px solid var(--sn-rule);
+  color: var(--sn-ink-secondary);
+}
+
+/* Writing on the line: its rule thickens in the focus colour. */
+.sn-field:focus-within {
+  box-shadow: inset 0 -2px 0 var(--sn-focus);
+}
+
+.sn-field:focus-within > .sn-margin-cell {
+  color: var(--sn-accent-text);
+}
+
+.sn-field input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0 0 0 var(--sn-space-2);
+  border: 0;
+  background: transparent;
+}
+
+.sn-panel .sn-field input {
+  color: var(--sn-ink);
+  font: var(--sn-text-body);
+  outline: 0;
+}
+
+.sn-field input::placeholder {
+  color: var(--sn-ink-secondary);
+  opacity: 1;
+}
+
+.sn-panel .sn-field.has-reminder .sn-quick-bell {
+  color: var(--sn-accent-text);
+}
+
+.sn-quick-submit {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  margin: 0 2px;
+  padding: 0;
+  border: 0;
+  border-radius: 5px;
+  background: var(--sn-accent);
+  box-shadow: 0 0 0 0.5px var(--sn-accent-edge);
+  cursor: pointer;
+}
+
+.sn-panel .sn-quick-submit {
+  color: var(--sn-accent-ink);
+}
+
+.sn-quick-submit:active {
+  transform: scale(0.94);
+}
+
+.sn-inline-field {
+  flex: none;
+}
+
+/* ---- Popover, menu, reminder picker ------------------------------------ */
+
+.sn-popover {
+  position: fixed;
+  z-index: 60;
+  top: 0;
+  left: 0;
+  min-width: 168px;
+  max-width: 260px;
+  padding: var(--sn-space-1);
+  border-radius: var(--sn-radius-group);
+  color: var(--sn-ink);
+  font: var(--sn-text-body);
+  font-size: 14px;
+  background: var(--sn-surface-raised);
+  box-shadow: var(--sn-shadow-toast);
+  animation: sn-view-in var(--sn-motion-quick) linear;
+}
+
+.sn-menu-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sn-space-2);
+  width: 100%;
+  height: 32px;
+  padding: 0 var(--sn-space-2);
+  border: 0;
+  border-radius: 6px;
+  text-align: left;
+  background: transparent;
+  cursor: pointer;
+}
+
+.sn-menu-item:hover,
+.sn-menu-item:focus-visible {
+  background: var(--sn-surface-hover);
+}
+
+.sn-panel .sn-menu-item:focus-visible {
+  outline-offset: -2px;
+}
+
+.sn-menu-item > svg {
+  color: var(--sn-ink-secondary);
+}
+
+.sn-menu-item > span {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sn-space-3);
+}
+
+.sn-menu-item em {
+  color: var(--sn-ink-secondary);
+  font-style: normal;
+}
+
+.sn-panel .sn-menu-item.is-danger,
+.sn-menu-item.is-danger > svg {
+  color: var(--sn-danger);
+}
+
+.sn-menu-item[aria-checked='true'] > svg {
+  color: var(--sn-accent-text);
+}
+
+.sn-menu-item[aria-checked='true']::after {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--sn-accent);
+  box-shadow: 0 0 0 0.5px color-mix(in srgb, var(--sn-ink) 35%, transparent);
+}
+
+.sn-confirm {
+  display: grid;
+  gap: var(--sn-space-2);
+  padding: var(--sn-space-2);
+}
+
+.sn-confirm > div {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--sn-space-2);
+}
+
+.sn-confirm-button {
+  height: var(--sn-icon-button);
+  padding: 0 var(--sn-space-3);
+  border: 0;
+  border-radius: var(--sn-radius-control);
+  background: var(--sn-surface-sunken);
+  cursor: pointer;
+}
+
+.sn-panel .sn-confirm-button {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.sn-panel .sn-confirm-button.is-danger {
+  color: var(--sn-surface-raised);
+  background: var(--sn-danger);
+}
+
+.sn-reminder-picker {
+  display: grid;
+  gap: var(--sn-space-2);
+  padding: var(--sn-space-1);
+}
+
+.sn-reminder-presets {
+  display: grid;
+  grid-auto-columns: 1fr;
+  grid-auto-flow: column;
+  gap: var(--sn-space-1);
+}
+
+.sn-reminder-presets button {
+  height: var(--sn-icon-button);
+  padding: 0 var(--sn-space-2);
+  border: 0;
+  border-radius: 8px;
+  white-space: nowrap;
+  background: var(--sn-surface-sunken);
+  cursor: pointer;
+}
+
+.sn-panel .sn-reminder-presets button {
+  font: var(--sn-text-caption);
+  font-weight: 600;
+}
+
+.sn-reminder-presets button:hover {
+  background: color-mix(in srgb, var(--sn-ink) 12%, var(--sn-surface-sunken));
+}
+
+.sn-reminder-time {
+  display: grid;
+  gap: var(--sn-space-1);
+  color: var(--sn-ink-secondary);
+  font: var(--sn-text-caption);
+}
+
+.sn-reminder-time input {
+  width: 100%;
+  height: var(--sn-icon-button);
+  padding: 0 var(--sn-space-2);
+  border: 0;
+  border-radius: 8px;
+  background: var(--sn-surface-sunken);
+}
+
+.sn-panel .sn-reminder-time input {
+  color: var(--sn-ink);
+  font: var(--sn-text-caption);
+}
+
+.sn-reminder-clear {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  gap: var(--sn-space-1);
+  height: 24px;
+  padding: 0 var(--sn-space-1);
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.sn-panel .sn-reminder-clear {
+  color: var(--sn-ink-secondary);
+  font: var(--sn-text-caption);
+}
+
+.sn-reminder-clear svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* ---- Setting controls -------------------------------------------------- */
+
+.sn-control-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0 var(--sn-space-2);
+  min-height: var(--sn-row-pitch);
+  padding: 5px var(--sn-space-3);
+  border-bottom: 0.5px solid var(--sn-rule);
+  cursor: pointer;
+}
+
+.sn-control-row > span {
+  flex: 1;
+  min-width: 0;
+}
+
+.sn-control-row > em {
+  min-width: 44px;
+  color: var(--sn-ink-secondary);
+  font: var(--sn-text-caption);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.sn-control-row > small {
+  flex-basis: 100%;
+  color: var(--sn-ink-secondary);
+  font: var(--sn-text-caption);
+}
+
+.sn-control-block {
+  padding: var(--sn-space-2) var(--sn-space-3);
+}
+
+.sn-switch {
+  position: relative;
+  flex: none;
+  width: 36px;
+  height: 22px;
+  margin: 0;
+  border-radius: var(--sn-radius-pill);
+  appearance: none;
+  /* Secondary ink: the off track keeps 3:1 against every preset's page. */
+  background: var(--sn-ink-secondary);
+  cursor: pointer;
+  transition: background-color var(--sn-motion-quick) linear;
+}
+
+.sn-switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--sn-surface-raised);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  transition: transform var(--sn-motion-quick) var(--sn-ease-out);
+}
+
+.sn-switch:checked {
+  background: var(--sn-accent);
+  box-shadow: inset 0 0 0 0.5px var(--sn-accent-edge);
+}
+
+.sn-switch:checked::after {
+  background: var(--sn-accent-ink);
+  transform: translateX(14px);
+}
+
+.sn-slider {
+  flex: none;
+  width: 104px;
+  height: 20px;
+  margin: 0;
+  accent-color: var(--sn-accent-text);
+  cursor: pointer;
+}
+
+.sn-segmented {
+  display: grid;
+  grid-auto-columns: 1fr;
+  grid-auto-flow: column;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 7px;
+  box-shadow: inset 0 0 0 1px var(--sn-border);
+}
+
+.sn-segmented button {
+  height: 24px;
+  padding: 0 var(--sn-space-2);
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.sn-panel .sn-segmented button {
+  color: var(--sn-ink-secondary);
+  font: var(--sn-text-caption);
+}
+
+.sn-panel .sn-segmented button[aria-pressed='true'] {
+  color: var(--sn-surface);
+  font-weight: 600;
+  background: var(--sn-ink);
+}
+
+/* ---- Reduced motion ---------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .sn-panel *,
+  .sn-panel *::before,
+  .sn-panel *::after {
+    animation-duration: 1ms !important;
+    transition-duration: 1ms !important;
+  }
+}

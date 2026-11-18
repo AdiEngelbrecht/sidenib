@@ -6,15 +6,17 @@ plugins {
 }
 
 android {
+    // The Kotlin source package keeps its inherited name; only the installed
+    // application id is Sidenib-specific so the APK can sit beside Todobar.
     namespace = "dev.todobar.mobile"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "dev.todobar.mobile"
+        applicationId = "io.github.adiengelbrecht.sidenib.mobile"
         minSdk = 26
         targetSdk = 34
-        versionCode = 14
-        versionName = "0.1.14"
+        versionCode = 15
+        versionName = "0.2.0"
         resourceConfigurations += listOf("en")
     }
 
@@ -23,12 +25,12 @@ android {
         // produced APK is installable from a GitHub release without further
         // ceremony. The keystore credentials are injected via env vars.
         create("release") {
-            val keystorePath = System.getenv("TODOBAR_KEYSTORE_PATH")
+            val keystorePath = System.getenv("SIDENIB_KEYSTORE_PATH")
             if (keystorePath != null) {
                 storeFile = file(keystorePath)
-                storePassword = System.getenv("TODOBAR_KEYSTORE_PASSWORD") ?: "todobar"
-                keyAlias = System.getenv("TODOBAR_KEY_ALIAS") ?: "todobar"
-                keyPassword = System.getenv("TODOBAR_KEY_PASSWORD") ?: "todobar"
+                storePassword = System.getenv("SIDENIB_KEYSTORE_PASSWORD") ?: "sidenib"
+                keyAlias = System.getenv("SIDENIB_KEY_ALIAS") ?: "sidenib"
+                keyPassword = System.getenv("SIDENIB_KEY_PASSWORD") ?: "sidenib"
             }
         }
     }
@@ -44,7 +46,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
-            val keystorePath = System.getenv("TODOBAR_KEYSTORE_PATH")
+            val keystorePath = System.getenv("SIDENIB_KEYSTORE_PATH")
             if (keystorePath != null) {
                 signingConfig = signingConfigs.getByName("release")
             } else {

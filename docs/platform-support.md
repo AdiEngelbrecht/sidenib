@@ -1,5 +1,9 @@
 # Platform Support
 
+> This page was written for upstream Todobar and is kept as history. For
+> Sidenib's current platform status see the [README](../README.md#status) and
+> [Release verification v0.2.0](release-verification-v0.2.0.md).
+
 Todobar targets Windows and macOS first.
 
 ## Windows

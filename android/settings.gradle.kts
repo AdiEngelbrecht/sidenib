@@ -20,5 +20,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "todobar-android"
+rootProject.name = "sidenib-android"
 include(":app")

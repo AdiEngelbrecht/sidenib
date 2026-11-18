@@ -1,372 +1,278 @@
-# Todobar
+# Sidenib
 
-[![CI](https://github.com/Leonxlnx/todobar/actions/workflows/ci.yml/badge.svg)](https://github.com/Leonxlnx/todobar/actions/workflows/ci.yml)
-[![Release](https://github.com/Leonxlnx/todobar/actions/workflows/release.yml/badge.svg)](https://github.com/Leonxlnx/todobar/actions/workflows/release.yml)
+[![CI](https://github.com/AdiEngelbrecht/sidenib/actions/workflows/ci.yml/badge.svg)](https://github.com/AdiEngelbrecht/sidenib/actions/workflows/ci.yml)
 
-Todobar is a native dockable todo sidebar for macOS and Windows, with an Android
-companion APK now building from the same product direction. It stays out of the
-way as a small edge handle, opens into a clean task panel, and is built for fast
-capture while you work in other apps.
+<img src="docs/design/sidenib/exports/app-128.png" alt="Sidenib app icon" width="96" height="96">
 
-The app is early, but the foundation is real: Tauri v2, React, local persisted
-tasks, reminders, custom in-app reminder toasts, global shortcuts, autostart,
-single-instance behavior, and release automation for Windows, macOS, and
-Android.
+Sidenib (side-nib) is a small task list that lives at the edge of your screen.
+Closed, it is a 12 × 48 golden tab halfway down the right edge. Click it or
+pull it inward and it brings a notebook page out with it: ruled yellow paper
+with Today, Calendar and Lists. It is a desktop app for macOS and Windows,
+built with Tauri and React, and it keeps everything on your machine.
 
-## Why
+<img src="docs/media/sidenib-demo.gif" alt="The golden tab at the screen edge is pulled inward and brings out the Sidenib page; a task is typed on the entry line, another is completed, and the Calendar is shown" width="420">
 
-Most todo apps are full windows. Todobar is designed as a desktop utility:
+The recording is the real macOS app, not a mock-up. A sharper
+[MP4 of the same take](docs/media/sidenib-demo.mp4) is in the repository.
 
-- always reachable from the edge of the screen
-- fast enough for one-line capture
-- clean enough to leave visible during focused work
-- local-first by default
-- ready for future AI and MCP integrations without making AI mandatory
+Sidenib is Adi Engelbrecht's independent remake of
+[Todobar](https://github.com/Leonxlnx/todobar) by Leonxlnx: a personal
+portfolio project, not affiliated with or endorsed by the Todobar project.
+What was inherited and what is new is set out under
+[What I changed](#what-i-changed) and
+[Origin and attribution](#origin-and-attribution).
 
-## Current Features
+## Preview
 
-- Dockable native sidebar for Windows and macOS
-- Right, left, and wider top dock placement modes
-- Small draggable handle that opens and closes the panel
-- Global shortcut: `Alt + T`, with `Alt + Shift + T` as a fallback
-- Native tray/menu-bar control for open, settings, and quit
-- Autostart on system login
-- Single-instance desktop behavior
-- Always-on-top frameless window
-- Click-through transparent area outside the handle and open panel
-- Compact icon command rail for Today, Calendar, Lists, and setup
-- Planning status strip with today's progress, open task count, and list count
-- Today tasks
-- Real calendar view with month navigation, selected-day capture, and scheduled
-  task and event actions
-- Custom task lists
-- Pin custom lists onto Today as goal groups
-- Add, edit, complete, prioritize, collapse, and delete tasks
-- Rename and delete custom lists
-- Add reminder times while capturing tasks
-- Quick reminder cycling on existing tasks
-- Clean icon rail for Today, Calendar, Lists, and Settings
-- Custom Todobar reminder toasts that appear inside the overlay instead of the
-  operating system notification tray
-- 10-minute snooze from reminder toasts
-- Optional completed-task visibility
-- Local persistence through browser storage
-- Light and dark modes with matching mode-specific theme presets
-- Custom theme dropdown with five matching light presets and five matching dark
-  presets
-- Optional custom backdrop image with strength, dim, and blur controls
-- Custom backdrop images also texture the visible edge tab/native dock surface
-- Optional hover-only visible tab mode for a quieter desktop edge
-- Theme-matched custom scrollbars in the sidebar and settings surfaces
-- Rearrange Today, Calendar, and Lists from settings
-- Collapse settings groups while tuning the sidebar, with the open/closed state
-  remembered locally
-- Gmail read-only connector foundation is implemented in code but hidden from
-  the product UI until Google OAuth verification and a public rollout plan are
-  ready.
-- Adjustable panel width, visible tab size, handle height, edge position,
-  motion speed, corner radius, task sort mode, task row height, task spacing,
-  task text size, completed-task visibility, launch-at-login, notifications,
-  and surface opacity
-- Responsive sizing for different monitor heights and widths
-- Native Android companion with a floating edge bubble, Today, Calendar, Lists,
-  Settings, local tasks, reminders, and matching English product language
+![Today and Calendar in light, a list and Settings in dark](docs/media/views.png)
 
-## Platform Status
+Today, Calendar, a list and Settings. All four are captures of the native
+macOS window with sample tasks.
 
-| Platform | Status | Notes |
-| --- | --- | --- |
-| Windows | Working | Built locally and in GitHub Actions. Release includes `.exe` and `.msi`. |
-| macOS Apple Silicon | Built in CI | Release includes `.dmg`. Unsigned until Apple signing is configured. |
-| macOS Intel | Built in CI | Release includes `.dmg`. Unsigned until Apple signing is configured. |
-| Android | Companion APK | Release includes an installable `.apk`. Overlay permission is required for the floating bubble. |
+### Where it started and where it is
 
-## Verification Status
+![Todobar, the first Sidenib redesign and the notebook page, side by side with the same five tasks](docs/media/before-after.png)
 
-The current `main` branch is checked by GitHub Actions on Windows and macOS.
-The release process publishes platform artifacts only after those workflows pass.
+The same five tasks at the same size in a browser. Left: Todobar, the
+starting point, from the upstream source. Middle: Sidenib's first compact
+redesign, which kept Todobar's structure of a title, a boxed input, tiled
+rows and a strip of three icon buttons, and was dropped for that reason.
+Right: the notebook page. What changed in structure, not only colour:
 
-What is verified:
+- The three views are words in an index line at the head of the page. The
+  icon rail and the footer tab bar are gone.
+- You add a task on the next empty line after the open tasks. There is no
+  separate input box.
+- A task is one ruled line: a square check in a margin column, the title,
+  and the reminder time at the end of the same line. Rows are not tiles.
+- The header is a date block in a serif face. Priority is a highlighter
+  stroke on the title.
+- Rules run to the foot of the page, so a short list is an unused page.
 
-- TypeScript and Vite production build
-- ESLint
-- Project consistency checks for versions, docs links, scripts, and workflows
-- Playwright sidebar smoke test
-- Responsive sidebar layout checks for desktop, narrow, and short viewports
-- Rust check
-- Tauri no-bundle native build smoke test
-- Android release APK build
+[The same comparison with names and icons hidden](docs/design/notebook/comparison-concealed.png)
+and the reasoning are in the
+[notebook design](docs/design/notebook/README.md). It records which choices
+were made for Sidenib; it does not claim the result is unlike every other
+task app.
 
-What is not fully verified yet:
+## What it does
 
-- Physical macOS QA on real hardware
-- Windows certificate signing and Apple notarization
-- Signed auto-update
-- Full keyboard/accessibility pass
+- **Tab and page.** Click the tab, pull it inward, or press the shortcut.
+  A short pull springs back. Drag the tab along the edge to move it. The
+  page is 340 × 480 and never grows; long content scrolls inside it.
+- **Today.** Overdue tasks first, then open tasks, then the line you write
+  the next task on, then each list you pinned (each can be folded), then
+  Completed.
+- **Calendar.** A month grid (one week on short screens) with tasks and
+  events on the selected day, capture onto that day, and arrow-key navigation.
+- **Lists.** Your own lists, one at a time in detail. Pin a list to show it on
+  Today.
+- **Tasks.** Add, rename, complete, reopen, prioritise, schedule and delete.
+  Row actions appear on hover or keyboard focus.
+- **Reminders.** A due reminder shows as a small toast beside the closed
+  notch, or as a banner inside the open card. It never opens the card or takes
+  focus. Snooze for 10 minutes, open it, or dismiss it.
+- **Settings.** System, Light or Dark; left, top or right edge; sort order;
+  tab order; launch at login. Sizes, density, theme presets and a backdrop
+  image are under Advanced.
+- **Desktop.** Native tray/menu-bar control for open, Settings and quit; a
+  global shortcut; one running instance; click-through everywhere outside the
+  notch and the card.
 
-## Roadmap
+Tasks and settings are stored locally in the app's web view storage. There is
+no account, no sync and no analytics.
 
-Todobar is planned in product layers:
+## Status
 
-- Version 0: dockable planner with local Today, Calendar, custom lists,
-  launch-at-login, global shortcut, tray/menu-bar control, and responsive native
-  shell.
-- Version 1: better planner with editable tasks, undo, reminders,
-  notifications, recurring tasks, keyboard-first triage, SQLite storage, and
-  import/export.
-- Version 2: assistant layer with AI suggestions, task splitting, Today
-  planning, source/confidence display, approval flow, and audit log.
-- Version 3: MCP/context connectors for local files, GitHub, Gmail, calendar,
-  Notion/docs, and issue trackers.
-- Companion manager: a larger settings/planning window for connectors,
-  notification rules, provider setup, bulk editing, backups, and assistant
-  history.
+Current version: `v0.2.0` (not released; no tag or published installer yet).
 
-The detailed plan lives in [Product vision](docs/product-vision.md) and
-[Roadmap](docs/roadmap.md).
+| Platform | Status |
+| --- | --- |
+| macOS, Apple Silicon | Built and exercised natively on macOS 26. The app is ad-hoc signed only: not signed with a Developer ID and not notarized. |
+| macOS, Intel | Compiled by CI. Not run. |
+| Windows | Compiled and smoke-tested in a browser by CI. The remake has not been run on a Windows machine; pointer pass-through there uses polling, and focus return is not implemented. |
+| Android | The inherited companion app with the Sidenib name. It is outside this redesign and still has the upstream layout. |
+
+What was and was not checked for this version, including the limits of the
+native pass, is in
+[Release verification v0.2.0](docs/release-verification-v0.2.0.md).
+[Release notes v0.2.0](docs/release-notes-v0.2.0.md) lists the changes and
+known issues.
 
 ## Install
 
-Download the latest Windows, macOS, or Android build from
-[GitHub Releases](https://github.com/Leonxlnx/todobar/releases).
-
-Current stable release: `v0.1.14`.
-
-Windows:
-
-- Prefer `Todobar_<version>_x64-setup.exe` for a normal installer.
-- Use `Todobar_<version>_x64_en-US.msi` for MSI-based install flows.
-
-macOS:
-
-- Use `Todobar_<version>_aarch64.dmg` on Apple Silicon Macs.
-- Use `Todobar_<version>_x64.dmg` on Intel Macs.
-
-macOS builds from public CI are currently unsigned until code signing and
-notarization certificates are configured. You may need to right-click the app and
-choose Open.
-
-Android:
-
-- Use `todobar-android-v<version>.apk`.
-- Android will ask for overlay permission so the floating sidebar bubble can
-  appear above other apps.
-- The Android app is a native companion and is being aligned with the desktop
-  experience over time.
-
-## Usage
-
-- Click the edge handle to open or close Todobar.
-- Drag the handle along its docked edge to change its position.
-- Press `Alt + T` to toggle it from any app.
-- If that shortcut is already owned by another app, use `Alt + Shift + T`.
-- Use the tray/menu-bar icon to toggle Todobar, open settings, or quit.
-- Press `Esc` to close the panel.
-- Use the command rail to jump between Today, Calendar, Lists, and setup
-  without turning the sidebar into a full dashboard.
-- Use the settings button to adjust appearance, dock edge, desktop startup,
-  window size, handle shape, task density, sorting, backdrop image, motion,
-  radius, and opacity.
-## Gmail Integration Status
-
-Gmail is implemented as a production-minded foundation, not as a frontend
-placeholder, but it is currently hidden from the normal Todobar UI:
-
-- Primary path: direct Gmail API OAuth, not MCP.
-- Scope: `https://www.googleapis.com/auth/gmail.readonly`.
-- Current reads: recent unread Inbox threads only.
-- Current actions: convert a selected suggestion into a local Todobar task,
-  open the original Gmail thread, or ignore the suggestion locally.
-- Not implemented: sending email, composing drafts, deleting email, archiving,
-  labeling, or mutating Gmail in any way.
-- Token storage: native OS credential store only. Windows uses Credential
-  Manager. macOS uses Keychain. OAuth tokens are never stored in frontend
-  `localStorage`.
-- Browser preview uses mock connector state for tests and design QA only.
-
-Normal users should not need a Google Cloud project. Maintainers of public
-builds still need to configure and verify the Google OAuth client before
-publishing a Gmail-enabled release. Until then, Gmail remains an internal
-foundation rather than a visible product feature.
-
-## Data and Privacy
-
-Todobar is local-first in this prototype. Task data and settings are stored in
-local browser storage inside the app webview. Gmail-derived tasks stay local in
-the same task store. There is no analytics layer and no general network sync.
-
-When Gmail is connected, Todobar uses the Gmail API only for the read-only
-connector features listed above. Every Gmail read performed by the UI is shown in
-the connector activity area. Disconnecting Gmail removes the stored OAuth token
-from the native OS credential store.
-
-Future AI and MCP features should stay optional, permissioned, and visible. The
-core task app must remain useful without AI.
-
-## Development
+There is no download yet. Build the app from source; on a Mac that takes a
+few minutes.
 
 Requirements:
 
-- Node.js LTS
-- Rust stable
-- Platform prerequisites for Tauri v2
-
-Install dependencies:
-
-```bash
-npm install
-```
-
-Run the web preview:
+- Node.js 22 or newer, with npm
+- Rust stable 1.77.2 or newer, installed with [rustup](https://rustup.rs)
+- The [Tauri v2 prerequisites](https://v2.tauri.app/start/prerequisites/):
+  Xcode Command Line Tools on macOS (`xcode-select --install`); Microsoft C++
+  Build Tools and WebView2 on Windows
 
 ```bash
-npm run dev
-```
-
-Run the native desktop app:
-
-```bash
-npm run tauri:dev
-```
-
-For local Gmail OAuth testing, provide a Google OAuth desktop client ID to the
-native process:
-
-```bash
-$env:TODOBAR_GMAIL_CLIENT_ID="your-client-id.apps.googleusercontent.com"
-npm run tauri:dev
-```
-
-If your OAuth client requires a secret, keep it in the native environment only:
-
-```bash
-$env:TODOBAR_GMAIL_CLIENT_SECRET="your-client-secret"
-```
-
-Do not put OAuth secrets in React code, static assets, or browser storage.
-
-Build the app locally:
-
-```bash
+git clone https://github.com/AdiEngelbrecht/sidenib.git
+cd sidenib
+npm ci
 npm run tauri:build
 ```
 
-Validate the project:
+On macOS this writes:
 
-```bash
-npm run verify
-npm run build
-npm run lint
-npm run test:smoke
-npm run test:native
-cargo check --manifest-path src-tauri/Cargo.toml
-```
+- `src-tauri/target/release/bundle/macos/Sidenib.app`
+- `src-tauri/target/release/bundle/dmg/Sidenib_0.2.0_aarch64.dmg`
 
-Build the Android APK locally:
+Open the `.dmg` and drag Sidenib to Applications, or run the `.app` where it
+is. A build made on your own Mac opens normally. A copy downloaded from
+somewhere else is quarantined by macOS and, because the app is not notarized,
+has to be allowed once under System Settings → Privacy & Security.
 
-```powershell
-cd android
-.\gradlew.bat assembleRelease
-```
+On Windows the same command writes `.exe` and `.msi` installers under
+`src-tauri\target\release\bundle\`.
 
-`npm run test:smoke` runs a browser smoke test against the Vite preview. If
-Chromium is missing locally, run `npx playwright install chromium` once.
+Sidenib installs as its own app (`io.github.adiengelbrecht.sidenib`) and runs
+beside an installed Todobar. It starts with its own empty data and does not
+read or migrate Todobar's tasks or settings; see
+[Sidenib identity](docs/sidenib-identity.md).
 
-`npm run test:native` runs a no-bundle Tauri release build. It validates the
-native desktop shell without creating installers.
+Launch at login is on by default. Turn it off in Settings if you are only
+trying a build from a folder you will delete.
 
-## Release Builds
+## Use
 
-The repository includes GitHub Actions workflows:
+| Action | How |
+| --- | --- |
+| Open or close | Click the notch, or press `Option + Shift + S` on macOS, `Alt + Shift + S` on Windows |
+| If that shortcut is taken | `Control + Option + Shift + S`, or `Ctrl + Alt + Shift + S`. The tray/menu-bar menu shows which one is active. |
+| Pull open | Drag the notch inward about 50 px |
+| Move the notch | Drag it along the edge; it snaps to the middle |
+| Close | `Esc`, the notch, the shortcut, or the menu-bar item |
+| Change view | The index line at the top of the page; left and right arrows work there |
+| Add a task | Type on the first empty line and press `Enter` |
+| Settings | The sliders button at the end of the index line, or the menu-bar item |
 
-- `ci.yml` checks TypeScript, linting, browser smoke tests, Rust, and no-bundle
-  native Tauri builds on Windows and macOS.
-- `release.yml` builds release artifacts for:
-  - Windows
-  - macOS Apple Silicon
-  - macOS Intel
-- `android.yml` builds an Android release APK and attaches it to version
-  releases.
+`Esc` peels one layer at a time: a menu, a rename, an unsent draft, Settings,
+then the card.
 
-Create a release by pushing a version tag:
+## What I changed
 
-```bash
-git tag vX.Y.Z
-git push origin vX.Y.Z
-```
+Todobar v0.1.14 is a full-height sidebar. Sidenib keeps its task model and
+its desktop plumbing and replaces the shell, the views and the identity.
 
-Before tagging, bump the version in `package.json`, `package-lock.json`,
-`src-tauri/Cargo.toml`, `src-tauri/Cargo.lock`, `src-tauri/tauri.conf.json`, and
-`android/app/build.gradle.kts`.
+**Mine, in this repository**
 
-The Tauri release workflow uploads the platform installers to GitHub Releases.
+- The name, the Peek icon and menu-bar mark, and a separate app identifier,
+  storage namespace, keychain service and login item, so both apps can be
+  installed together ([identity](docs/sidenib-identity.md),
+  [brand](docs/brand-direction.md)).
+- The compact shell: one geometry module that places the notch, card and
+  toast; a native window that is only as large as what is drawn; and pointer
+  pass-through for the shadow, the rounded corners and the gap at the screen
+  edge, event-driven on macOS ([shell](docs/shell.md)).
+- Click, pull and drag-to-move on the notch, with focus going to the right
+  place on open and back to the previous app on close.
+- The views, rewritten from a 3,656-line `App.tsx` into a small composition
+  root, shared components and one module per view ([views](docs/views.md)).
+- The notebook page: the layout, navigation, row, entry line, typography and
+  tokens described in the [notebook design](docs/design/notebook/README.md),
+  written in CSS with no image assets.
+- The Calendar's day states, week mode and keyboard navigation
+  ([calendar](docs/calendar.md)), and Settings as a short page with Advanced
+  behind it and a System theme ([settings](docs/settings.md)).
+- The in-card reminder banner, foldable pinned lists, and the browser tests
+  for all of the above.
+- The written [design contract](docs/design/compact/README.md) for geometry
+  and behaviour, and the [notebook design](docs/design/notebook/README.md)
+  for the look.
 
-Current release workflow output:
+**Inherited from Todobar**
 
-- Windows setup `.exe`
-- Windows `.msi`
-- macOS Apple Silicon `.dmg`
-- macOS Intel `.dmg`
-- macOS `.app.tar.gz` archives
-- Android `.apk`
+- The Tauri v2 and React project, build scripts and CI and release workflows.
+- The task, list and reminder model and local storage. The task engine was
+  not rewritten: what a task is, how lists, priorities, reminders and
+  snoozing work, and how they are stored are Todobar's.
+- Tray, global shortcut, autostart and single-instance wiring.
+- The theme presets and backdrop image options, now under Advanced.
+- The Android companion.
+- A read-only Gmail connector that is present in the code and hidden in the
+  app. No OAuth client is configured for Sidenib.
 
 ## Architecture
 
-Todobar uses:
+```text
+src/
+  App.tsx            composition: shell, data hooks, one view at a time
+  shell/             notch, card frame, geometry, gestures, native window bridge
+  components/        PanelView (page frame), ViewTabs (index), TaskRow, Group, QuickAdd (entry line), Popover, controls
+  views/             today, lists, calendar, settings
+  data/taskStore.ts  tasks and lists, every mutation, storage
+  reminders/         the due check, the toast and the banner
+  design/            tokens and theme presets
+src-tauri/src/
+  lib.rs             tray, global shortcut, plugins
+  shell.rs           window frame, pointer pass-through, focus return
+tests/               Playwright specs for the shell and each view
+```
 
-- React + TypeScript for the UI
-- Tauri v2 for native desktop APIs
-- `@tauri-apps/plugin-global-shortcut` for the open/close shortcut
-- `@tauri-apps/plugin-autostart` for launch-at-login
-- Tauri tray/menu-bar APIs for desktop control while the window is skipped from
-  the taskbar
-- `tauri-plugin-single-instance` to prevent duplicate sidebars
-- local browser storage for the current prototype task store
+- React 19 and TypeScript for the interface, Tauri v2 and Rust for the window.
+- The frontend computes the layout from the monitor's work area and sends the
+  native side the window bounds and the regions that take the pointer in one
+  call. Only the notch, the card and the toast take the pointer.
+- Views read design tokens (`--sn-*`) and never read window size or settings
+  directly.
+- The web view is transparent through Tauri's `macOSPrivateApi`, which rules
+  out the Mac App Store.
 
-Native window behavior is intentionally kept in a small layer:
+The [documentation index](docs/index.md) lists the rest, including the
+upstream planning notes such as the [Product vision](docs/product-vision.md),
+which describe Todobar's roadmap and are kept as history.
 
-- the Tauri window is positioned per dock edge
-- the visible tab remains docked to the chosen screen edge
-- transparent regions pass clicks through to the app behind Todobar
-- panel width is clamped so it still fits on narrow monitors
+## Development
 
-The long-term architecture keeps native integrations behind adapters so the UI
-can stay portable while desktop capabilities remain explicit and permissioned.
+```bash
+npm ci
+npm run dev          # browser preview at http://127.0.0.1:5173
+npm run tauri:dev    # the native app with hot reload
+```
 
-## Open Source
+Checks:
 
-Todobar is licensed under the Apache License 2.0.
+```bash
+npm run verify       # versions, links, identity and attribution
+npm run lint
+npm run build
+npm run test:smoke   # Playwright; run `npx playwright install chromium` once
+node docs/design/compact/geometry.js --check
+cargo test --manifest-path src-tauri/Cargo.toml
+npm run test:native  # release build without bundling
+```
 
-Roadmap and release follow-ups are kept in the docs so the public issue tracker
-stays focused on real user reports:
+CI runs these on Windows and macOS for pull requests to `main`. Pushing a
+version tag runs `release.yml`, which builds installers for Windows, macOS
+Apple Silicon and macOS Intel; `android.yml` builds the APK. No tag has been
+pushed for Sidenib.
 
-- physical macOS QA
-- Windows signing and macOS notarization
-- signed auto-update channel
-- keyboard and accessibility hardening
+`npm run icons` regenerates the native icon set from the artwork in
+`docs/design/sidenib/`.
 
-Contributions are welcome, especially around:
+## Origin and attribution
 
-- Windows and macOS edge-window behavior
-- accessibility and keyboard-first task flows
-- local-first data storage
-- release signing and auto-update
-- MCP connector design
-- AI planning UX with strong privacy boundaries
+| | |
+| --- | --- |
+| Upstream project | [Leonxlnx/todobar](https://github.com/Leonxlnx/todobar) |
+| Upstream baseline release | `v0.1.14` (tag commit `12a49c9`) |
+| Starting source commit | `809b0d5857b03b3fec946f227ddaffb70cbe2789` (upstream `main`, three commits after `v0.1.14`) |
+| License | Apache License 2.0, unchanged |
 
-## Documentation
+The full upstream Git history is preserved in this repository. The original
+copyright line stays in [`LICENSE`](LICENSE), and [`NOTICE`](NOTICE) records
+what Sidenib changed. Documents under [`docs/`](docs/) that predate the
+remake, including the `release-verification-v0.1.*` records and the entries
+for `0.1.14` and earlier in the [changelog](CHANGELOG.md), describe upstream
+Todobar and keep its name.
 
-Planning and research notes live in [`docs/`](docs/).
+## License
 
-Useful starting points:
-
-- [Architecture](docs/architecture.md)
-- [Gmail integration](docs/gmail-integration.md)
-- [Product vision](docs/product-vision.md)
-- [UI direction](docs/ui-direction.md)
-- [Platform support](docs/platform-support.md)
-- [Release verification](docs/release-verification-v0.1.14.md)
-- [Roadmap](docs/roadmap.md)
-- [Native test matrix](docs/native-test-matrix.md)
-- [Security model](docs/security-model.md)
-- [Open source plan](docs/open-source-plan.md)
+Apache License 2.0. See [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE).

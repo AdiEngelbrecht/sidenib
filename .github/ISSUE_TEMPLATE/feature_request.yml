@@ -1,5 +1,5 @@
 name: Feature request
-description: Suggest an improvement for Todobar.
+description: Suggest an improvement for Sidenib.
 title: "[Feature]: "
 labels:
   - enhancement
@@ -8,7 +8,7 @@ body:
     id: problem
     attributes:
       label: Problem
-      description: What workflow should Todobar make easier?
+      description: What workflow should Sidenib make easier?
     validations:
       required: true
   - type: textarea

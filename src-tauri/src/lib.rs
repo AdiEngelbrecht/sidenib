@@ -6,38 +6,48 @@ use tauri::{
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
 
 mod gmail;
+mod shell;
 
-const TRAY_TOGGLE_EVENT: &str = "todobar-tray-toggle";
-const TRAY_SETTINGS_EVENT: &str = "todobar-tray-settings";
+const TRAY_TOGGLE_EVENT: &str = "sidenib-tray-toggle";
+const SHORTCUT_TOGGLE_EVENT: &str = "sidenib-shortcut-toggle";
+const TRAY_SETTINGS_EVENT: &str = "sidenib-tray-settings";
 
-fn focus_main_window(app: &tauri::AppHandle) {
-    if let Some(window) = app.get_webview_window("main") {
-        let _ = window.set_always_on_top(true);
-        let _ = window.unminimize();
-        let _ = window.set_focus();
-    }
-}
+// Sidenib uses its own shortcut pair so it can run beside the upstream
+// baseline app (Alt+T / Alt+Shift+T) without both toggling at once. The
+// second entry is the fallback when another app already holds the first.
+const TOGGLE_SHORTCUTS: [&str; 2] = ["Alt+Shift+S", "Control+Alt+Shift+S"];
 
+/// Forwards a tray or shortcut action to the shell. The window is not focused
+/// here: the frontend decides whether the action opens the card (and takes
+/// focus) or closes it (and hands focus back), so the app that is frontmost
+/// right now is recorded first.
 fn emit_to_main(app: &tauri::AppHandle, event: &str) {
-    focus_main_window(app);
+    shell::remember_frontmost(app);
     let _ = app.emit_to("main", event, ());
 }
 
-fn setup_tray(app: &tauri::App) -> tauri::Result<()> {
+fn setup_tray(app: &tauri::App, active_shortcut: Option<&str>) -> tauri::Result<()> {
+    // The menu shows whichever shortcut actually registered, so an occupied
+    // primary shortcut surfaces the fallback instead of a dead hint.
     let toggle = MenuItem::with_id(
         app,
         "toggle",
-        "Open / Close Todobar",
+        "Open / Close Sidenib",
         true,
-        Some("Alt+T"),
+        active_shortcut,
     )?;
     let settings = MenuItem::with_id(app, "settings", "Settings", true, None::<&str>)?;
-    let quit = MenuItem::with_id(app, "quit", "Quit Todobar", true, None::<&str>)?;
+    let quit = MenuItem::with_id(app, "quit", "Quit Sidenib", true, None::<&str>)?;
     let menu = Menu::with_items(app, &[&toggle, &settings, &quit])?;
+    // macOS menu bars expect an alpha-only template image that follows the
+    // system appearance; other platforms keep the full-color app icon.
+    #[cfg(target_os = "macos")]
+    let icon = Some(tauri::include_image!("icons/tray-template.png"));
+    #[cfg(not(target_os = "macos"))]
     let icon = app.default_window_icon().cloned();
 
-    let mut tray = TrayIconBuilder::with_id("todobar")
-        .tooltip("Todobar")
+    let mut tray = TrayIconBuilder::with_id("sidenib")
+        .tooltip("Sidenib")
         .menu(&menu)
         .show_menu_on_left_click(false)
         .on_menu_event(|app, event| match event.id().as_ref() {
@@ -60,27 +70,37 @@ fn setup_tray(app: &tauri::App) -> tauri::Result<()> {
         });
 
     if let Some(icon) = icon {
-        tray = tray.icon(icon);
+        tray = tray.icon(icon).icon_as_template(cfg!(target_os = "macos"));
     }
 
     tray.build(app)?;
     Ok(())
 }
 
-fn setup_global_shortcuts(app: &tauri::App) {
-    for shortcut in ["Alt+T", "Alt+Shift+T"] {
+/// Registers the toggle shortcuts and returns the first one that is active.
+fn setup_global_shortcuts(app: &tauri::App) -> Option<&'static str> {
+    let mut active = None;
+
+    for shortcut in TOGGLE_SHORTCUTS {
         let result = app
             .global_shortcut()
             .on_shortcut(shortcut, move |app, _shortcut, event| {
                 if event.state() == ShortcutState::Pressed {
-                    emit_to_main(app, TRAY_TOGGLE_EVENT);
+                    emit_to_main(app, SHORTCUT_TOGGLE_EVENT);
                 }
             });
 
-        if let Err(error) = result {
-            eprintln!("failed to register global shortcut {shortcut}: {error}");
+        match result {
+            Ok(()) => {
+                active.get_or_insert(shortcut);
+            }
+            Err(error) => {
+                eprintln!("failed to register global shortcut {shortcut}: {error}");
+            }
         }
     }
+
+    active
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -95,15 +115,25 @@ pub fn run() {
         }))
         .plugin(tauri_plugin_autostart::Builder::new().build())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
+        .manage(shell::ShellState::default())
+        .on_window_event(|window, event| {
+            if matches!(event, tauri::WindowEvent::ScaleFactorChanged { .. }) {
+                let _ = window.emit(shell::DISPLAY_EVENT, ());
+            }
+        })
         .invoke_handler(tauri::generate_handler![
+            shell::shell_apply_layout,
+            shell::shell_focus,
+            shell::shell_restore_focus,
+            shell::shell_set_gesture,
             gmail::gmail_connect,
             gmail::gmail_disconnect,
             gmail::gmail_fetch_unread,
             gmail::gmail_status,
         ])
         .setup(|app| {
-            setup_tray(app)?;
-            setup_global_shortcuts(app);
+            let active_shortcut = setup_global_shortcuts(app);
+            setup_tray(app, active_shortcut)?;
 
             if let Some(window) = app.get_webview_window("main") {
                 let _ = window.set_decorations(false);
@@ -111,35 +141,12 @@ pub fn run() {
                 let _ = window.set_always_on_top(true);
                 let _ = window.set_skip_taskbar(true);
                 let _ = window.set_background_color(Some(tauri::utils::config::Color(0, 0, 0, 0)));
-
-                let monitor = window
-                    .cursor_position()
-                    .ok()
-                    .and_then(|position| {
-                        window
-                            .monitor_from_point(position.x, position.y)
-                            .ok()
-                            .flatten()
-                    })
-                    .or_else(|| window.current_monitor().ok().flatten());
-
-                if let Some(monitor) = monitor {
-                    let monitor_size = monitor.size();
-                    let monitor_position = monitor.position();
-                    let scale_factor = monitor.scale_factor();
-                    let window_width = (442.0_f64 * scale_factor).round() as u32;
-                    let tab_width = (42.0_f64 * scale_factor).round() as u32;
-                    let closed_offset = (2.0_f64 * scale_factor).round() as i32;
-
-                    let _ = window
-                        .set_size(tauri::PhysicalSize::new(window_width, monitor_size.height));
-                    let _ = window.set_position(tauri::PhysicalPosition::new(
-                        monitor_position.x + monitor_size.width as i32 - tab_width as i32
-                            + closed_offset,
-                        monitor_position.y,
-                    ));
-                }
             }
+
+            // The window starts hidden at the size of the closed notch. The
+            // frontend places it from the saved dock edge and shows it, so
+            // launch never flashes a full-height or misplaced surface.
+            shell::install(app.handle());
 
             if cfg!(debug_assertions) {
                 app.handle().plugin(

@@ -1,20 +1,20 @@
 # Gmail Integration
 
-Todobar's first Gmail connector uses direct Gmail API OAuth from the native
+Sidenib's first Gmail connector uses direct Gmail API OAuth from the native
 Tauri layer. MCP remains an advanced future integration path, not the normal
 user flow.
 
 ## User Flow
 
-1. Open Todobar settings.
+1. Open Sidenib settings.
 2. Open Connectors.
 3. Click Connect Gmail.
 4. The system browser opens Google's OAuth consent screen.
 5. The user approves read-only Gmail access.
-6. Todobar receives the OAuth callback through a local loopback redirect.
+6. Sidenib receives the OAuth callback through a local loopback redirect.
 7. The native layer exchanges the code for tokens.
 8. Tokens are stored in the OS credential store.
-9. Todobar can read recent unread Inbox threads and show local suggestions.
+9. Sidenib can read recent unread Inbox threads and show local suggestions.
 
 Normal users should not paste MCP endpoints, OAuth client IDs, or secrets.
 
@@ -26,14 +26,14 @@ The first version requests only:
 https://www.googleapis.com/auth/gmail.readonly
 ```
 
-Todobar can:
+Sidenib can:
 
 - read recent unread Inbox threads
 - show subject, sender, date, snippet, and a Gmail link
-- convert a selected thread into a local Todobar task
+- convert a selected thread into a local Sidenib task
 - ignore a suggestion locally
 
-Todobar cannot:
+Sidenib cannot:
 
 - send email
 - compose drafts
@@ -70,17 +70,17 @@ and connector activity entries. It must not contain OAuth tokens.
 
 ## Maintainer OAuth Setup
 
-For local development, create a Google OAuth desktop client and run Todobar with:
+For local development, create a Google OAuth desktop client and run Sidenib with:
 
 ```powershell
-$env:TODOBAR_GMAIL_CLIENT_ID="your-client-id.apps.googleusercontent.com"
+$env:SIDENIB_GMAIL_CLIENT_ID="your-client-id.apps.googleusercontent.com"
 npm run tauri:dev
 ```
 
 If your Google client requires a secret, keep it native-only:
 
 ```powershell
-$env:TODOBAR_GMAIL_CLIENT_SECRET="your-client-secret"
+$env:SIDENIB_GMAIL_CLIENT_SECRET="your-client-secret"
 ```
 
 The native flow uses a loopback redirect like:
@@ -116,8 +116,8 @@ Before a public Gmail release:
 
 ## Privacy Boundary
 
-Every Gmail read triggered by the UI is recorded in Todobar's connector activity
-area. Gmail-derived tasks are local-first and stay in Todobar's local task store.
+Every Gmail read triggered by the UI is recorded in Sidenib's connector activity
+area. Gmail-derived tasks are local-first and stay in Sidenib's local task store.
 
 The current connector is intentionally read-only. Write actions should be added
 only as separate, explicit, permissioned features with their own scopes and UI.

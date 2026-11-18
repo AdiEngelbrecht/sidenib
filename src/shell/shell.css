@@ -1,0 +1,393 @@
+/*
+ * Compact shell: the notch, the card frame and the reminder toast.
+ *
+ * Every position and size here comes from CSS variables that useShell.ts
+ * derives from src/shell/geometry.ts, the same geometry that sizes the native
+ * window and defines its pointer regions. Nothing in this file positions
+ * itself against the viewport, and nothing is as tall as the screen.
+ */
+
+.sn-shell {
+  --sn-reveal-x: 16px;
+  --sn-reveal-y: 0px;
+  --sn-notch-grow: 0px;
+  /* The narrow ink edge of the page, on the docked side (the Peek icon). */
+  --sn-page-edge-shadow: 2px 0 0 var(--sn-page-edge);
+}
+
+.sn-shell.sn-edge-left {
+  --sn-reveal-x: -16px;
+  --sn-page-edge-shadow: -2px 0 0 var(--sn-page-edge);
+}
+
+.sn-shell.sn-edge-top {
+  --sn-reveal-x: 0px;
+  --sn-reveal-y: -16px;
+  --sn-page-edge-shadow: 0 -2px 0 var(--sn-page-edge);
+}
+
+/* Inside the native window the shadow has 28 px of room. These fall to
+   nothing well inside that margin, so the window edge never cuts a visible
+   line through them. */
+.sn-shell.is-native {
+  --sn-shadow-card:
+    0 0 0 0.5px rgba(70, 56, 8, 0.3), 0 8px 20px rgba(40, 32, 12, 0.2),
+    0 1px 4px rgba(40, 32, 12, 0.12);
+  --sn-shadow-toast:
+    0 0 0 0.5px rgba(70, 56, 8, 0.3), 0 6px 16px rgba(40, 32, 12, 0.18);
+}
+
+.sn-shell.is-native.theme-dark {
+  --sn-shadow-card:
+    0 0 0 0.5px rgba(0, 0, 0, 0.7), 0 8px 20px rgba(0, 0, 0, 0.42),
+    0 1px 4px rgba(0, 0, 0, 0.3);
+  --sn-shadow-toast:
+    0 0 0 0.5px rgba(0, 0, 0, 0.7), 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+/* ---- Notch ------------------------------------------------------------- */
+
+.sn-notch {
+  position: fixed;
+  z-index: 30;
+  top: var(--sn-hit-y);
+  left: var(--sn-hit-x);
+  width: var(--sn-hit-w);
+  height: var(--sn-hit-h);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  appearance: none;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sn-notch.is-dragging {
+  cursor: grabbing;
+}
+
+.sn-notch:focus-visible {
+  outline: none;
+}
+
+.sn-notch-pill {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  width: calc(var(--sn-notch-thickness) + var(--sn-notch-grow));
+  height: var(--sn-notch-length);
+  border-radius: var(--sn-radius-notch) 0 0 var(--sn-radius-notch);
+  background: var(--sn-notch);
+  /* The golden tab sits on whatever is on the desktop; a dark amber hairline
+     bounds it over light content, and the gold carries it over dark. */
+  box-shadow: 0 0 0 0.5px var(--sn-accent-edge);
+  transform: translateY(-50%);
+  transition:
+    width var(--sn-motion-quick) var(--sn-ease-out),
+    height var(--sn-motion-quick) var(--sn-ease-out),
+    background-color var(--sn-motion-quick) linear,
+    opacity var(--sn-motion-quick) linear;
+}
+
+.sn-edge-left .sn-notch-pill {
+  right: auto;
+  left: 0;
+  border-radius: 0 var(--sn-radius-notch) var(--sn-radius-notch) 0;
+}
+
+.sn-edge-top .sn-notch-pill {
+  top: 0;
+  right: auto;
+  left: 50%;
+  width: var(--sn-notch-length);
+  height: calc(var(--sn-notch-thickness) + var(--sn-notch-grow));
+  border-radius: 0 0 var(--sn-radius-notch) var(--sn-radius-notch);
+  transform: translateX(-50%);
+}
+
+/* Hovering confirms the pointer is on the notch. It never opens anything. */
+.sn-notch:hover:not(.is-open),
+.sn-notch.is-hovered:not(.is-open),
+.sn-notch.is-pulling,
+.sn-notch.is-dragging {
+  --sn-notch-grow: 2px;
+}
+
+.sn-notch:hover .sn-notch-pill,
+.sn-notch.is-hovered .sn-notch-pill,
+.sn-notch.is-pulling .sn-notch-pill,
+.sn-notch.is-dragging .sn-notch-pill {
+  background: var(--sn-notch-hover);
+}
+
+.sn-notch.is-open .sn-notch-pill,
+.sn-notch.has-reminder .sn-notch-pill {
+  background: var(--sn-notch-active);
+}
+
+/* Open, the tab spans the clearance and is attached to the page: square
+   where it meets the page, so the two read as one object. */
+.sn-notch.is-open .sn-notch-pill {
+  border-radius: 0;
+  box-shadow:
+    0 -0.5px 0 var(--sn-accent-edge),
+    0 0.5px 0 var(--sn-accent-edge);
+}
+
+.sn-edge-top .sn-notch.is-open .sn-notch-pill {
+  box-shadow:
+    -0.5px 0 0 var(--sn-accent-edge),
+    0.5px 0 0 var(--sn-accent-edge);
+}
+
+.sn-notch:focus-visible .sn-notch-pill {
+  outline: 2px solid var(--sn-focus);
+  outline-offset: 2px;
+}
+
+/* Hover-only preference: invisible until the pointer reaches the hit target,
+   keyboard focus lands on it, or a reminder is waiting. */
+.sn-notch.is-hover-only:not(
+    .is-open,
+    .is-hovered,
+    .is-pulling,
+    .is-dragging,
+    .has-reminder,
+    :hover,
+    :focus-visible
+  )
+  .sn-notch-pill {
+  opacity: 0;
+}
+
+.sn-notch-badge {
+  position: absolute;
+  top: -6px;
+  right: calc(100% - 4px);
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: var(--sn-radius-pill);
+  color: #fffbea;
+  font: var(--sn-text-micro);
+  font-size: 10px;
+  line-height: 16px;
+  text-align: center;
+  background: #282722;
+  box-shadow: 0 0 0 1px rgba(255, 251, 234, 0.7);
+}
+
+.sn-edge-left .sn-notch-badge {
+  right: auto;
+  left: calc(100% - 4px);
+}
+
+.sn-edge-top .sn-notch-badge {
+  top: calc(100% - 4px);
+  right: -6px;
+}
+
+/* ---- Card -------------------------------------------------------------- */
+
+.sn-card {
+  position: fixed;
+  z-index: 20;
+  top: var(--sn-card-y);
+  left: var(--sn-card-x);
+  width: var(--sn-card-w);
+  height: var(--sn-card-h);
+  overflow: hidden;
+  border-radius: var(--sn-radius-card);
+  box-shadow: var(--sn-page-edge-shadow), var(--sn-shadow-card);
+  outline: none;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translate(var(--sn-reveal-x), var(--sn-reveal-y))
+    scale(var(--sn-reveal-scale));
+  transform-origin: var(--sn-card-origin-x) var(--sn-card-origin-y);
+  transition:
+    opacity var(--sn-motion-dismiss) var(--sn-ease-in),
+    transform var(--sn-motion-dismiss) var(--sn-ease-in),
+    visibility 0s linear var(--sn-motion-dismiss);
+}
+
+.sn-card.is-open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: none;
+  transition:
+    opacity var(--sn-motion-reveal) var(--sn-ease-out),
+    transform var(--sn-motion-reveal) var(--sn-ease-out),
+    visibility 0s;
+}
+
+/* During an inward pull the card follows the pointer (inline style). */
+.sn-card.is-pulling {
+  visibility: visible;
+}
+
+/* ---- Reminder toast ---------------------------------------------------- */
+
+.sn-toast {
+  position: fixed;
+  z-index: 40;
+  top: var(--sn-toast-y);
+  left: var(--sn-toast-x);
+  width: var(--sn-toast-w);
+  height: var(--sn-toast-h);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translate(var(--sn-reveal-x), var(--sn-reveal-y));
+  transition:
+    opacity var(--sn-motion-dismiss) var(--sn-ease-in),
+    transform var(--sn-motion-dismiss) var(--sn-ease-in),
+    visibility 0s linear var(--sn-motion-dismiss);
+}
+
+.sn-toast.is-beside {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: none;
+  transition:
+    opacity var(--sn-motion-reveal) var(--sn-ease-out),
+    transform var(--sn-motion-reveal) var(--sn-ease-out),
+    visibility 0s;
+}
+
+.sn-toast:empty {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.sn-toast-item {
+  height: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: var(--sn-space-1);
+  padding: 0 var(--sn-space-2) 0 var(--sn-space-3);
+  color: var(--sn-ink);
+  font: var(--sn-text-body);
+  border-radius: var(--sn-radius-toast);
+  background: var(--sn-surface-raised);
+  box-shadow: var(--sn-page-edge-shadow), var(--sn-shadow-toast);
+}
+
+.sn-toast-item button {
+  margin: 0;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  background: transparent;
+  cursor: pointer;
+}
+
+.sn-toast-item button:focus-visible {
+  outline: 2px solid var(--sn-focus);
+  outline-offset: 2px;
+}
+
+.sn-toast-main {
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--sn-space-3);
+  padding: 0;
+  text-align: left;
+  border-radius: var(--sn-radius-control);
+}
+
+.sn-toast-main svg {
+  flex: none;
+  color: var(--sn-accent-text);
+}
+
+.sn-toast-copy {
+  min-width: 0;
+  display: grid;
+}
+
+.sn-toast-copy strong,
+.sn-toast-copy span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sn-toast-copy strong {
+  font-weight: 600;
+}
+
+.sn-toast-copy span {
+  color: var(--sn-ink-secondary);
+  font: var(--sn-text-caption);
+}
+
+.sn-toast-action {
+  height: var(--sn-icon-button);
+  padding: 0 var(--sn-space-2);
+  color: var(--sn-accent-text) !important;
+  font: var(--sn-text-micro) !important;
+  font-size: 12px !important;
+  white-space: nowrap;
+  border-radius: var(--sn-radius-control) !important;
+  transition: background-color var(--sn-motion-quick) linear;
+}
+
+.sn-toast-action.is-icon {
+  width: var(--sn-icon-button);
+  display: grid;
+  place-items: center;
+  padding: 0;
+  color: var(--sn-ink-secondary) !important;
+}
+
+.sn-toast-action:hover {
+  background: var(--sn-surface-hover);
+}
+
+/* ---- Window resize guard ----------------------------------------------- */
+
+/* The native window repaints a frame after it is resized. While that happens
+   nothing is drawn, so the notch cannot appear at a stale offset. */
+.sn-shell.sn-blank .sn-notch-pill,
+.sn-shell.sn-blank .sn-card,
+.sn-shell.sn-blank .sn-toast {
+  opacity: 0 !important;
+  transition: none !important;
+}
+
+/* ---- Reduced motion ---------------------------------------------------- */
+
+/* No travel and no scale: a short opacity fade only. App.css zeroes every
+   transition under this query, so the durations are restated here. */
+@media (prefers-reduced-motion: reduce) {
+  .sn-card,
+  .sn-toast {
+    transform: none !important;
+    transition-property: opacity, visibility !important;
+    transition-duration: var(--sn-motion-quick), 0s !important;
+    transition-delay: 0s, var(--sn-motion-quick) !important;
+    transition-timing-function: linear !important;
+  }
+
+  .sn-card.is-open,
+  .sn-card.is-pulling,
+  .sn-toast.is-beside {
+    transition-delay: 0s, 0s !important;
+  }
+
+  .sn-notch-pill {
+    transition-duration: var(--sn-motion-quick) !important;
+  }
+}

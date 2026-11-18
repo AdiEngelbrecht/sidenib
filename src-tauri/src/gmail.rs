@@ -16,7 +16,7 @@ const GOOGLE_AUTH_URL: &str = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_TOKEN_URL: &str = "https://oauth2.googleapis.com/token";
 const GMAIL_PROFILE_URL: &str = "https://gmail.googleapis.com/gmail/v1/users/me/profile";
 const GMAIL_THREADS_URL: &str = "https://gmail.googleapis.com/gmail/v1/users/me/threads";
-const KEYRING_SERVICE: &str = "todobar.gmail";
+const KEYRING_SERVICE: &str = "sidenib.gmail";
 const KEYRING_USER: &str = "oauth";
 
 #[derive(Debug, Serialize)]
@@ -127,23 +127,23 @@ fn now_iso() -> String {
 }
 
 fn oauth_config() -> Result<GmailOAuthConfig, String> {
-    let client_id = std::env::var("TODOBAR_GMAIL_CLIENT_ID")
+    let client_id = std::env::var("SIDENIB_GMAIL_CLIENT_ID")
         .ok()
         .filter(|value| !value.trim().is_empty())
         .or_else(|| {
-            option_env!("TODOBAR_GMAIL_CLIENT_ID")
+            option_env!("SIDENIB_GMAIL_CLIENT_ID")
                 .map(str::to_owned)
                 .filter(|value| !value.trim().is_empty())
         })
         .ok_or_else(|| {
-            "Gmail OAuth is not configured in this build. Maintainers need to set TODOBAR_GMAIL_CLIENT_ID.".to_string()
+            "Gmail OAuth is not configured in this build. Maintainers need to set SIDENIB_GMAIL_CLIENT_ID.".to_string()
         })?;
 
-    let client_secret = std::env::var("TODOBAR_GMAIL_CLIENT_SECRET")
+    let client_secret = std::env::var("SIDENIB_GMAIL_CLIENT_SECRET")
         .ok()
         .filter(|value| !value.trim().is_empty())
         .or_else(|| {
-            option_env!("TODOBAR_GMAIL_CLIENT_SECRET")
+            option_env!("SIDENIB_GMAIL_CLIENT_SECRET")
                 .map(str::to_owned)
                 .filter(|value| !value.trim().is_empty())
         });
@@ -210,7 +210,7 @@ fn status_from_token(token: Option<StoredGmailToken>) -> Result<GmailConnectionS
             state: "unconfigured".to_string(),
             account_email: None,
             sync_state: "idle".to_string(),
-            message: "Gmail login is built, but this app build does not include Todobar's Google OAuth client ID yet.".to_string(),
+            message: "Gmail login is built, but this app build does not include Sidenib's Google OAuth client ID yet.".to_string(),
             scope: GMAIL_SCOPE.to_string(),
         });
     }
@@ -276,9 +276,9 @@ fn listen_for_oauth_callback(listener: TcpListener, expected_state: String) -> R
                 }
 
                 let html = if oauth_error.is_none() && state.as_deref() == Some(expected_state.as_str()) {
-                    "<!doctype html><title>Todobar Gmail connected</title><body style=\"font-family:system-ui;margin:40px\"><h1>Gmail connected</h1><p>You can close this tab and return to Todobar.</p></body>"
+                    "<!doctype html><title>Sidenib Gmail connected</title><body style=\"font-family:system-ui;margin:40px\"><h1>Gmail connected</h1><p>You can close this tab and return to Sidenib.</p></body>"
                 } else {
-                    "<!doctype html><title>Todobar Gmail sign-in failed</title><body style=\"font-family:system-ui;margin:40px\"><h1>Gmail sign-in failed</h1><p>Please return to Todobar and try again.</p></body>"
+                    "<!doctype html><title>Sidenib Gmail sign-in failed</title><body style=\"font-family:system-ui;margin:40px\"><h1>Gmail sign-in failed</h1><p>Please return to Sidenib and try again.</p></body>"
                 };
                 let response = format!(
                     "HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",

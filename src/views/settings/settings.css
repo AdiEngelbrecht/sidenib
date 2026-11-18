@@ -1,0 +1,347 @@
+/*
+ * Settings view styles (ADIEN-164). Scoped to .sn-settings and the settings
+ * rows; tokens only, apart from the preset swatch colours.
+ */
+
+/* Settings is written on the same page: each group is a label line and a
+   run of ruled rows. The page has no margin column here. */
+.sn-settings {
+  display: block;
+}
+
+.sn-settings .sn-group > *,
+.sn-preset-list > * {
+  border-bottom: 0.5px solid var(--sn-rule);
+}
+
+/* ---- Rows --------------------------------------------------------------- */
+
+.sn-setting-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sn-space-2);
+  width: 100%;
+  min-height: var(--sn-row-pitch);
+  padding: 4px var(--sn-space-3);
+  border: 0;
+  text-align: left;
+  background: transparent;
+}
+
+.sn-setting-row > span:first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.sn-setting-row > .sn-segmented {
+  flex: none;
+}
+
+button.sn-setting-row {
+  cursor: pointer;
+}
+
+button.sn-setting-row:hover {
+  background: var(--sn-surface-hover);
+}
+
+/* The ring is drawn inside the row, which runs the width of the page. */
+.sn-panel button.sn-setting-row:focus-visible,
+.sn-preset-row:has(input:focus-visible) {
+  outline: 2px solid var(--sn-focus);
+  outline-offset: -2px;
+}
+
+.sn-setting-row.is-nav > em {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--sn-ink-secondary);
+  font: var(--sn-text-caption);
+  font-style: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sn-setting-row.is-nav > svg {
+  color: var(--sn-ink-tertiary);
+}
+
+.sn-settings .sn-setting-row.is-danger {
+  color: var(--sn-danger);
+}
+
+.sn-setting-row.is-apply > span:first-child {
+  color: var(--sn-ink-secondary);
+  font: var(--sn-text-caption);
+}
+
+.sn-settings kbd {
+  padding: 2px 6px;
+  border-radius: 5px;
+  color: var(--sn-ink);
+  font: var(--sn-text-caption);
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: inset 0 0 0 1px var(--sn-border);
+}
+
+/* A footnote under a group, on its own ruled lines. */
+.sn-settings-note {
+  margin: 0;
+  padding: 7px var(--sn-space-3);
+  border-bottom: 0.5px solid var(--sn-rule);
+  color: var(--sn-ink-secondary);
+  font: var(--sn-text-caption);
+}
+
+.sn-settings-note:empty {
+  display: none;
+}
+
+.sn-settings-note kbd {
+  padding: 0 4px;
+  font-weight: 600;
+  box-shadow: none;
+}
+
+.sn-reset-confirm {
+  max-width: 264px;
+}
+
+/* ---- Theme preset ------------------------------------------------------ */
+
+.sn-preset-row {
+  gap: 10px;
+  cursor: pointer;
+}
+
+.sn-preset-row:hover {
+  background: var(--sn-surface-hover);
+}
+
+.sn-preset-row > span:not(.theme-swatch) {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+}
+
+.sn-preset-row strong {
+  font-weight: 400;
+}
+
+.sn-preset-row em {
+  color: var(--sn-ink-secondary);
+  font: var(--sn-text-caption);
+  font-style: normal;
+}
+
+.sn-preset-row > svg {
+  color: var(--sn-accent-text);
+}
+
+/* A two-tone chip: the preset's paper with a dot of its accent. */
+.theme-swatch {
+  --swatch-surface: #faf2cc;
+  --swatch-accent: #f6c445;
+
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  background: radial-gradient(
+    circle at 50% 50%,
+    var(--swatch-accent) 0 4px,
+    var(--swatch-surface) 4.5px
+  );
+  box-shadow: 0 0 0 0.5px var(--sn-border);
+}
+
+.theme-swatch.is-dark {
+  --swatch-surface: #25221b;
+}
+
+.theme-preview-porcelain {
+  --swatch-surface: #f4f5f7;
+  --swatch-accent: #1f2937;
+}
+
+.theme-preview-frost {
+  --swatch-surface: #eaf3fc;
+  --swatch-accent: #2676d9;
+}
+
+.theme-preview-paper {
+  --swatch-surface: #f5f0e4;
+  --swatch-accent: #7c5c2f;
+}
+
+.theme-preview-clay {
+  --swatch-surface: #f3e9e1;
+  --swatch-accent: #9e5d3f;
+}
+
+.theme-preview-blueprint {
+  --swatch-surface: #eaf1fd;
+  --swatch-accent: #1d4ed8;
+}
+
+.theme-preview-carbon.is-dark {
+  --swatch-surface: #101113;
+  --swatch-accent: #d8dde5;
+}
+
+.theme-preview-graphite.is-dark {
+  --swatch-surface: #14161a;
+  --swatch-accent: #e8edf4;
+}
+
+.theme-preview-midnight.is-dark {
+  --swatch-surface: #0b1322;
+  --swatch-accent: #8fbaff;
+}
+
+.theme-preview-clay.is-dark {
+  --swatch-surface: #1c1310;
+  --swatch-accent: #f2a47f;
+}
+
+.theme-preview-blueprint.is-dark {
+  --swatch-surface: #0c1729;
+  --swatch-accent: #7fb0ff;
+}
+
+/* ---- Tab order --------------------------------------------------------- */
+
+.section-order-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sn-space-2);
+  min-height: var(--sn-row-pitch);
+  padding: 0 var(--sn-space-2) 0 var(--sn-space-1);
+}
+
+.section-order-row.is-dragging {
+  background: var(--sn-surface-hover);
+}
+
+.section-order-row > span:nth-child(2) {
+  flex: 1;
+}
+
+.section-order-row > div {
+  display: flex;
+  gap: 2px;
+}
+
+.section-order-grip {
+  display: grid;
+  place-items: center;
+  width: var(--sn-icon-button);
+  height: var(--sn-icon-button);
+  color: var(--sn-ink-tertiary);
+  cursor: grab;
+  touch-action: none;
+}
+
+/* ---- Backdrop ---------------------------------------------------------- */
+
+.backdrop-setting {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sn-space-2) 10px;
+  padding: var(--sn-space-2) var(--sn-space-3);
+}
+
+.backdrop-preview {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--sn-radius-control);
+  color: var(--sn-ink-secondary);
+  background: var(--sn-surface-sunken) center / cover no-repeat;
+}
+
+.backdrop-copy {
+  flex: 1 1 150px;
+  min-width: 0;
+  display: grid;
+}
+
+.backdrop-copy strong {
+  overflow-wrap: anywhere;
+  font-weight: 400;
+}
+
+.backdrop-copy span {
+  color: var(--sn-ink-secondary);
+  font: var(--sn-text-caption);
+}
+
+.backdrop-copy em {
+  color: var(--sn-danger);
+  font: var(--sn-text-caption);
+}
+
+.backdrop-actions {
+  display: flex;
+  gap: var(--sn-space-2);
+}
+
+.backdrop-actions label {
+  position: relative;
+  overflow: hidden;
+}
+
+.backdrop-actions label:focus-within {
+  outline: 2px solid var(--sn-focus);
+  outline-offset: 2px;
+}
+
+.backdrop-actions input[type='file'] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* ---- Connector (held back; see ConnectorSetting.tsx) -------------------- */
+
+.connector-setting {
+  display: grid;
+  gap: var(--sn-space-2);
+  padding: var(--sn-space-3);
+  color: var(--sn-ink-secondary);
+  font: var(--sn-text-caption);
+}
+
+.connector-setting p,
+.connector-setting ol {
+  margin: 0;
+}
+
+.connector-summary {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sn-space-2);
+}
+
+.connector-copy {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+}
+
+.connector-copy strong {
+  color: var(--sn-ink);
+  font: var(--sn-text-body);
+}
+
+.connector-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sn-space-1);
+}

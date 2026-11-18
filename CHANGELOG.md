@@ -1,5 +1,115 @@
 # Changelog
 
+Sidenib starts from Todobar `v0.1.14` by Leonxlnx. Entries for `0.1.14` and
+earlier are the upstream Todobar history and keep the original product name.
+
+## 0.2.0 - Sidenib (unreleased)
+
+### Changed
+
+- Gave the card its own layout, a notebook page, after the first compact
+  redesign was judged too close to Todobar. The three views are an index
+  line in the header; the footer tab bar is gone. A task is added on the
+  next empty line after the open tasks instead of in a box at the foot. Rows
+  are single ruled lines with a square check in a margin column and the
+  reminder time at the trailing end. The header is a date block in a serif
+  face, focus priority is a highlighter stroke, and rules continue to the
+  foot of the page. See
+  [docs/design/notebook/README.md](docs/design/notebook/README.md).
+- The closed notch is the golden tab of the icon. Open, it is 10 wide and
+  touches the page, which has a narrow ink edge on that side.
+- Defaults: card radius 16, row height 36 (lower bound 32). "Row spacing"
+  adds to the line height instead of splitting rows into tiles.
+- Stored settings, once: card width, radius, row height, row spacing, text
+  size and motion that are still a previous default move to the notebook
+  defaults; chosen values are kept. The settings as they were are saved
+  under `sidenib.sidebar.settings.backup.rev2`. See
+  [docs/settings.md](docs/settings.md).
+- In the Calendar, an entry under its own day shows the time only.
+- Fixed: the off state of a switch was below 3:1 against the page in four
+  light presets.
+
+- Renamed the product to Sidenib across the app, tray/menu-bar menu, window
+  title, accessibility labels, package metadata, and workflows.
+- Replaced the app icon with the Sidenib Peek icon, including a macOS menu-bar
+  template mark that follows the system appearance.
+- Moved the app to its own identifier, `io.github.adiengelbrecht.sidenib`, with
+  separate local storage keys, Gmail credential service, launch-at-login entry,
+  and single-instance lock, so it runs beside an installed Todobar.
+- Changed the global shortcut to `Alt + Shift + S`, with
+  `Ctrl + Alt + Shift + S` as the fallback. The tray/menu-bar menu shows the
+  shortcut that is active.
+- Renamed the Gmail OAuth environment variables to `SIDENIB_GMAIL_CLIENT_ID`
+  and `SIDENIB_GMAIL_CLIENT_SECRET`.
+- Gave the Android companion the Sidenib label and its own application id. The
+  rolling Android prerelease now publishes only when started manually.
+
+- Replaced the full-height sidebar with a compact shell: a 12 × 48 notch
+  halfway down the right edge that opens a 340 × 480 rounded card by click,
+  inward pull, shortcut or tray. The native window is only as large as what is
+  drawn, starts hidden so launch never flashes, and long content scrolls inside
+  the card. See [docs/shell.md](docs/shell.md).
+- Pointer events are taken only by the notch, the card and the reminder toast.
+  Shadow margins, rounded corners and the edge gap pass through to other apps:
+  event driven on macOS, bounded polling on Windows.
+- Closing the card hands focus back to the previously frontmost app on macOS.
+  Escape closes Settings before the card.
+- Reminders show as a compact toast beside the closed notch and never open the
+  card. With the card open, a due reminder is a gold banner above the view's
+  body with the same open, snooze and dismiss actions.
+- New installs default to the compact right-middle layout. Stored dock edge,
+  sizes, presets, backdrop and hover-only notch are kept; the notch thickness
+  and length sliders now go down to 10 and 44, and a full-height panel is an
+  opt-in setting.
+- Restyled Today and Lists as a compact Notes-like task pane: system type,
+  warm paper and ink with a restrained gold accent, one bold title per view,
+  soft groups with inset hairlines, 44 px rows (52 with a reminder line), and
+  one segmented tab control in place of the side rail and progress strip. See
+  [docs/views.md](docs/views.md).
+- Today lists overdue tasks first, then open tasks, one group per pinned list,
+  and a Completed disclosure. Lists is an index with one list at a time in
+  detail.
+- Row actions appear on hover or keyboard focus. Reminder opens presets, an
+  exact time and Clear; More holds Rename, Priority and Delete. Long titles
+  clamp to two lines and show in full as a tooltip and while renaming.
+- Escape now peels one layer at a time: a menu, a rename, a quick-add draft,
+  Settings, then the card.
+- Theme presets now recolour the card through the design tokens. Studio and
+  Obsidian, the stored defaults, are the Sidenib paper and ink palettes.
+- New installs default to 14 px task text and hairline-separated rows. Stored
+  text size and row gap are kept; the row gap slider now goes down to 0.
+- The macOS web view is now transparent through Tauri's `macOSPrivateApi`.
+- Polished the Calendar for the card: a cue besides colour for every day
+  state, only the weeks a month needs, one week at a time on short screens
+  with ISO week numbers, arrow-key, Home, End and Page navigation in the grid,
+  and a stable agenda order. See [docs/calendar.md](docs/calendar.md).
+- Settings is a ten-row page with Advanced behind it. Theme gained System,
+  which follows the device. The Sidenib palette is its own preset; a stored
+  Studio or Obsidian draws the same. See [docs/settings.md](docs/settings.md).
+- A pinned list's group on Today folds, and the fold is remembered.
+- A task's stored note is shown on its second line without repeating
+  "Today", "Calendar" or the list name. New tasks no longer store those
+  labels.
+- The Calendar's scroll separator is the line under the grid.
+- The macOS bundle is sealed with an ad-hoc signature.
+
+### Fixed
+
+- A pointer click that an input source reports without a click count no
+  longer toggles the notch twice.
+- A profile first written by the full-height app no longer draws a grey
+  42 × 84 block at the screen edge in place of the notch, or a card whose
+  paper lets the desktop show through. Those two old defaults are carried
+  forward to the compact ones once; values chosen afterwards are kept. See
+  [docs/native-transparency-adien-171.md](docs/native-transparency-adien-171.md).
+
+### Notes
+
+- Sidenib starts with its own data. It does not read or migrate Todobar's
+  tasks, settings, or Gmail connection.
+- Release notes: [docs/release-notes-v0.2.0.md](docs/release-notes-v0.2.0.md).
+  Checks: [docs/release-verification-v0.2.0.md](docs/release-verification-v0.2.0.md).
+
 ## 0.1.14 - Closed Tab Shadow Fix
 
 ### Fixed

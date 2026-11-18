@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for helping improve Todobar.
+Thanks for helping improve Sidenib.
 
 ## Local Setup
 

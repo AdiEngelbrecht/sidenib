@@ -47,7 +47,10 @@ jobs:
       - name: ESLint
         run: npm run lint
 
+      # Bounded: a healthy install takes well under a minute. Playwright
+      # older than the pinned version hangs while extracting on Node 26.
       - name: Install Playwright browser
+        timeout-minutes: 10
         run: npx playwright install chromium
 
       - name: Sidebar smoke test

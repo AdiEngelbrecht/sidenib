@@ -271,7 +271,7 @@ class SidebarOverlayController(
             layoutParams = p
         }
         val titleTv = TextView(ctx).apply {
-            text = "Todobar"
+            text = "Sidenib"
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 15.5f)
             typeface = Typeface.create("sans-serif-medium", Typeface.BOLD)
         }
